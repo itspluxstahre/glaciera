@@ -3,7 +3,7 @@
 #
 
 CC ?= clang
-CFLAGS ?= -O3 -Wall -pedantic
+CFLAGS ?= -O2 -Wall -Wextra -Wpedantic -Wformat-security -std=c23
 CPPFLAGS ?= -I/opt/homebrew/include
 CPPFLAGS += -I$(SRC_DIR)
 LDFLAGS ?= -L/opt/homebrew/lib
