@@ -41,7 +41,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-int flac_info(char *filename, struct tuneinfo *ti)
+bool flac_info(char *filename, struct tuneinfo *ti)
 {
 	int error;
 	struct stat ss;
@@ -50,7 +50,7 @@ int flac_info(char *filename, struct tuneinfo *ti)
 	error = stat(filename, &ss);
 	if (error) {
 		fprintf(stderr, "\nflac_read_info: fail in open '%s'\n", filename);
-		return 0;
+		return false;
 	}
 
 	FLAC__metadata_get_streaminfo(filename, &md);
@@ -64,10 +64,10 @@ int flac_info(char *filename, struct tuneinfo *ti)
 	ti->bitrate = 128;      /* TODO: Get values from file */
 	ti->genre = 0xff;       /* TODO: Get values from file */
 
-	return 1;
+	return true;
 }
 
-int flac_isit(char *s, int len)
+bool flac_isit(char *s, int len)
 {
         if ((len > 5) &&
             (s[len - 5] == '.') &&

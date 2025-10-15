@@ -11,7 +11,7 @@
 struct filetype;
 
 struct filetype * music_isit(char *filename);
-int music_info(char *filename, struct tuneinfo *si);
+bool music_info(char *filename, struct tuneinfo *si);
 void music_play(char *filename);
 void music_register_all_modules(void);
 

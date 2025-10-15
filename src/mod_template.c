@@ -15,16 +15,16 @@
 
 /* --------------------------------------------------------------------------- */
 
-int TEMPLATE_info(char *filename, struct tuneinfo *ti)
+bool TEMPLATE_info(char *filename, struct tuneinfo *ti)
 {
-        return 0;
+        return false;
 }
 
 /* -------------------------------------------------------------------------- */
 
-int TEMPLATE_isit(char *s, int len)
+bool TEMPLATE_isit(char *s, int len)
 {
-	return 0;
+	return false;
 }	
 
 /* -------------------------------------------------------------------------- */

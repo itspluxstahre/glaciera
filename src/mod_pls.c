@@ -34,12 +34,11 @@
  * Return true if the file contains lines with URL's.
  * Yes, the same as a "grep http filename" but much faster !
  */
-
-int pls_info(char *filename, struct tuneinfo *ti)
+bool pls_info(char *filename, struct tuneinfo *ti)
 {
 	FILE *f;
 	char buf[1024];
-	int has_httplines = false;
+	bool has_httplines = false;
 	
 	f = fopen(filename, "r");
 	if (f) {
@@ -52,7 +51,7 @@ int pls_info(char *filename, struct tuneinfo *ti)
         return has_httplines;
 }
 
-int pls_isit(char *s, int len)
+bool pls_isit(char *s, int len)
 {
         if ((len > 4) &&
             (s[len - 4] == '.') &&

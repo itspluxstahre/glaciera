@@ -163,14 +163,14 @@ struct mp3_id3v1 {
 
 /* --------------------------------------------------------------------------- */
 
-int mp3_info(char *filename, struct tuneinfo *ti)
+bool mp3_info(char *filename, struct tuneinfo *ti)
 {
         int f;
         unsigned long h;
         int variable_frames;
         unsigned char *pmm_start;
 	unsigned char *pmm_end;
-        int is_valid_mp3 = false;
+        bool is_valid_mp3 = false;
         unsigned char *header;
         int error;
         struct stat ss;
@@ -290,7 +290,7 @@ printf("%8d %4d %4d %4d %s\n", variable_frames, ti->duration, ti->bitrate, ti->g
 
 /* -------------------------------------------------------------------------- */
 
-int mp3_isit(char *s, int len)
+bool mp3_isit(char *s, int len)
 {
         if ((len > 4) &&
             (s[len - 4] == '.') &&	    

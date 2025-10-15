@@ -41,7 +41,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-int ogg_info(char *filename, struct tuneinfo *ti)
+bool ogg_info(char *filename, struct tuneinfo *ti)
 {
         FILE *f;
         OggVorbis_File vf;
@@ -51,7 +51,7 @@ int ogg_info(char *filename, struct tuneinfo *ti)
         f = fopen(filename, "r");
         if (!f) {
                 fprintf(stderr, "\nogg_read_info: fail in open '%s'\n", filename);
-                return 0;
+                return false;
         }
 
         memset(&vf, 0, sizeof(OggVorbis_File));
@@ -59,7 +59,7 @@ int ogg_info(char *filename, struct tuneinfo *ti)
         if (error < 0) {
                 fclose(f);
                 fprintf(stderr,"\nogg_read_info: Unable to understand '%s', errorcode=%d\n", filename, error);
-                return 0;
+                return false;
         }
 
         error = stat(filename, &ss);
@@ -76,10 +76,10 @@ int ogg_info(char *filename, struct tuneinfo *ti)
          * fclose() is done _inside_ of ov_clear()
          */
         ov_clear(&vf);
-        return 1;
+        return true;
 }
 
-int ogg_isit(char *s, int len)
+bool ogg_isit(char *s, int len)
 {
         if ((len > 4) &&
             (s[len - 4] == '.') &&

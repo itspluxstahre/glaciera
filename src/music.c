@@ -56,9 +56,9 @@
  * http://www-128.ibm.com/developerworks/power/library/pa-ctypes1/?ca=dgr-lnxw02CTypesP1
  */
 struct filetype {
-	int (*isit) (char *, int); 
-	int (*info) (char *, struct tuneinfo *);
-	void (*play) (char *); 
+	bool (*isit) (char *, int);
+	bool (*info) (char *, struct tuneinfo *);
+	void (*play) (char *);
 	struct filetype *next;
 };
 
@@ -66,8 +66,8 @@ struct filetype {
 
 static struct filetype *fthead = NULL;
 
-static void music_register_filetype(int (*isitproc) (char *, int), 
-				    int (*infoproc) (char *, struct tuneinfo *),
+static void music_register_filetype(bool (*isitproc) (char *, int),
+				    bool (*infoproc) (char *, struct tuneinfo *),
 				    void (*playproc) (char *)) 
 {
 	struct filetype *ft;
@@ -96,12 +96,12 @@ struct filetype * music_isit(char *filename)
 
 /* -------------------------------------------------------------------------- */
 
-int music_info(char *filename, struct tuneinfo *si)
+bool music_info(char *filename, struct tuneinfo *si)
 {
 	struct filetype *ft;
 	
 	ft = music_isit(filename);
-	return ft ? ft->info(filename, si) : 0;
+	return ft ? ft->info(filename, si) : false;
 }
 
 /* -------------------------------------------------------------------------- */
