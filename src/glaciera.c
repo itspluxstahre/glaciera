@@ -363,14 +363,14 @@ void make_local_copy_of_database(int showprogress)
     time_t timeprogress = 0;
     time_t now;
 
-    if(stat(opt_mp3path, &st) != 0)
+    if(stat(opt_datapath, &st) != 0)
     {
-        printf("Error: Could not read path \"%s\"\n", opt_mp3path);
+        printf("Error: Could not read path \"%s\"\n", opt_datapath);
         exit(-1);
     }
 
     for (i = 0; i < 5; i++) {
-        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_mp3path, i);
+        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
         snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
         bytes = filesize(srcfilename);
         bytes_total += bytes;
@@ -381,7 +381,7 @@ void make_local_copy_of_database(int showprogress)
         return;
 
     for (i = 0; i < 5; i++) {
-        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_mp3path , i);
+        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath , i);
         snprintf(dstfilename, sizeof(dstfilename), "%s%d.db.tmp", playlist_dir, i);
 
         read_fd = open(srcfilename, O_RDONLY);
@@ -1378,7 +1378,7 @@ void parse_shoutcaststream_log(char *result)
     char buf[1024];
     char *p;
 
-    f = fopen(MP3BERG_PIPE, "r");
+    f = fopen(GLACIERA_PIPE, "r");
     if (!f)
         return;
 

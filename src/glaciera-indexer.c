@@ -1146,7 +1146,7 @@ void start_recurse_disc(const char * argdir)
         for (p = buf; *p; p++)
                 if ('/' == *p)
                         *p = '_';
-	snprintf(freefilename, sizeof(freefilename), "%s%s.free", opt_mp3path, buf);
+	snprintf(freefilename, sizeof(freefilename), "%s%s.free", opt_datapath, buf);
 
         f = fopen(freefilename, "r");
         if (f) {
@@ -1279,18 +1279,18 @@ int main(int argc, char *argv[])
         build_fastarrays();
         memset(&g_posblock, 0, sizeof(g_posblock));
 
-	if (!can_create_database(opt_mp3path)) {
-		fprintf(stderr, "Error: The path '%s' must be writeable.\n", opt_mp3path);
-		exit(1);
+	if (!can_create_database(opt_datapath)) {
+		fprintf(stderr, "Error: The path '%s' must be writeable.\n", opt_datapath);
+		exit(EXIT_FAILURE);
 	}
 
         fprintf(stderr, "Loading rippers database...");
         load_rippers(opt_ripperspath);
 
-        fprintf(stderr, "\nLoading mp3 database...");
-        load_all_mp3_database(opt_mp3path);
+        fprintf(stderr, "\nLoading audio database...");
+        load_all_mp3_database(opt_datapath);
 
-        fprintf(stderr, "\nSorting mp3 database, (%d) songs...", allcount);
+        fprintf(stderr, "\nSorting audio database, (%d) songs...", allcount);
         start = time(NULL);
         sort_mp3_database();
         fprintf(stderr, " sort took %ld seconds.\n", time(NULL) - start);
@@ -1310,7 +1310,7 @@ int main(int argc, char *argv[])
         for (i = optind; i < argc; i++)
                 start_recurse_disc(argv[i]);
         if (!threadcount)
-                start_recurse_disc(opt_mp3path);
+                start_recurse_disc(opt_datapath);
         for (i = 0; i < threadcount; i++) {
                 pthread_join(threads[i], NULL);
         }
@@ -1332,9 +1332,9 @@ int main(int argc, char *argv[])
         fprintf(stderr, " sort took %ld seconds.", time(NULL) - start);
 
         fprintf(stderr, "\nCopying database files...");
-        copy_db(opt_mp3path);
+        copy_db(opt_datapath);
 
-        fprintf(stderr, "\nmp3build: total files: %d  new files: %d\n", total_files, new_files);
+        fprintf(stderr, "\nglaciera-indexer: total files: %d  new files: %d\n", total_files, new_files);
 
         exit(0);
 }
