@@ -32,7 +32,7 @@ Glaciera is a fork and modernization of **mp3berg** by Krister Brus, which itsel
 
 ```bash
 # Clone the repository
-git clone https://github.com/plux/glaciera.git
+git clone https://github.com/itspluxstahre/glaciera.git
 cd glaciera
 
 # Configure and build
