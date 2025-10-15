@@ -36,13 +36,32 @@ if have_libintl_header
   mp3berg_c_args += ['-DHAVE_LIBINTL_H']
 endif
 
-git_version_script = find_program('generate_git_version_c.sh')
-git_version = custom_target(
-  'git_version',
+git_exe = find_program('git', required: false)
+
+git_description = 'unknown'
+if git_exe.found()
+  git_res = run_command(git_exe, 'describe', '--tags', '--dirty', '--always', check: false)
+  if git_res.returncode() == 0
+    git_description = git_res.stdout().strip()
+  endif
+  if git_description == '' or git_res.returncode() != 0
+    git_res = run_command(git_exe, 'rev-parse', '--short', 'HEAD', check: false)
+    if git_res.returncode() == 0
+      git_description = git_res.stdout().strip()
+    endif
+  endif
+endif
+
+git_desc_escaped = git_description.replace('\\', '\\\\').replace('"', '\\"')
+
+git_version_conf = configuration_data()
+git_version_conf.set('GIT_DESCRIPTION', '"@0@"'.format(git_desc_escaped))
+
+git_version = configure_file(
   output: 'git_version.c',
-  command: [git_version_script, '@OUTPUT@'],
-  build_by_default: true,
-  build_always_stale: true,
+  input: files('meson/git_version.c.in'),
+  configuration: git_version_conf,
+  install: false,
 )
 
 subdir('src')
