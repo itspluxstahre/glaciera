@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <pthread.h>
@@ -36,6 +37,7 @@
 #include "db.h"
 #include "git_version.h"
 #include "music.h"
+#include "theme_preview.h"
 
 #ifdef USE_GETTEXT
 #define _(String) gettext(String)
@@ -3591,7 +3593,14 @@ int main(int argc, char **argv) {
 	textdomain("glaciera");
 #endif
 
-	while ((arg = getopt(argc, argv, "hvrs:")) > -1) {
+	/* Define long options */
+	static struct option long_options[] = {{"help", no_argument, 0, 'h'},
+	                                       {"version", no_argument, 0, 'v'},
+	                                       {"theme-preview", no_argument, 0, 't'},
+	                                       {0, 0, 0, 0}};
+
+	int option_index = 0;
+	while ((arg = getopt_long(argc, argv, "hvr", long_options, &option_index)) > -1) {
 		switch (arg) {
 		case 'r':
 			opt_read_ahead = 0;
@@ -3599,13 +3608,28 @@ int main(int argc, char **argv) {
 		case 'h':
 		case '?':
 			print_version();
-			printf("usage: glaciera [-h] [-v] [-r]\n");
+			printf("usage: glaciera [-h] [-v] [-r] [--theme-preview]\n");
 			printf("options:\n");
-			printf("	-r                  *Don't* use read ahead\n");
+			printf("  -h, --help          Show this help message\n");
+			printf("  -v, --version       Show version information\n");
+			printf("  -r                  *Don't* use read ahead\n");
+			printf("  --theme-preview     Display all available themes and exit\n");
 			exit(0);
 			break;
 		case 'v':
 			print_version();
+			exit(0);
+		case 't':
+			/* Initialize config to get themes directory */
+			if (!config_init()) {
+				fprintf(stderr, "Failed to initialize configuration\n");
+				exit(EXIT_FAILURE);
+			}
+			/* Display theme previews */
+			char themes_path[1024];
+			snprintf(themes_path, sizeof(themes_path), "%s/themes",
+			         xdg_config_dir);
+			display_theme_previews(themes_path);
 			exit(0);
 		}
 	}

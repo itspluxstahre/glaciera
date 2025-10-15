@@ -10,6 +10,7 @@ common_sources = files(
   'mod_ogg.c',
   'mod_flac.c',
   'mod_pls.c',
+  'theme_preview.c',
 )
 
 glaciera_sources = common_sources + [
