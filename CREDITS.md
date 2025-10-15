@@ -13,8 +13,8 @@
 - **Email**: kristerbrus@fastmail.fm
 
 ## Contributors
-- **Plux Stahre** (formerly Mattias Stahre)
-  - **Email**: mattias.stahre@gmail.com
+- **Plux Stahre** 
+  - **Email**: github@plux.se
   - **Contribution**: Project development and maintenance
 
 ## Third-party Code
