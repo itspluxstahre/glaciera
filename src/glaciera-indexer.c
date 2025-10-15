@@ -280,6 +280,19 @@ void trim_space_dot_space(char *src)
         *dst = 0;
 }
 
+/*
+ * Get the length of a UTF-8 character sequence starting at the given byte
+ * Returns 1-4 for valid sequences, 1 for invalid bytes
+ */
+static int utf8_char_len(unsigned char c)
+{
+        if ((c & 0x80) == 0x00) return 1;      /* 0xxxxxxx - ASCII */
+        if ((c & 0xE0) == 0xC0) return 2;      /* 110xxxxx - 2-byte */
+        if ((c & 0xF0) == 0xE0) return 3;      /* 1110xxxx - 3-byte */
+        if ((c & 0xF8) == 0xF0) return 4;      /* 11110xxx - 4-byte */
+        return 1;  /* Invalid UTF-8, treat as single byte */
+}
+
 static void build_display_from_filename(const char *dir,
                                         const char *filename,
                                         BITS keepers[],
@@ -301,10 +314,23 @@ static void build_display_from_filename(const char *dir,
         strip_ripper(fullpath);
         strncat(fullpath, "/", sizeof(fullpath) - strlen(fullpath) - 1);
 
+        /* UTF-8 aware copying using keepers bitmap */
         char *p = fullpath + strlen(fullpath);
-        for (int i = 0; filename[i] && (size_t)(p - fullpath) < sizeof(fullpath) - 1; i++) {
-                if (bittest(keepers, i))
-                        *p++ = filename[i];
+        for (int i = 0; filename[i] && (size_t)(p - fullpath) < sizeof(fullpath) - 1; ) {
+                /* Determine UTF-8 character length */
+                int char_len = utf8_char_len((unsigned char)filename[i]);
+                
+                /* Check if first byte of character should be kept */
+                if (bittest(keepers, i)) {
+                        /* Copy entire UTF-8 character */
+                        for (int j = 0; j < char_len && filename[i + j] &&
+                             (size_t)(p - fullpath) < sizeof(fullpath) - 1; j++) {
+                                *p++ = filename[i + j];
+                        }
+                }
+                
+                /* Advance by full character length */
+                i += char_len;
         }
         *p = '\0';
 
@@ -316,8 +342,9 @@ static void build_display_from_filename(const char *dir,
         trim_minus_space_minus(gbuf);
         trim_space_dot_space(gbuf);
 
+        /* Skip leading non-alphanumeric ASCII, but preserve Unicode */
         p = gbuf;
-        while (*p && !isalnum((unsigned char)*p))
+        while (*p && (unsigned char)*p < 128 && !isalnum((unsigned char)*p))
                 p++;
 
         snprintf(out, out_size, "%s", p);
