@@ -1,18 +1,18 @@
-# Allow the users to use own mp3bergrcfiles.
-# stored in <home>/.mp3bergrc
+# Allow the users to use own glacierarcfiles.
+# stored in <home>/.glacierarc
 # Valid values: [0/1]
 :allowprivatercfile:
 1
 # This is the path to your musicfolder.
 
-:mp3path:
-/Users/ellie/Music/mp3berg
+:datapath:
+/Users/ellie/Music/glaciera
 
 # This is where you have your rippers database,
 # probalbly in the path above example /mp3/rippers.
 
 :rippersdatabase:
-/Users/ellie/Music/mp3berg/rippers
+/Users/ellie/Music/glaciera/rippers
 
 # Full path to your mp3player,
 # We will catch some settings for it below.
@@ -20,8 +20,8 @@
 :mp3player:
 /usr/bin/mpg123
 
-# This is if your mp3player needs some special settings, 
-# for an example if you need some settings for wich 
+# This is if your mp3player needs some special settings,
+# for an example if you need some settings for wich
 # sounddevice to use. Most cases /dev/dsp
 # Read documentation for your mp3player for more info.
 
@@ -33,7 +33,7 @@
 /usr/bin/ogg123
 
 #This is if your oggplayer needs som special settings,
-# for an example if you need some settings for wich 
+# for an example if you need some settings for wich
 # sounddevice to use. Most cases /dev/dsp
 # Read documentation for your oggplayer for more info.
 

@@ -1,5 +1,5 @@
 /*
- * mod_ogg - makes mp3berg know about .ogg-files.
+ * mod_ogg - makes glaciera know about .ogg-files.
  *
  * Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
  *

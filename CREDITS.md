@@ -12,10 +12,11 @@
 - **Years**: 2000-2010
 - **Email**: kristerbrus@fastmail.fm
 
-## Contributors
-- **Plux Stahre** 
-  - **Email**: github@plux.se
-  - **Contribution**: Project development and maintenance
+## glaciera Project
+**glaciera** - Enhanced curses based jukebox for audio files
+- **Primary Author**: Plux Stahre
+- **Years**: 2025
+- **Email**: github@plux.se
 
 ## Third-party Code
 - **fuzzy() function**

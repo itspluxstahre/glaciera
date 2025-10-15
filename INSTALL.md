@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Before building mp3berg, you'll need to install the required dependencies. The project uses **Meson** as its build system and requires development headers for several audio libraries.
+Before building glaciera, you'll need to install the required dependencies. The project uses **Meson** as its build system and requires development headers for several audio libraries.
 
 ## Installing Dependencies
 
@@ -48,7 +48,7 @@ sudo pkg install meson ninja ncurses libogg libvorbis flac
 
 ## Building and Installation
 
-Once you have the dependencies installed, you can build and install mp3berg:
+Once you have the dependencies installed, you can build and install glaciera:
 
 ```bash
 # Configure the build (this creates a 'builddir' directory)
@@ -66,11 +66,11 @@ sudo ninja -C builddir install
 During development, you can run the binaries directly from the build directory without installing them:
 
 ```bash
-# Run mp3berg from build directory
-./builddir/src/mp3berg
+# Run glaciera from build directory
+./builddir/src/glaciera
 
-# Run mp3build from build directory
-./builddir/src/mp3build
+# Run glaciera-indexer from build directory
+./builddir/src/glaciera-indexer
 ```
 
 ## Runtime Dependencies
@@ -109,8 +109,8 @@ For cross-compilation or building for different architectures, refer to the [Mes
 
 After installation, you may want to:
 
-1. Copy `global_mp3bergrc` to `/etc/mp3bergrc` for system-wide configuration
-2. Create `~/.mp3bergrc` for personal configuration
+1. Copy `global_glacierarc` to `/etc/glacierarc` for system-wide configuration
+2. Create `~/.glacierarc` for personal configuration
 3. Set up your music directory in the configuration file
 
-See the `mp3bergrc` file for configuration options.
+See the `glacierarc` file for configuration options.

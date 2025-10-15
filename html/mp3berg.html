@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>MP3BERG -- Not Your Average mp3-player</title>
+<title>GLACIERA -- Not Your Average audio player</title>
 <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body> 
 <div id="container"> 
   <div id="header"> 
-    <img src="mp3berg.jpg" alt="mp3berg" />
+    <img src="glaciera.jpg" alt="glaciera" />
   </div> 
   <div id="navigation"> 
     <ul id="navlist"> 
@@ -25,7 +25,7 @@
     </ul> 
   </div> 
   <div id="content"> 
-    <h2>Welcome to mp3berg.</h2> 
+    <h2>Welcome to glaciera.</h2> 
     <p><strong>Brought to you by:<br/> 
       Krister Brus &lt;kristerbrus[at]fastmail.fm&gt;<br />
       and Mattias Stahre &lt;mattias.stahre[at]gmail.com&gt;</strong></p>
@@ -89,15 +89,15 @@
 	
 	
 	<h2><a name="details"></a>Program details:</h2>
-	<p>The standalone database builder program, <strong>mp3build</strong>, scans all your mp3's, 
-	and builds the database (files named 0.db, 1.db, 2.db, 3.db and 4.db) in the /mp3 directory. <br />
-	<strong>mp3build</strong> will normally be run as a cron-job, but can also be run on demand.  
-	<strong>mp3build</strong> will also calculate the song length and bitrate of each mp3 file.
-	When <strong>mp3build</strong> has been run once, no further song length calculations will be necessary 
+	<p>The standalone database builder program, <strong>glaciera-indexer</strong>, scans all your audio files, 
+	and builds the database (files named 0.db, 1.db, 2.db, 3.db and 4.db) in the /glaciera directory. <br />
+	<strong>glaciera-indexer</strong> will normally be run as a cron-job, but can also be run on demand.  
+	<strong>glaciera-indexer</strong> will also calculate the song length and bitrate of each audio file.
+	When <strong>glaciera-indexer</strong> has been run once, no further song length calculations will be necessary 
 	on existing songs, thus speeding up the scanning process.
-	As new songs gets copied onto the MP3BERG, <strong>mp3build</strong> rescans all directories, 
+	As new songs gets copied onto the GLACIERA, <strong>glaciera-indexer</strong> rescans all directories, 
 	looking for the new songs.<br />
-	Finally, <strong>mp3berg</strong> reads the database and displays the main MP3BERG screen. </p>
+	Finally, <strong>glaciera</strong> reads the database and displays the main GLACIERA screen. </p>
 	
 	<h2><a name="screenshots"></a>The mandatory screen shots:</h2>
 	<p>
@@ -131,7 +131,7 @@
 	followed by
 	<pre> 
 	$ sudo aptitude update
-	$ sudo aptitude install mp3berg
+	$ sudo aptitude install glaciera
 	</pre>
 	to install the Debian binary package complete with all necessary dependencies. And yes, as
 	a service to the Ubuntu community, the same package also works on all tested versions of Ubuntu.

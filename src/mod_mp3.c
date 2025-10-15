@@ -1,5 +1,5 @@
 /*
- * mod_mp3 - makes mp3berg know about .mp3-files.
+ * mod_mp3 - makes glaciera know about .mp3-files.
  *
  * Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
  * Scanning code based on C# code from:

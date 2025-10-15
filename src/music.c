@@ -20,7 +20,7 @@
  * It's just the music_register_all_modules function that needs
  * ONE additional call to setup the pointers to the new functions.
  *
- * Also, you don't have to change _anything_ in the mp3build/mp3berg programs.
+ * Also, you don't have to change _anything_ in the glaciera-indexer/glaciera programs.
  *
  * ------------------------------------------------------------------
  *
@@ -142,7 +142,7 @@ void music_play(char *filename)
 #include "mod_pls.h"
 
 /*
- * Called from mp3build & mp3berg to build the list of supported music formats.
+ * Called from glaciera-indexer & glaciera to build the list of supported music formats.
  */
 
 void music_register_all_modules(void)

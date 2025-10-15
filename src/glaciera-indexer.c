@@ -1,13 +1,13 @@
 #define noDEBUG
 /*
- * mp3build
- *      generates the database for mp3berg 
+ * glaciera-indexer
+ *      generates the database for glaciera
  *
- * Goal 1: Recursive scan of all mp3's
+ * Goal 1: Recursive scan of all audio files
  *      Takes ~5 minutes on my old P120 40MB RedHat9 machine
- *      to scan ~71000 mp3's spread over ten hard disks.
+ *      to scan ~71000 audio files spread over ten hard disks.
  *
- * Goal 2: Calculate the song length for every mp3.
+ * Goal 2: Calculate the song length for every audio file.
  *      Takes an extra 35 minutes on above machine.
  *      This is what I call a FullScan.
  *
@@ -20,9 +20,9 @@
  *      For multi-disk systems, read each disk in its own thread,
  *      scanning only the if the contents have changed since the
  *      last scan. This is what I call a TurboScan.
- *                 
+ *
  * 2005-05-28:
- *	System: P200 96MB FC3 machine 185000mp3s 8 physical disks
+ *	System: P200 96MB FC3 machine 185000 audio files 8 physical disks
  *      Turboscan:  ~1 minute (1 disk rescan)
  *      Quickscan:  ~4 minutes
  *      Fullscan:  ~60 minutes

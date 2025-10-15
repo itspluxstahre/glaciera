@@ -1,5 +1,5 @@
 project(
-  'mp3berg',
+  'glaciera',
   'c',
   version: '4.0',
   default_options: [
@@ -25,15 +25,15 @@ m_dep = cc.find_library('m', required: false)
 libintl_dep = dependency('intl', required: false)
 have_libintl_header = cc.has_header('libintl.h')
 
-mp3berg_extra_deps = []
-mp3berg_c_args = []
+glaciera_extra_deps = []
+glaciera_c_args = []
 
 if libintl_dep.found()
-  mp3berg_extra_deps += libintl_dep
+  glaciera_extra_deps += libintl_dep
 endif
 
 if have_libintl_header
-  mp3berg_c_args += ['-DHAVE_LIBINTL_H']
+  glaciera_c_args += ['-DHAVE_LIBINTL_H']
 endif
 
 git_exe = find_program('git', required: false)

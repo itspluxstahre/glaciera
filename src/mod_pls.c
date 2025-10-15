@@ -1,5 +1,5 @@
 /*
- * mod_pls - makes mp3berg know about .pls-files.
+ * mod_pls - makes glaciera know about .pls-files.
  *
  * Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
  *
@@ -76,7 +76,7 @@ bool pls_isit(char *s, int len)
 void pls_play(char *filename)
 {
 	/*
- 	 * Don't spam the /tmp/mp3berg.out too much, but don't be to quiet either... 
+ 	 * Don't spam the /tmp/glaciera.out too much, but don't be to quiet either... 
  	 * Unless the -quiet flag is present, the logfile is flooded with
  	 * several progress messages per second. 
  	 * The -quiet flag lets the StreamTitle messages get through. 

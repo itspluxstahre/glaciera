@@ -1,5 +1,5 @@
 /*
- * common.c - Common stuff for mp3build and mp3berg
+ * common.c - Common stuff for glaciera-indexer and glaciera
  *
  * Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
  * Portions borrowed from the world wild web :)
@@ -37,14 +37,14 @@
 #include <pwd.h>
 #include "common.h"
 
-char opt_mp3path       [100] = "/Users/ellie/Music/mp3berg";
-char opt_ripperspath   [100] = "/Users/ellie/Music/mp3berg/rippers";
+char opt_datapath       [100] = "/Users/ellie/Music/glaciera";
+char opt_ripperspath   [100] = "/Users/ellie/Music/glaciera/rippers";
 char opt_mp3playerpath [100] = "mpg123";	/* Don't need absolute path thanks to execlp */
 char opt_mp3playerflags[100] = "";
 char opt_oggplayerpath [100] = "ogg123";	/* Don't need absolute path thanks to execlp */
 char opt_oggplayerflags[100] = "";
-char opt_mp3bergrcpath [100] = "/etc/mp3bergrc";
-char opt_mp3bergrchomepath [100] = ".mp3bergrc";
+char opt_configpath [100] = "/etc/glacierarc";
+char opt_homeconfigpath [100] = ".glacierarc";
 char opt_allowprivatercfile[100] = "true";
 char tolowerarray[256];
 
@@ -364,7 +364,7 @@ void parse_rc_file(char *rcfile)
 	printf("\nReading rcfile: %s\n", rcfile);
         while (fgets(buf, sizeof(buf), f)) {
                 trim(buf);
-                if      (0 == strcmp(buf, ":mp3path:"        )) p = opt_mp3path;
+                if      (0 == strcmp(buf, ":datapath:"        )) p = opt_datapath;
                 else if (0 == strcmp(buf, ":ripperspath:"    )) p = opt_ripperspath;
                 else if (0 == strcmp(buf, ":mp3playerpath:" )) p = opt_mp3playerpath;
                 else if (0 == strcmp(buf, ":mp3playerflags:")) p = opt_mp3playerflags;
@@ -381,13 +381,13 @@ void parse_rc_file(char *rcfile)
 
 void read_rc_file(void)
 {
-	parse_rc_file(opt_mp3bergrcpath);
+	parse_rc_file(opt_configpath);
 	
 	if (0 == strcmp(opt_allowprivatercfile, "true" )) {
 		char buf[100];
 		strcpy(buf, gethomedir());
 		strcat(buf, "/");
-		strcat(buf, opt_mp3bergrchomepath);
+		strcat(buf, opt_homeconfigpath);
 		parse_rc_file(buf);
 	}
 }
@@ -396,14 +396,14 @@ void sanitize_rc_parameters(bool check_binpaths)
 {
 	(void)check_binpaths;
 
-	if (opt_mp3path[strlen(opt_mp3path) - 1] != '/')
-		strcat(opt_mp3path, "/");
+	if (opt_datapath[strlen(opt_datapath) - 1] != '/')
+		strcat(opt_datapath, "/");
 	
 	/* Yes not having the mp3/oggplayer IS critical.
 	 * we WANT to exit when they are not found to
 	 * make sure the user knows about it 
 	 * However we only want to check that if we run
-	 * the main mp3berg, the server where mp3build lives
+	 * the main glaciera, the server where glaciera-indexer lives
 	 * won't need thoose.
 	 * // Plux Sat 08 Jul 2006 06:15:12 CEST 
 	 */

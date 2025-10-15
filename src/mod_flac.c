@@ -1,5 +1,5 @@
 /*
- * mod_flac - makes mp3berg know about .flac-files.
+ * mod_flac - makes glaciera know about .flac-files.
  *
  * Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
  *

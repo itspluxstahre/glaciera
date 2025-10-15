@@ -46,12 +46,14 @@ struct track_metadata {
         int track_number;
 };
 
-extern char opt_mp3path[100];
+extern char opt_datapath[100];
 extern char opt_ripperspath[100];
 extern char opt_mp3playerpath[100];
 extern char opt_mp3playerflags[100];
 extern char opt_oggplayerpath[100];
 extern char opt_oggplayerflags[100];
+extern char opt_configpath[100];
+extern char opt_homeconfigpath[100];
 extern char opt_allowprivatercfile[100];
 extern char tolowerarray[256];
 

@@ -3,7 +3,7 @@
 #define dontUSE_FINISH
 
 /*
- * mp3berg - curses based jukebox for mp3-compressed audio.
+ * glaciera - curses based jukebox for audio files.
  *
  * Copyright (c) 2000-2010 Krister Brus <kristerbrus@fastmail.fm>
  * Portions Copyright (c) 1997 Kristian Wiklund <kw@dtek.chalmers.se>
@@ -68,7 +68,7 @@ int opt_read_ahead = 1;
 
 #define COLUMN_DELTA 20
 #define EMPTY_SEARCH    NULL
-#define MP3BERG_PIPE	"/tmp/mp3berg.stdout"
+#define GLACIERA_PIPE	"/tmp/glaciera.stdout"
 
 enum {
     ARG_NORMAL,
@@ -1576,10 +1576,10 @@ void start_play(int userpressed_enter, struct tune *tune)
         player_pid = fork();
         if (0 == player_pid) {
             /*
-             * Redirect the new process' stdout to /tmp/mp3berg.stdout,
+             * Redirect the new process' stdout to /tmp/glaciera.stdout,
              * so we can scan it for lines containing "StreamTitle". 
              */
-            freopen(MP3BERG_PIPE, "w", stdout);
+            freopen(GLACIERA_PIPE, "w", stdout);
             freopen("/dev/null", "w", stderr);
 
             music_play(actual_file_name);
@@ -1596,7 +1596,7 @@ void start_play(int userpressed_enter, struct tune *tune)
      * // Plux
      */
     FILE *f;
-    f = fopen("/tmp/mp3berg-nowplaying", "w");
+    f = fopen("/tmp/glaciera-nowplaying", "w");
     fprintf(f, "%s", tune->display);
     fclose(f);
 
@@ -3230,8 +3230,8 @@ int main(int argc, char **argv)
 #ifdef USE_GETTEXT
     /* setup internationalization of message-strings via gettext(): */
     setlocale(LC_ALL, "");
-    bindtextdomain("mp3berg", "./locale");
-    textdomain("mp3berg");
+    bindtextdomain("glaciera", "./locale");
+    textdomain("glaciera");
 #endif
 
 #if 0
@@ -3253,7 +3253,7 @@ int main(int argc, char **argv)
             case 'h':
             case '?':
                 print_version();
-                printf("usage: mp3berg [-h] [-v] [-r]\n");
+                printf("usage: glaciera [-h] [-v] [-r]\n");
                 printf("options:\n");
                 printf("	-r                  *Don't* use read ahead\n");
                 exit(0);
