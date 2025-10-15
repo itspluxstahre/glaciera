@@ -190,17 +190,26 @@ int trim(char s[])
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Reverse a string in-place
+ * @param str String to reverse
+ * @return Pointer to the reversed string (same as input)
+ */
 char *strrev(char *str)
 {
-      char *pLeft, *pRight;
+      char *left, *right;
+      char temp;
 
       if (!str || !*str)
             return str;
-      for (pLeft = str, pRight = str + strlen(str) - 1; pRight > pLeft; ++pLeft, --pRight) {
-            *pLeft  ^= *pRight;
-            *pRight ^= *pLeft;
-            *pLeft  ^= *pRight;
+
+      /* Swap characters from both ends moving towards center */
+      for (left = str, right = str + strlen(str) - 1; right > left; ++left, --right) {
+            temp = *left;
+            *left = *right;
+            *right = temp;
       }
+      
       return str;
 }
 
