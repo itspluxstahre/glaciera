@@ -13,7 +13,7 @@
 - **Email**: kristerbrus@fastmail.fm
 
 ## glaciera Project
-**glaciera** - Enhanced curses based jukebox for audio files
+**glaciera** - Fuzzy. Ferocious. Terminal-born. Welcome to Glaciera.
 - **Primary Author**: Plux Stahre
 - **Years**: 2025
 - **Email**: github@plux.se
