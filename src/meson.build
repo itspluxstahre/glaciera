@@ -2,6 +2,8 @@ src_inc = include_directories('.')
 
 common_sources = files(
   'common.c',
+  'config.c',
+  'toml.c',
   'db.c',
   'music.c',
   'mod_mp3.c',

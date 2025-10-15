@@ -71,6 +71,7 @@
 #include <limits.h>
 #include <sqlite3.h>
 #include "common.h"
+#include "config.h"
 #include "db.h"
 #include "git_version.h"
 #include "music.h"
@@ -221,8 +222,8 @@ void get_cached_info(char *filename, struct tuneinfo *ti)
                 memcpy(ti, &track->ti, sizeof(struct tuneinfo));
                 db_free_track(track);
         } else if (!opt_skip_file_info) {
-                if (music_info(filename, ti))
-                        new_files++;
+                music_info(filename, ti);
+                /* Note: new_files is incremented when inserting into DB, not here */
         }
 
         total_files++;
@@ -999,8 +1000,22 @@ int main(int argc, char *argv[])
         }
 
         print_version();
-	read_rc_file();
-	sanitize_rc_parameters(false);
+
+	/* Initialize new XDG-compliant configuration system */
+	if (!config_init()) {
+		fprintf(stderr, "Failed to initialize configuration\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Populate legacy variables from new config */
+	strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
+	strcat(opt_datapath, "/");
+	strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
+	strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
+	strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
+	strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
+	strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
+
 	music_register_all_modules();
         build_fastarrays();
 
@@ -1010,9 +1025,7 @@ int main(int argc, char *argv[])
 	}
 
         fprintf(stderr, "Initializing database...");
-        char db_path[1024];
-        snprintf(db_path, sizeof(db_path), "%sglaciera.db", opt_datapath);
-        if (!db_init(db_path)) {
+        if (!db_init(config_get_db_path())) {
                 fprintf(stderr, "Failed to initialize database\n");
                 exit(EXIT_FAILURE);
         }
@@ -1030,10 +1043,26 @@ int main(int argc, char *argv[])
 	signal(SIGALRM, &report_scanning_progress);
 	alarm(1);
 
+        /* Index paths from command line */
         for (i = optind; i < argc; i++)
                 start_recurse_disc(argv[i]);
-        if (!threadcount)
-                start_recurse_disc(opt_datapath);
+        
+        /* If no command-line paths, use configured index paths */
+        if (!threadcount) {
+                if (global_config.index_paths_count > 0) {
+                        fprintf(stderr, "Indexing %d path(s) from config:\n", 
+                                global_config.index_paths_count);
+                        for (i = 0; i < global_config.index_paths_count; i++) {
+                                fprintf(stderr, "  [%d] %s\n", i + 1, 
+                                        global_config.index_paths[i]);
+                                start_recurse_disc(global_config.index_paths[i]);
+                        }
+                } else {
+                        fprintf(stderr, "Warning: No index paths configured. "
+                                "Please edit %s/config.toml\n", xdg_config_dir);
+                }
+        }
+        
         for (i = 0; i < threadcount; i++) {
                 pthread_join(threads[i], NULL);
         }

@@ -46,15 +46,13 @@ struct track_metadata {
         int track_number;
 };
 
+/* Legacy config variables - populated from new config system */
 extern char opt_datapath[100];
 extern char opt_ripperspath[100];
 extern char opt_mp3playerpath[100];
 extern char opt_mp3playerflags[100];
 extern char opt_oggplayerpath[100];
 extern char opt_oggplayerflags[100];
-extern char opt_configpath[100];
-extern char opt_homeconfigpath[100];
-extern char opt_allowprivatercfile[100];
 extern char tolowerarray[256];
 
 bool inrange(int v, int min, int max);
@@ -76,8 +74,7 @@ void bitnull(BITS *abits, int bits);
 BITS *bitalloc(int bits);
 
 char *find_actual_file_name(char *buf, char *fullfilename);
+/* Legacy config functions - deprecated, use config.h instead */
 char *gethomedir(void);
-void read_rc_file(void);
-void sanitize_rc_parameters(bool check_binpaths);
 void track_metadata_init(struct track_metadata *meta);
 void track_metadata_clear(struct track_metadata *meta);

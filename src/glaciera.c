@@ -57,6 +57,7 @@
 #include <sqlite3.h>
 #include "db.h"
 #include "common.h"
+#include "config.h"
 #include "git_version.h"
 #include "music.h"
 
@@ -687,20 +688,83 @@ void make_ui(void)
     raw();
 
     /*
-     * Setup some colors.
+     * Setup theme colors from config.
      */
     if (has_colors()) {
         start_color();
-        init_pair(1, COLOR_WHITE,  COLOR_BLUE);
-        init_pair(2, COLOR_BLACK,  COLOR_CYAN);
-
-        init_pair(3, COLOR_YELLOW, COLOR_BLUE);
-        init_pair(4, COLOR_RED,    COLOR_WHITE);
-
-        init_pair(5, COLOR_BLACK,  COLOR_WHITE);
-
-        init_pair(6, COLOR_GREEN,  COLOR_BLUE);
-        init_pair(7, COLOR_GREEN,  COLOR_WHITE);
+        
+        /* Try to use RGB colors if terminal supports it */
+        if (can_change_color() && COLORS >= 256) {
+            /* Define custom colors using theme RGB values (scaled to 0-1000) */
+            #define RGB_SCALE(val) ((val) * 1000 / 255)
+            
+            /* Custom color indices (use high numbers to avoid conflicts) */
+            #define THEME_MAIN_BG      16
+            #define THEME_MAIN_FG      17
+            #define THEME_ACCENT_BG    18
+            #define THEME_ACCENT_FG    19
+            #define THEME_PLAYING      20
+            #define THEME_PLAYLIST     21
+            #define THEME_HIGHLIGHT_BG 22
+            #define THEME_HIGHLIGHT_FG 23
+            
+            init_color(THEME_MAIN_BG, 
+                      RGB_SCALE(global_config.theme.main_bg.r),
+                      RGB_SCALE(global_config.theme.main_bg.g),
+                      RGB_SCALE(global_config.theme.main_bg.b));
+            init_color(THEME_MAIN_FG,
+                      RGB_SCALE(global_config.theme.main_fg.r),
+                      RGB_SCALE(global_config.theme.main_fg.g),
+                      RGB_SCALE(global_config.theme.main_fg.b));
+            init_color(THEME_ACCENT_BG,
+                      RGB_SCALE(global_config.theme.accent_bg.r),
+                      RGB_SCALE(global_config.theme.accent_bg.g),
+                      RGB_SCALE(global_config.theme.accent_bg.b));
+            init_color(THEME_ACCENT_FG,
+                      RGB_SCALE(global_config.theme.accent_fg.r),
+                      RGB_SCALE(global_config.theme.accent_fg.g),
+                      RGB_SCALE(global_config.theme.accent_fg.b));
+            init_color(THEME_PLAYING,
+                      RGB_SCALE(global_config.theme.playing.r),
+                      RGB_SCALE(global_config.theme.playing.g),
+                      RGB_SCALE(global_config.theme.playing.b));
+            init_color(THEME_PLAYLIST,
+                      RGB_SCALE(global_config.theme.playlist.r),
+                      RGB_SCALE(global_config.theme.playlist.g),
+                      RGB_SCALE(global_config.theme.playlist.b));
+            init_color(THEME_HIGHLIGHT_BG,
+                      RGB_SCALE(global_config.theme.highlight_bg.r),
+                      RGB_SCALE(global_config.theme.highlight_bg.g),
+                      RGB_SCALE(global_config.theme.highlight_bg.b));
+            init_color(THEME_HIGHLIGHT_FG,
+                      RGB_SCALE(global_config.theme.highlight_fg.r),
+                      RGB_SCALE(global_config.theme.highlight_fg.g),
+                      RGB_SCALE(global_config.theme.highlight_fg.b));
+            
+            /* Main window */
+            init_pair(1, THEME_MAIN_FG, THEME_MAIN_BG);
+            /* Info/status bars */
+            init_pair(2, THEME_ACCENT_FG, THEME_ACCENT_BG);
+            /* Now playing (not highlighted) */
+            init_pair(3, THEME_PLAYING, THEME_MAIN_BG);
+            /* Now playing (highlighted) */
+            init_pair(4, THEME_PLAYING, THEME_ACCENT_BG);
+            /* Highlighted item */
+            init_pair(5, THEME_HIGHLIGHT_FG, THEME_HIGHLIGHT_BG);
+            /* Playlist item (not highlighted) */
+            init_pair(6, THEME_PLAYLIST, THEME_MAIN_BG);
+            /* Playlist item (highlighted) */
+            init_pair(7, THEME_PLAYLIST, THEME_ACCENT_BG);
+        } else {
+            /* Fallback to standard colors for limited terminals */
+            init_pair(1, COLOR_WHITE,  COLOR_BLACK);
+            init_pair(2, COLOR_WHITE,  COLOR_BLUE);
+            init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+            init_pair(4, COLOR_YELLOW, COLOR_BLUE);
+            init_pair(5, COLOR_BLACK,  COLOR_WHITE);
+            init_pair(6, COLOR_GREEN,  COLOR_BLACK);
+            init_pair(7, COLOR_GREEN,  COLOR_BLUE);
+        }
     }
 
     middlesize = LINES - 3;
@@ -3325,8 +3389,20 @@ int main(int argc, char **argv)
 
     print_version();
 
-    read_rc_file();
-    sanitize_rc_parameters(true);
+    /* Initialize new XDG-compliant configuration system */
+    if (!config_init()) {
+        fprintf(stderr, "Failed to initialize configuration\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Populate legacy variables from new config */
+    strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
+    strcat(opt_datapath, "/");
+    strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
+    strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
+    strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
+    strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
+    strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
 
     music_register_all_modules();
 
@@ -3343,12 +3419,9 @@ int main(int argc, char **argv)
     mkdir(playlist_dir, 0700);
 
     /*
-     * !!2004-08-08 KB
-     * Initialize SQLite database
+     * Initialize SQLite database (using XDG_DATA_HOME)
      */
-    char db_path[1024];
-    snprintf(db_path, sizeof(db_path), "%sglaciera.db", opt_datapath);
-    if (!db_init(db_path)) {
+    if (!db_init(config_get_db_path())) {
         printf(_("Failed to initialize database!\n"));
         exit(0);
     }

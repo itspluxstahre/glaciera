@@ -1,0 +1,50 @@
+# Nord Dark Theme for Glaciera
+# Based on https://www.nordtheme.com/
+
+name = "Nord Dark"
+
+[colors]
+# Main window colors
+[colors.main_bg]
+r = 46
+g = 52
+b = 64
+
+[colors.main_fg]
+r = 216
+g = 222
+b = 233
+
+# Accent/status bar colors
+[colors.accent_bg]
+r = 94
+g = 129
+b = 172
+
+[colors.accent_fg]
+r = 236
+g = 239
+b = 244
+
+# Now playing track color (yellow aurora)
+[colors.playing]
+r = 235
+g = 203
+b = 139
+
+# Playlist items (green aurora)
+[colors.playlist]
+r = 163
+g = 190
+b = 140
+
+# Highlight colors (inverted)
+[colors.highlight_bg]
+r = 236
+g = 239
+b = 244
+
+[colors.highlight_fg]
+r = 46
+g = 52
+b = 64

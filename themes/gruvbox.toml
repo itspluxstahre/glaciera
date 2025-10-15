@@ -1,0 +1,50 @@
+# Gruvbox Dark Theme for Glaciera
+# Based on https://github.com/morhetz/gruvbox
+
+name = "Gruvbox Dark"
+
+[colors]
+# Main window - dark background
+[colors.main_bg]
+r = 40
+g = 40
+b = 40
+
+[colors.main_fg]
+r = 235
+g = 219
+b = 178
+
+# Accent/status bar - bright blue
+[colors.accent_bg]
+r = 69
+g = 133
+b = 136
+
+[colors.accent_fg]
+r = 251
+g = 241
+b = 199
+
+# Now playing - bright yellow
+[colors.playing]
+r = 250
+g = 189
+b = 47
+
+# Playlist items - bright green
+[colors.playlist]
+r = 184
+g = 187
+b = 38
+
+# Highlight - light background
+[colors.highlight_bg]
+r = 235
+g = 219
+b = 178
+
+[colors.highlight_fg]
+r = 40
+g = 40
+b = 40

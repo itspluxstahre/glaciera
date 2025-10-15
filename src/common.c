@@ -37,15 +37,13 @@
 #include <pwd.h>
 #include "common.h"
 
-char opt_datapath       [100] = "/Users/ellie/Music/glaciera";
-char opt_ripperspath   [100] = "/Users/ellie/Music/glaciera/rippers";
-char opt_mp3playerpath [100] = "mpg123";	/* Don't need absolute path thanks to execlp */
-char opt_mp3playerflags[100] = "";
-char opt_oggplayerpath [100] = "ogg123";	/* Don't need absolute path thanks to execlp */
-char opt_oggplayerflags[100] = "";
-char opt_configpath [100] = "/etc/glacierarc";
-char opt_homeconfigpath [100] = ".glacierarc";
-char opt_allowprivatercfile[100] = "true";
+/* Legacy config variables - will be populated from new config system */
+char opt_datapath       [100];
+char opt_ripperspath   [100];
+char opt_mp3playerpath [100];
+char opt_mp3playerflags[100];
+char opt_oggplayerpath [100];
+char opt_oggplayerflags[100];
 char tolowerarray[256];
 
 /**
@@ -347,86 +345,7 @@ char * find_actual_file_name(char *buf, char *fullfilename)
 	return buf;
 }
 
-/* -------------------------------------------------------------------------- */
-       	
-/* Read a rcfile */
-
-void parse_rc_file(char *rcfile) 
-{
-	char * p = NULL;
-	FILE * f;
-	char buf[100];
-	
-	f = fopen(rcfile, "r");
-	if (!f)
-		return;
-
-	printf("\nReading rcfile: %s\n", rcfile);
-        while (fgets(buf, sizeof(buf), f)) {
-                trim(buf);
-                if      (0 == strcmp(buf, ":datapath:"        )) p = opt_datapath;
-                else if (0 == strcmp(buf, ":ripperspath:"    )) p = opt_ripperspath;
-                else if (0 == strcmp(buf, ":mp3playerpath:" )) p = opt_mp3playerpath;
-                else if (0 == strcmp(buf, ":mp3playerflags:")) p = opt_mp3playerflags;
-                else if (0 == strcmp(buf, ":oggplayerpath:" )) p = opt_oggplayerpath;
-                else if (0 == strcmp(buf, ":oggplayerflags:")) p = opt_oggplayerflags;
-                else if (0 == strcmp(buf, ":allowprivatercfile:")) p = opt_allowprivatercfile;
-                else if (p) {
-                        strcpy(p, buf);
-                        p = NULL;
-                }
-        }
-	fclose(f);
-}
-
-void read_rc_file(void)
-{
-	parse_rc_file(opt_configpath);
-	
-	if (0 == strcmp(opt_allowprivatercfile, "true" )) {
-		char buf[100];
-		strcpy(buf, gethomedir());
-		strcat(buf, "/");
-		strcat(buf, opt_homeconfigpath);
-		parse_rc_file(buf);
-	}
-}
-
-void sanitize_rc_parameters(bool check_binpaths)
-{
-	(void)check_binpaths;
-
-	if (opt_datapath[strlen(opt_datapath) - 1] != '/')
-		strcat(opt_datapath, "/");
-	
-	/* Yes not having the mp3/oggplayer IS critical.
-	 * we WANT to exit when they are not found to
-	 * make sure the user knows about it 
-	 * However we only want to check that if we run
-	 * the main glaciera, the server where glaciera-indexer lives
-	 * won't need thoose.
-	 * // Plux Sat 08 Jul 2006 06:15:12 CEST 
-	 */
-/*	if (check_binpaths) {
-	 
-		if (access(opt_mp3playerpath, X_OK) != 0) 
-	 	{
-			printf("CRITICAL ERROR: %s was NOT found!\n", opt_mp3playerpath);
-			error = true;
-	 	}
-
-		if (access(opt_oggplayerpath, X_OK) != 0)
-		{
-			printf("CRITICAL ERROR: %s was NOT found!\n", opt_oggplayerpath);
-			error = true;
-		}
-
-		
-		if (error)
-			exit(EXIT_FAILURE);
-
-	}*/	
-}
+/* Old config file parsing removed - now using TOML config in config.c */
 
 /* -------------------------------------------------------------------------- */
 
