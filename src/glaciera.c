@@ -6,33 +6,33 @@
 // Kristian Wiklund, Dept. of Computer Engineering,
 // Chalmers University of Technology, S-412 96 GOTHENBURG, SWEDEN
 
+#include <fcntl.h>
+#include <locale.h>
 #include <ncurses.h>
 #include <signal.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <locale.h>
 #if defined(HAVE_LIBINTL_H)
 #include <libintl.h>
 #endif
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <dirent.h>
-#include <ctype.h>
-#include <pthread.h>
-#include <sqlite3.h>
-#include "db.h"
 #include "common.h"
 #include "config.h"
+#include "db.h"
 #include "git_version.h"
 #include "music.h"
+#include <ctype.h>
+#include <dirent.h>
+#include <pthread.h>
+#include <sqlite3.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
 
 #ifdef USE_GETTEXT
 #define _(String) gettext(String)
@@ -43,27 +43,27 @@
 int opt_read_ahead = 1;
 
 #define COLUMN_DELTA 20
-#define EMPTY_SEARCH    NULL
-#define GLACIERA_PIPE	"/tmp/glaciera.stdout"
+#define EMPTY_SEARCH NULL
+#define GLACIERA_PIPE "/tmp/glaciera.stdout"
 
 enum {
-    ARG_NORMAL,
-    ARG_LENGTH,
-    ARG_SIZE,
-    ARG_DATE,
-    ARG_BITRATE,
-    ARG_GENRE,
-    ARG_RATING,
-    ARG_PATH,
+	ARG_NORMAL,
+	ARG_LENGTH,
+	ARG_SIZE,
+	ARG_DATE,
+	ARG_BITRATE,
+	ARG_GENRE,
+	ARG_RATING,
+	ARG_PATH,
 #ifdef USE_FINISH
-    ARG_FINISH,
+	ARG_FINISH,
 #endif
-    ARG_MAXVAL
+	ARG_MAXVAL
 };
 
 struct {
-    int lo;
-    int hi;
+	int lo;
+	int hi;
 } qsearch[256];
 
 struct tune *alltunes = NULL;
@@ -87,9 +87,9 @@ WINDOW *win_top = NULL;
 WINDOW *win_info = NULL;
 WINDOW *win_middle = NULL;
 WINDOW *win_bottom = NULL;
-int tunenr = 0;                 /* the currently selected tune */
-int toptunenr = 0;              /* the tune at the top of middle window */
-int middlesize = 0;             /* size of displayed tunelist */
+int tunenr = 0;     /* the currently selected tune */
+int toptunenr = 0;  /* the tune at the top of middle window */
+int middlesize = 0; /* size of displayed tunelist */
 
 char playlist_dir[100] = "";
 char search_string[100] = "";
@@ -115,290 +115,276 @@ void do_state(int cmd);
 
 /* -------------------------------------------------------------------------- */
 
-int same_key_twice_in_a_row(int *last_key_count)
-{
-    int result;
+int same_key_twice_in_a_row(int *last_key_count) {
+	int result;
 
-    result = (1 + *last_key_count) == key_count;
-    *last_key_count = key_count;
+	result = (1 + *last_key_count) == key_count;
+	*last_key_count = key_count;
 
-    return result;
-}	
+	return result;
+}
 
 /* -------------------------------------------------------------------------- */
 
 /*
  * The alltunes array is already sorted (by mp3build) on the "display" field.
- * We can use that fact to do speedy searches/sorts by comparing just 
+ * We can use that fact to do speedy searches/sorts by comparing just
  * _the pointers_ themselves. We don't need to strcmp() the strings !
  */
-int displaytunes_sort(const void *a, const void *b)
-{
-    return ((BIGPTR)(((struct tune *) a)->display)) -
-        ((BIGPTR)(((struct tune *) b)->display));
+int displaytunes_sort(const void *a, const void *b) {
+	return ((BIGPTR)(((struct tune *)a)->display)) - ((BIGPTR)(((struct tune *)b)->display));
 }
 
 /*
  * With SQLite backend, we use strdup() for strings, so we can't rely on pointer comparison.
  * We need to do a linear search by string content.
  */
-struct tune * find_in_alltunes_by_display_pointer(char *display)
-{
-    int i;
-    
-    /* Linear search through alltunes */
-    for (i = 0; i < allcount; i++) {
-        if (strcmp(alltunes[i].display, display) == 0) {
-            return &alltunes[i];
-        }
-    }
-    
-    return NULL;
+struct tune *find_in_alltunes_by_display_pointer(char *display) {
+	int i;
+
+	/* Linear search through alltunes */
+	for (i = 0; i < allcount; i++) {
+		if (strcmp(alltunes[i].display, display) == 0) {
+			return &alltunes[i];
+		}
+	}
+
+	return NULL;
 }
 
 /*
  * Given a pointer to a tune in the alltunes array,
  * we can do an O(1) calculation to get that tunes index (0..allcount-1).
  */
-int find_tune_number_by_alltunes_address(struct tune *t)
-{
-    return ((BIGPTR)t - (BIGPTR)&alltunes[0]) / sizeof(struct tune);
+int find_tune_number_by_alltunes_address(struct tune *t) {
+	return ((BIGPTR)t - (BIGPTR)&alltunes[0]) / sizeof(struct tune);
 }
 
-void clear_displaytunes_prim(bool dosave)
-{
-    int i;
-    struct tune *tune;
+void clear_displaytunes_prim(bool dosave) {
+	int i;
+	struct tune *tune;
 
-    /* TODO: push the current displaylist to stack */
-#ifdef USE_BACK	
-    if (dosave)
-        do_state('S');
+	/* TODO: push the current displaylist to stack */
+#ifdef USE_BACK
+	if (dosave)
+		do_state('S');
 #else
-    (void)dosave;
-#endif		
+	(void)dosave;
+#endif
 
-    /*
-     * Free all stale malloc's, allocated by show_available_playlists()
-     */
-    for (i = 0; i < displaycount; i++) {
-        tune = displaytunes[i];
-        if (EMPTY_SEARCH == tune->search) {
-            if (tune->path == tune->display) {
-                free(tune->path);
-                free(tune);
-            }
-        }
-    }
+	/*
+	 * Free all stale malloc's, allocated by show_available_playlists()
+	 */
+	for (i = 0; i < displaycount; i++) {
+		tune = displaytunes[i];
+		if (EMPTY_SEARCH == tune->search) {
+			if (tune->path == tune->display) {
+				free(tune->path);
+				free(tune);
+			}
+		}
+	}
 
-    displaycount = 0;
-    tunenr = 0;
-    toptunenr = 0;
-    col_step = 0;
-    needs_strcasecmp_sort = false;
+	displaycount = 0;
+	tunenr = 0;
+	toptunenr = 0;
+	col_step = 0;
+	needs_strcasecmp_sort = false;
 #ifdef USE_FINISH
-    display_relative_end_time = 0;
+	display_relative_end_time = 0;
 #endif
 }
 
-void clear_displaytunes(void)
-{
-    clear_displaytunes_prim(true);
+void clear_displaytunes(void) {
+	clear_displaytunes_prim(true);
 }
 
-void addtunetodisplay(struct tune *tune)
-{
-    if (tune) {
-        displaytunes = realloc(displaytunes, (displaycount + 1) * sizeof(void *));
-        displaytunes[displaycount] = tune;
+void addtunetodisplay(struct tune *tune) {
+	if (tune) {
+		displaytunes = realloc(displaytunes, (displaycount + 1) * sizeof(void *));
+		displaytunes[displaycount] = tune;
 #ifdef USE_FINISH
-        displaytimes = realloc(displaytimes, (displaycount + 1) * sizeof(time_t));
-        displaytimes[displaycount] = display_relative_end_time;
-        if (tune->ti)
-            display_relative_end_time += tune->ti->duration;
+		displaytimes = realloc(displaytimes, (displaycount + 1) * sizeof(time_t));
+		displaytimes[displaycount] = display_relative_end_time;
+		if (tune->ti)
+			display_relative_end_time += tune->ti->duration;
 #endif
-        displaycount++;
-        if (EMPTY_SEARCH == tune->search)
-            needs_strcasecmp_sort = true;
-    }
+		displaycount++;
+		if (EMPTY_SEARCH == tune->search)
+			needs_strcasecmp_sort = true;
+	}
 }
 
-void addtexttodisplay(char *text, int duration, int filesize, time_t filedate)
-{
-    struct tune *tune;
+void addtexttodisplay(char *text, int duration, int filesize, time_t filedate) {
+	struct tune *tune;
 
-    tune = malloc(sizeof(struct tune));
-    tune->display = tune->path = strdup(text);
-    tune->search = EMPTY_SEARCH;
-    tune->ti = malloc(sizeof(struct tuneinfo));
-    tune->ti->filesize = filesize;
-    tune->ti->filedate = filedate;
-    tune->ti->duration = duration;
-    tune->ti->bitrate = 0;
-    tune->ti->genre = 0;
-    tune->ti->rating = 0;
+	tune = malloc(sizeof(struct tune));
+	tune->display = tune->path = strdup(text);
+	tune->search = EMPTY_SEARCH;
+	tune->ti = malloc(sizeof(struct tuneinfo));
+	tune->ti->filesize = filesize;
+	tune->ti->filedate = filedate;
+	tune->ti->duration = duration;
+	tune->ti->bitrate = 0;
+	tune->ti->genre = 0;
+	tune->ti->rating = 0;
 
-    addtunetodisplay(tune);
+	addtunetodisplay(tune);
 }
 
-int tune_in_playlist(struct tune *tune)
-{
-    int i;
+int tune_in_playlist(struct tune *tune) {
+	int i;
 
-    if (tune) {
-        for (i = 0; i < playlistcount; i++)
-            if (tune->path == playlist[i]->path)
-                return true;
-    }
-    return false;
+	if (tune) {
+		for (i = 0; i < playlistcount; i++)
+			if (tune->path == playlist[i]->path)
+				return true;
+	}
+	return false;
 }
 
-int tune_in_displaylist(struct tune *tune)
-{
-    int i;
+int tune_in_displaylist(struct tune *tune) {
+	int i;
 
-    if (tune) {
-        for (i = 0; i < displaycount; i++)
-            if (tune->path == displaytunes[i]->path)
-                return true;
-    }
-    return false;
+	if (tune) {
+		for (i = 0; i < displaycount; i++)
+			if (tune->path == displaytunes[i]->path)
+				return true;
+	}
+	return false;
 }
 
 /* -------------------------------------------------------------------------- */
 
-struct tune *find_next_song(struct tune *tune)
-{
-    int i, j;
+struct tune *find_next_song(struct tune *tune) {
+	int i, j;
 
-    /*
-     * Is the current playing song in the now loaded playlist?
-     */
-    for (i = 0; i < playlistcount - 1; i++) {
-        if (tune->path == playlist[i]->path)
-            for (j = i + 1; j < playlistcount - 1; j++)
-                if (playlist[j]->search)
-                    return playlist[j];
-    }
+	/*
+	 * Is the current playing song in the now loaded playlist?
+	 */
+	for (i = 0; i < playlistcount - 1; i++) {
+		if (tune->path == playlist[i]->path)
+			for (j = i + 1; j < playlistcount - 1; j++)
+				if (playlist[j]->search)
+					return playlist[j];
+	}
 
-    /*
-     * Is the current playing song on the screen?
-     */
-    for (i = 0; i < displaycount - 1; i++) {
-        if (tune->path == displaytunes[i]->path)
-            for (j = i + 1; j < displaycount - 1; j++)
-                if (displaytunes[j]->search)
-                    return displaytunes[j];
-    }
+	/*
+	 * Is the current playing song on the screen?
+	 */
+	for (i = 0; i < displaycount - 1; i++) {
+		if (tune->path == displaytunes[i]->path)
+			for (j = i + 1; j < displaycount - 1; j++)
+				if (displaytunes[j]->search)
+					return displaytunes[j];
+	}
 
-    /*
-     * Nope, try to find it in the biglist
-     */
-    for (i = 0; i < allcount - 1; i++) {
-        if (tune->path == alltunes[i].path)
-            for (j = i + 1; j < allcount - 1; j++)
-                if (alltunes[j].search)
-                    return &alltunes[j];
-    }
+	/*
+	 * Nope, try to find it in the biglist
+	 */
+	for (i = 0; i < allcount - 1; i++) {
+		if (tune->path == alltunes[i].path)
+			for (j = i + 1; j < allcount - 1; j++)
+				if (alltunes[j].search)
+					return &alltunes[j];
+	}
 
-    /*
-     * OK, nothing found... start from the beginning!
-     */
-    return &alltunes[0];
+	/*
+	 * OK, nothing found... start from the beginning!
+	 */
+	return &alltunes[0];
 }
 
 /* -------------------------------------------------------------------------- */
 
-size_t filesize(const char *filename)
-{
-    struct stat ss;
-    int error;
+size_t filesize(const char *filename) {
+	struct stat ss;
+	int error;
 
-    error = stat(filename, &ss);
-    return error ? -1 : ss.st_size;
+	error = stat(filename, &ss);
+	return error ? -1 : ss.st_size;
 }
 
 struct stat st;
 
-void make_local_copy_of_database(int showprogress)
-{
+void make_local_copy_of_database(int showprogress) {
 #define COPY_SIZE 0x4000
-    int i;
-    char srcfilename[255];
-    char dstfilename[255];
-    bool mustcopy = false;
-    int read_fd;
-    int write_fd;
-    char *buf;
-    size_t bytes;
-    unsigned long bytes_total = 0;
-    unsigned long bytes_written = 0;
-    time_t timeprogress = 0;
-    time_t now;
+	int i;
+	char srcfilename[255];
+	char dstfilename[255];
+	bool mustcopy = false;
+	int read_fd;
+	int write_fd;
+	char *buf;
+	size_t bytes;
+	unsigned long bytes_total = 0;
+	unsigned long bytes_written = 0;
+	time_t timeprogress = 0;
+	time_t now;
 
-    if(stat(opt_datapath, &st) != 0)
-    {
-        printf("Error: Could not read path \"%s\"\n", opt_datapath);
-        exit(-1);
-    }
+	if (stat(opt_datapath, &st) != 0) {
+		printf("Error: Could not read path \"%s\"\n", opt_datapath);
+		exit(-1);
+	}
 
-    for (i = 0; i < 5; i++) {
-        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
-        snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
-        bytes = filesize(srcfilename);
-        bytes_total += bytes;
-        if (bytes != filesize(dstfilename))
-            mustcopy = true;
-    }
-    if (!mustcopy)
-        return;
+	for (i = 0; i < 5; i++) {
+		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
+		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
+		bytes = filesize(srcfilename);
+		bytes_total += bytes;
+		if (bytes != filesize(dstfilename))
+			mustcopy = true;
+	}
+	if (!mustcopy)
+		return;
 
-    for (i = 0; i < 5; i++) {
-        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath , i);
-        snprintf(dstfilename, sizeof(dstfilename), "%s%d.db.tmp", playlist_dir, i);
+	for (i = 0; i < 5; i++) {
+		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
+		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db.tmp", playlist_dir, i);
 
-        read_fd = open(srcfilename, O_RDONLY);
-        if (read_fd < 0)
-            continue;
+		read_fd = open(srcfilename, O_RDONLY);
+		if (read_fd < 0)
+			continue;
 
-        write_fd = open(dstfilename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
-        if (write_fd != -1) {
-            buf = malloc(COPY_SIZE);
-            while ((bytes = read(read_fd, buf, COPY_SIZE)) > 0) {
-                bytes_written += write(write_fd, buf, bytes);
-                if (showprogress) {
-                    now = time(NULL);
-                    if (now > timeprogress) {
-                        char progress[61];
-                        int filled = 0;
+		write_fd = open(dstfilename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
+		if (write_fd != -1) {
+			buf = malloc(COPY_SIZE);
+			while ((bytes = read(read_fd, buf, COPY_SIZE)) > 0) {
+				bytes_written += write(write_fd, buf, bytes);
+				if (showprogress) {
+					now = time(NULL);
+					if (now > timeprogress) {
+						char progress[61];
+						int filled = 0;
 
-                        if (bytes_total > 0) {
-                            filled = (int) ((bytes_written * 60UL) / bytes_total);
-                            if (filled > 60)
-                                filled = 60;
-                        }
+						if (bytes_total > 0) {
+							filled = (int)((bytes_written * 60UL) /
+								       bytes_total);
+							if (filled > 60)
+								filled = 60;
+						}
 
-                        memset(progress, '#', filled);
-                        memset(progress + filled, ' ', 60 - filled);
-                        progress[60] = '\0';
+						memset(progress, '#', filled);
+						memset(progress + filled, ' ', 60 - filled);
+						progress[60] = '\0';
 
-                        fprintf(stderr, "[%s]\r", progress);
-                        timeprogress = now;
-                    }
-                }
-            }
-            free(buf);
-            close(write_fd);
-        }
+						fprintf(stderr, "[%s]\r", progress);
+						timeprogress = now;
+					}
+				}
+			}
+			free(buf);
+			close(write_fd);
+		}
 
-        close(read_fd);
-    }
+		close(read_fd);
+	}
 
-    for (i = 0; i < 5; i++) {
-        snprintf(srcfilename, sizeof(srcfilename), "%s%d.db.tmp", playlist_dir, i);
-        snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
-        rename(srcfilename, dstfilename);
-    }
+	for (i = 0; i < 5; i++) {
+		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db.tmp", playlist_dir, i);
+		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
+		rename(srcfilename, dstfilename);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -410,121 +396,238 @@ void make_local_copy_of_database(int showprogress)
  * munmap(memblock, len);
  */
 
-void load_all_songs(void)
-{
-    int count = 0;
-    struct db_track **tracks = db_get_all_tracks(&count);
+void load_all_songs(void) {
+	int count = 0;
+	struct db_track **tracks = db_get_all_tracks(&count);
 
-    if (!tracks) {
-        return;
-    }
+	if (!tracks) {
+		return;
+	}
 
-    /* If database is empty, count will be 0 but tracks array is valid */
-    if (count == 0) {
-        free(tracks);
-        return;
-    }
+	/* If database is empty, count will be 0 but tracks array is valid */
+	if (count == 0) {
+		free(tracks);
+		return;
+	}
 
-    /* Allocate memory for alltunes array */
-    alltunes = malloc(sizeof(struct tune) * count);
-    if (!alltunes) {
-        db_free_track_list(tracks, count);
-        return;
-    }
+	/* Allocate memory for alltunes array */
+	alltunes = malloc(sizeof(struct tune) * count);
+	if (!alltunes) {
+		db_free_track_list(tracks, count);
+		return;
+	}
 
-    allcount = count;
+	allcount = count;
 
-    /* Convert database tracks to tune structures */
-    for (int i = 0; i < count; i++) {
-        struct db_track *db_track = tracks[i];
+	/* Convert database tracks to tune structures */
+	for (int i = 0; i < count; i++) {
+		struct db_track *db_track = tracks[i];
 
-        alltunes[i].path = strdup(db_track->filepath);
-        alltunes[i].display = strdup(db_track->display_name);
-        alltunes[i].search = strdup(db_track->search_text);
-        alltunes[i].ti = malloc(sizeof(struct tuneinfo));
-        memcpy(alltunes[i].ti, &db_track->ti, sizeof(struct tuneinfo));
+		alltunes[i].path = strdup(db_track->filepath);
+		alltunes[i].display = strdup(db_track->display_name);
+		alltunes[i].search = strdup(db_track->search_text);
+		alltunes[i].ti = malloc(sizeof(struct tuneinfo));
+		memcpy(alltunes[i].ti, &db_track->ti, sizeof(struct tuneinfo));
 
-        db_free_track(db_track);
-    }
+		db_free_track(db_track);
+	}
 
-    free(tracks);
+	free(tracks);
 
-    /*
-     * Init the array used for (somewhat) quick linear searches
-     */
-    for(int i = 0; i < 256; i++) {
-        qsearch[i].lo = -1;
-        qsearch[i].hi = -1;
-    }
-    for (int i = 0; i < allcount; i++) {
-        int ch = 0xff & alltunes[i].search[0];
-        if (-1 == qsearch[ch].lo)
-            qsearch[ch].lo = i;
-        qsearch[ch].hi = i + 1;
-    }
+	/*
+	 * Init the array used for (somewhat) quick linear searches
+	 */
+	for (int i = 0; i < 256; i++) {
+		qsearch[i].lo = -1;
+		qsearch[i].hi = -1;
+	}
+	for (int i = 0; i < allcount; i++) {
+		int ch = 0xff & alltunes[i].search[0];
+		if (-1 == qsearch[ch].lo)
+			qsearch[ch].lo = i;
+		qsearch[ch].hi = i + 1;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-char * genre_names[256] =
-{
+char *genre_names[256] = {
     /*
      * NOTE: The spelling of these genre names is identical to those found in
      * Winamp and mp3info.
      */
-    "Blues", "Classic Rock", "Country", "Dance", "Disco", "Funk", "Grunge",
-    "Hip-Hop", "Jazz", "Metal", "New Age", "Oldies", "Other", "Pop", "R&B",
-    "Rap", "Reggae", "Rock", "Techno", "Industrial", "Alternative", "Ska",
-    "Death Metal", "Pranks", "Soundtrack", "Euro-Techno", "Ambient", "Trip-Hop",
-    "Vocal", "Jazz+Funk", "Fusion", "Trance", "Classical", "Instrumental",
-    "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise", "Alt. Rock",
-    "Bass", "Soul", "Punk", "Space", "Meditative", "Instrumental Pop",
-    "Instrumental Rock", "Ethnic", "Gothic", "Darkwave", "Techno-Industrial",
-    "Electronic", "Pop-Folk", "Eurodance", "Dream", "Southern Rock", "Comedy",
-    "Cult", "Gangsta Rap", "Top 40", "Christian Rap", "Pop/Funk", "Jungle",
-    "Native American", "Cabaret", "New Wave", "Psychedelic", "Rave",
-    "Showtunes", "Trailer", "Lo-Fi", "Tribal", "Acid Punk", "Acid Jazz",
-    "Polka", "Retro", "Musical", "Rock & Roll", "Hard Rock", "Folk",
-    "Folk/Rock", "National Folk", "Swing", "Fast-Fusion", "Bebob", "Latin",
-    "Revival", "Celtic", "Bluegrass", "Avantgarde", "Gothic Rock",
-    "Progressive Rock", "Psychedelic Rock", "Symphonic Rock", "Slow Rock",
-    "Big Band", "Chorus", "Easy Listening", "Acoustic", "Humour", "Speech",
-    "Chanson", "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
-    "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango", "Samba",
-    "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul", "Freestyle", "Duet",
-    "Punk Rock", "Drum Solo", "A Cappella", "Euro-House", "Dance Hall",
-    "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie",
-    "BritPop", "Negerpunk", "Polsk Punk", "Beat", "Christian Gangsta Rap",
-    "Heavy Metal", "Black Metal", "Crossover", "Contemporary Christian",
-    "Christian Rock", "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop",
-    "Synthpop"
-};
+    "Blues",
+    "Classic Rock",
+    "Country",
+    "Dance",
+    "Disco",
+    "Funk",
+    "Grunge",
+    "Hip-Hop",
+    "Jazz",
+    "Metal",
+    "New Age",
+    "Oldies",
+    "Other",
+    "Pop",
+    "R&B",
+    "Rap",
+    "Reggae",
+    "Rock",
+    "Techno",
+    "Industrial",
+    "Alternative",
+    "Ska",
+    "Death Metal",
+    "Pranks",
+    "Soundtrack",
+    "Euro-Techno",
+    "Ambient",
+    "Trip-Hop",
+    "Vocal",
+    "Jazz+Funk",
+    "Fusion",
+    "Trance",
+    "Classical",
+    "Instrumental",
+    "Acid",
+    "House",
+    "Game",
+    "Sound Clip",
+    "Gospel",
+    "Noise",
+    "Alt. Rock",
+    "Bass",
+    "Soul",
+    "Punk",
+    "Space",
+    "Meditative",
+    "Instrumental Pop",
+    "Instrumental Rock",
+    "Ethnic",
+    "Gothic",
+    "Darkwave",
+    "Techno-Industrial",
+    "Electronic",
+    "Pop-Folk",
+    "Eurodance",
+    "Dream",
+    "Southern Rock",
+    "Comedy",
+    "Cult",
+    "Gangsta Rap",
+    "Top 40",
+    "Christian Rap",
+    "Pop/Funk",
+    "Jungle",
+    "Native American",
+    "Cabaret",
+    "New Wave",
+    "Psychedelic",
+    "Rave",
+    "Showtunes",
+    "Trailer",
+    "Lo-Fi",
+    "Tribal",
+    "Acid Punk",
+    "Acid Jazz",
+    "Polka",
+    "Retro",
+    "Musical",
+    "Rock & Roll",
+    "Hard Rock",
+    "Folk",
+    "Folk/Rock",
+    "National Folk",
+    "Swing",
+    "Fast-Fusion",
+    "Bebob",
+    "Latin",
+    "Revival",
+    "Celtic",
+    "Bluegrass",
+    "Avantgarde",
+    "Gothic Rock",
+    "Progressive Rock",
+    "Psychedelic Rock",
+    "Symphonic Rock",
+    "Slow Rock",
+    "Big Band",
+    "Chorus",
+    "Easy Listening",
+    "Acoustic",
+    "Humour",
+    "Speech",
+    "Chanson",
+    "Opera",
+    "Chamber Music",
+    "Sonata",
+    "Symphony",
+    "Booty Bass",
+    "Primus",
+    "Porn Groove",
+    "Satire",
+    "Slow Jam",
+    "Club",
+    "Tango",
+    "Samba",
+    "Folklore",
+    "Ballad",
+    "Power Ballad",
+    "Rhythmic Soul",
+    "Freestyle",
+    "Duet",
+    "Punk Rock",
+    "Drum Solo",
+    "A Cappella",
+    "Euro-House",
+    "Dance Hall",
+    "Goa",
+    "Drum & Bass",
+    "Club-House",
+    "Hardcore",
+    "Terror",
+    "Indie",
+    "BritPop",
+    "Negerpunk",
+    "Polsk Punk",
+    "Beat",
+    "Christian Gangsta Rap",
+    "Heavy Metal",
+    "Black Metal",
+    "Crossover",
+    "Contemporary Christian",
+    "Christian Rock",
+    "Merengue",
+    "Salsa",
+    "Thrash Metal",
+    "Anime",
+    "JPop",
+    "Synthpop"};
 
 /*
  * Return the name of the genre. O(1)
  */
-char *genrename(int genre)
-{
-    char *p = genre_names[genre & 0xff];
-    return p ? p : _("(unknown)");
+char *genrename(int genre) {
+	char *p = genre_names[genre & 0xff];
+	return p ? p : _("(unknown)");
 }
 
 /* -------------------------------------------------------------------------- */
 
-static bool is_all_digits(const char *s)
-{
-    if (!*s)
-        return false;
-    for ( ; *s; s++) {
-        /*
-         * Ignore newlines. Simplifies fgets() calls
-         */
-        if ('\n' == *s)
-            continue;
-        if (!isdigit(*s))
-            return false;
-    }
-    return true;
+static bool is_all_digits(const char *s) {
+	if (!*s)
+		return false;
+	for (; *s; s++) {
+		/*
+		 * Ignore newlines. Simplifies fgets() calls
+		 */
+		if ('\n' == *s)
+			continue;
+		if (!isdigit(*s))
+			return false;
+	}
+	return true;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -535,62 +638,67 @@ static bool is_all_digits(const char *s)
  */
 
 struct hashnode {
-    char *word;
-    int count;
-    int duration;
-    struct hashnode * next;
+	char *word;
+	int count;
+	int duration;
+	struct hashnode *next;
 };
 
 #define NHASH 997
 #define MULT 31
-struct hashnode ** hashnodebin = NULL;
+struct hashnode **hashnodebin = NULL;
 
-void hash_init(void)
-{
-    hashnodebin = malloc(NHASH * sizeof(struct hashnode));
-    memset(hashnodebin, 0, NHASH * sizeof(struct hashnode));
+void hash_init(void) {
+	hashnodebin = malloc(NHASH * sizeof(struct hashnode));
+	memset(hashnodebin, 0, NHASH * sizeof(struct hashnode));
 }
 
-void hash_done(void)
-{
-    int i;
-    struct hashnode *wp;
+void hash_done(void) {
+	int i;
+	struct hashnode *wp;
 
-    for (i = 0; i < NHASH; i++) {
-        for (wp = hashnodebin[i]; wp; wp = wp->next) {
-            free(wp->word);
-            free(wp);
-        }
-    }
+	for (i = 0; i < NHASH; i++) {
+		for (wp = hashnodebin[i]; wp; wp = wp->next) {
+			free(wp->word);
+			free(wp);
+		}
+	}
 
-    free(hashnodebin);
-    hashnodebin = NULL;
+	free(hashnodebin);
+	hashnodebin = NULL;
 }
 
 /*
  * Our hash function maps a string to a positive integer less than NHASH:
  * Using unsigned integers ensures that h remains positive.
  */
-unsigned int hash_calc(const char *s, int len)
-{
-    unsigned int h = 0;
-    int loops;
+unsigned int hash_calc(const char *s, int len) {
+	unsigned int h = 0;
+	int loops;
 
-    loops = (len + 7) / 8;      /* count > 0 assumed */
-    switch (len % 8)
-    {
-        case 0:        do {  h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 7:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 6:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 5:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 4:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 3:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 2:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                           case 1:              h = MULT * h + tolowerarray[(unsigned char) *s++];
-                       } while (--loops > 0);
-    }
+	loops = (len + 7) / 8; /* count > 0 assumed */
+	switch (len % 8) {
+	case 0:
+		do {
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 7:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 6:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 5:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 4:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 3:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 2:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		case 1:
+			h = MULT * h + tolowerarray[(unsigned char)*s++];
+		} while (--loops > 0);
+	}
 
-    return h % NHASH;
+	return h % NHASH;
 }
 
 /*
@@ -598,49 +706,47 @@ unsigned int hash_calc(const char *s, int len)
  * input word (and initializes it if it is not already there):
  */
 
-void hash_incword(const char *s, int duration)
-{
-    unsigned int h;
-    struct hashnode *wp;
-    int len;
+void hash_incword(const char *s, int duration) {
+	unsigned int h;
+	struct hashnode *wp;
+	int len;
 
-    len = strlen(s);
-    h = hash_calc(s, len);
-    for (wp = hashnodebin[h]; wp; wp = wp->next) {
-        if (0 == strncasecmp(s, wp->word, len)) {
-            wp->count++;
-            wp->duration += duration;
-            return;
-        }
-    }
+	len = strlen(s);
+	h = hash_calc(s, len);
+	for (wp = hashnodebin[h]; wp; wp = wp->next) {
+		if (0 == strncasecmp(s, wp->word, len)) {
+			wp->count++;
+			wp->duration += duration;
+			return;
+		}
+	}
 
-    wp = malloc(sizeof(struct hashnode));
-    wp->count = 1;
-    wp->duration = duration;
+	wp = malloc(sizeof(struct hashnode));
+	wp->count = 1;
+	wp->duration = duration;
 
-    /*
-     * inline-version of strndup.
-     */
-    wp->word = malloc(len + 1);
-    wp->word[len] = '\0';
-    memcpy(wp->word, s, len);
+	/*
+	 * inline-version of strndup.
+	 */
+	wp->word = malloc(len + 1);
+	wp->word[len] = '\0';
+	memcpy(wp->word, s, len);
 
-    wp->next = hashnodebin[h];
-    hashnodebin[h] = wp;
+	wp->next = hashnodebin[h];
+	hashnodebin[h] = wp;
 }
 
 /* -------------------------------------------------------------------------- */
 
-int can_open(const char *filename)
-{
-    int error;
+int can_open(const char *filename) {
+	int error;
 
-    /*
-     * Test if that file exist...
-     * That is, if the user has READ access rights.
-     */
-    error = access(filename, R_OK);
-    return !error;
+	/*
+	 * Test if that file exist...
+	 * That is, if the user has READ access rights.
+	 */
+	error = access(filename, R_OK);
+	return !error;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -649,172 +755,165 @@ int can_open(const char *filename)
 /*                                                                           */
 /* ------------------------------------------------------------------------- */
 
-void make_ui(void)
-{
-    /*
-     * Initialize the screen.
-     */
-    initscr();
-    nonl();
-    cbreak();
-    noecho();
-    raw();
+void make_ui(void) {
+	/*
+	 * Initialize the screen.
+	 */
+	initscr();
+	nonl();
+	cbreak();
+	noecho();
+	raw();
 
-    /*
-     * Setup theme colors from config.
-     */
-    if (has_colors()) {
-        start_color();
-        
-        /* Try to use RGB colors if terminal supports it */
-        if (can_change_color() && COLORS >= 256) {
-            /* Define custom colors using theme RGB values (scaled to 0-1000) */
-            #define RGB_SCALE(val) ((val) * 1000 / 255)
-            
-            /* Custom color indices (use high numbers to avoid conflicts) */
-            #define THEME_MAIN_BG      16
-            #define THEME_MAIN_FG      17
-            #define THEME_ACCENT_BG    18
-            #define THEME_ACCENT_FG    19
-            #define THEME_PLAYING      20
-            #define THEME_PLAYLIST     21
-            #define THEME_HIGHLIGHT_BG 22
-            #define THEME_HIGHLIGHT_FG 23
-            
-            init_color(THEME_MAIN_BG, 
-                      RGB_SCALE(global_config.theme.main_bg.r),
-                      RGB_SCALE(global_config.theme.main_bg.g),
-                      RGB_SCALE(global_config.theme.main_bg.b));
-            init_color(THEME_MAIN_FG,
-                      RGB_SCALE(global_config.theme.main_fg.r),
-                      RGB_SCALE(global_config.theme.main_fg.g),
-                      RGB_SCALE(global_config.theme.main_fg.b));
-            init_color(THEME_ACCENT_BG,
-                      RGB_SCALE(global_config.theme.accent_bg.r),
-                      RGB_SCALE(global_config.theme.accent_bg.g),
-                      RGB_SCALE(global_config.theme.accent_bg.b));
-            init_color(THEME_ACCENT_FG,
-                      RGB_SCALE(global_config.theme.accent_fg.r),
-                      RGB_SCALE(global_config.theme.accent_fg.g),
-                      RGB_SCALE(global_config.theme.accent_fg.b));
-            init_color(THEME_PLAYING,
-                      RGB_SCALE(global_config.theme.playing.r),
-                      RGB_SCALE(global_config.theme.playing.g),
-                      RGB_SCALE(global_config.theme.playing.b));
-            init_color(THEME_PLAYLIST,
-                      RGB_SCALE(global_config.theme.playlist.r),
-                      RGB_SCALE(global_config.theme.playlist.g),
-                      RGB_SCALE(global_config.theme.playlist.b));
-            init_color(THEME_HIGHLIGHT_BG,
-                      RGB_SCALE(global_config.theme.highlight_bg.r),
-                      RGB_SCALE(global_config.theme.highlight_bg.g),
-                      RGB_SCALE(global_config.theme.highlight_bg.b));
-            init_color(THEME_HIGHLIGHT_FG,
-                      RGB_SCALE(global_config.theme.highlight_fg.r),
-                      RGB_SCALE(global_config.theme.highlight_fg.g),
-                      RGB_SCALE(global_config.theme.highlight_fg.b));
-            
-            /* Main window */
-            init_pair(1, THEME_MAIN_FG, THEME_MAIN_BG);
-            /* Info/status bars */
-            init_pair(2, THEME_ACCENT_FG, THEME_ACCENT_BG);
-            /* Now playing (not highlighted) */
-            init_pair(3, THEME_PLAYING, THEME_MAIN_BG);
-            /* Now playing (highlighted) */
-            init_pair(4, THEME_PLAYING, THEME_ACCENT_BG);
-            /* Highlighted item */
-            init_pair(5, THEME_HIGHLIGHT_FG, THEME_HIGHLIGHT_BG);
-            /* Playlist item (not highlighted) */
-            init_pair(6, THEME_PLAYLIST, THEME_MAIN_BG);
-            /* Playlist item (highlighted) */
-            init_pair(7, THEME_PLAYLIST, THEME_ACCENT_BG);
-        } else {
-            /* Fallback to standard colors for limited terminals */
-            init_pair(1, COLOR_WHITE,  COLOR_BLACK);
-            init_pair(2, COLOR_WHITE,  COLOR_BLUE);
-            init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-            init_pair(4, COLOR_YELLOW, COLOR_BLUE);
-            init_pair(5, COLOR_BLACK,  COLOR_WHITE);
-            init_pair(6, COLOR_GREEN,  COLOR_BLACK);
-            init_pair(7, COLOR_GREEN,  COLOR_BLUE);
-        }
-    }
+	/*
+	 * Setup theme colors from config.
+	 */
+	if (has_colors()) {
+		start_color();
 
-    middlesize = LINES - 3;
+		/* Try to use RGB colors if terminal supports it */
+		if (can_change_color() && COLORS >= 256) {
+/* Define custom colors using theme RGB values (scaled to 0-1000) */
+#define RGB_SCALE(val) ((val) * 1000 / 255)
 
-    win_top = newwin(1, 0, 0, 0);
-    win_info = newwin(1, 0, 1, 0);
-    win_middle = newwin(middlesize, 0, 2, 0);
-    win_bottom = newwin(1, 0, LINES - 1, 0);
+/* Custom color indices (use high numbers to avoid conflicts) */
+#define THEME_MAIN_BG 16
+#define THEME_MAIN_FG 17
+#define THEME_ACCENT_BG 18
+#define THEME_ACCENT_FG 19
+#define THEME_PLAYING 20
+#define THEME_PLAYLIST 21
+#define THEME_HIGHLIGHT_BG 22
+#define THEME_HIGHLIGHT_FG 23
 
-    keypad(win_top, true);
+			init_color(THEME_MAIN_BG, RGB_SCALE(global_config.theme.main_bg.r),
+				   RGB_SCALE(global_config.theme.main_bg.g),
+				   RGB_SCALE(global_config.theme.main_bg.b));
+			init_color(THEME_MAIN_FG, RGB_SCALE(global_config.theme.main_fg.r),
+				   RGB_SCALE(global_config.theme.main_fg.g),
+				   RGB_SCALE(global_config.theme.main_fg.b));
+			init_color(THEME_ACCENT_BG, RGB_SCALE(global_config.theme.accent_bg.r),
+				   RGB_SCALE(global_config.theme.accent_bg.g),
+				   RGB_SCALE(global_config.theme.accent_bg.b));
+			init_color(THEME_ACCENT_FG, RGB_SCALE(global_config.theme.accent_fg.r),
+				   RGB_SCALE(global_config.theme.accent_fg.g),
+				   RGB_SCALE(global_config.theme.accent_fg.b));
+			init_color(THEME_PLAYING, RGB_SCALE(global_config.theme.playing.r),
+				   RGB_SCALE(global_config.theme.playing.g),
+				   RGB_SCALE(global_config.theme.playing.b));
+			init_color(THEME_PLAYLIST, RGB_SCALE(global_config.theme.playlist.r),
+				   RGB_SCALE(global_config.theme.playlist.g),
+				   RGB_SCALE(global_config.theme.playlist.b));
+			init_color(THEME_HIGHLIGHT_BG,
+				   RGB_SCALE(global_config.theme.highlight_bg.r),
+				   RGB_SCALE(global_config.theme.highlight_bg.g),
+				   RGB_SCALE(global_config.theme.highlight_bg.b));
+			init_color(THEME_HIGHLIGHT_FG,
+				   RGB_SCALE(global_config.theme.highlight_fg.r),
+				   RGB_SCALE(global_config.theme.highlight_fg.g),
+				   RGB_SCALE(global_config.theme.highlight_fg.b));
+
+			/* Main window */
+			init_pair(1, THEME_MAIN_FG, THEME_MAIN_BG);
+			/* Info/status bars */
+			init_pair(2, THEME_ACCENT_FG, THEME_ACCENT_BG);
+			/* Now playing (not highlighted) */
+			init_pair(3, THEME_PLAYING, THEME_MAIN_BG);
+			/* Now playing (highlighted) */
+			init_pair(4, THEME_PLAYING, THEME_ACCENT_BG);
+			/* Highlighted item */
+			init_pair(5, THEME_HIGHLIGHT_FG, THEME_HIGHLIGHT_BG);
+			/* Playlist item (not highlighted) */
+			init_pair(6, THEME_PLAYLIST, THEME_MAIN_BG);
+			/* Playlist item (highlighted) */
+			init_pair(7, THEME_PLAYLIST, THEME_ACCENT_BG);
+		} else {
+			/* Fallback to standard colors for limited terminals */
+			init_pair(1, COLOR_WHITE, COLOR_BLACK);
+			init_pair(2, COLOR_WHITE, COLOR_BLUE);
+			init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+			init_pair(4, COLOR_YELLOW, COLOR_BLUE);
+			init_pair(5, COLOR_BLACK, COLOR_WHITE);
+			init_pair(6, COLOR_GREEN, COLOR_BLACK);
+			init_pair(7, COLOR_GREEN, COLOR_BLUE);
+		}
+	}
+
+	middlesize = LINES - 3;
+
+	win_top = newwin(1, 0, 0, 0);
+	win_info = newwin(1, 0, 1, 0);
+	win_middle = newwin(middlesize, 0, 2, 0);
+	win_bottom = newwin(1, 0, LINES - 1, 0);
+
+	keypad(win_top, true);
 }
 
-void draw_scrollbar(void)
-{
-    char scrollbar[255];  /* There is room for a 255-row display... */
-    int percent;
-    int row;
+void draw_scrollbar(void) {
+	char scrollbar[255]; /* There is room for a 255-row display... */
+	int percent;
+	int row;
 
-    memset(scrollbar, ' ', sizeof(scrollbar));
+	memset(scrollbar, ' ', sizeof(scrollbar));
 
-    if (displaycount) {
-        percent = (100 * tunenr) / displaycount;
-        scrollbar[(percent * middlesize) / 100] = '#';
-    }
+	if (displaycount) {
+		percent = (100 * tunenr) / displaycount;
+		scrollbar[(percent * middlesize) / 100] = '#';
+	}
 
-    for (row = 0; row < middlesize; row++)
-        mvwaddch(win_middle, row, COLS-1, scrollbar[row]);
+	for (row = 0; row < middlesize; row++)
+		mvwaddch(win_middle, row, COLS - 1, scrollbar[row]);
 }
 
 /*
  * Get the length of a UTF-8 character sequence starting at the given byte
  * Returns 1-4 for valid sequences, 1 for invalid bytes
  */
-static inline int utf8_char_len_ui(unsigned char c)
-{
-    if ((c & 0x80) == 0x00) return 1;      /* 0xxxxxxx - ASCII */
-    if ((c & 0xE0) == 0xC0) return 2;      /* 110xxxxx - 2-byte */
-    if ((c & 0xF0) == 0xE0) return 3;      /* 1110xxxx - 3-byte */
-    if ((c & 0xF8) == 0xF0) return 4;      /* 11110xxx - 4-byte */
-    return 1;  /* Invalid UTF-8, treat as single byte */
+static inline int utf8_char_len_ui(unsigned char c) {
+	if ((c & 0x80) == 0x00)
+		return 1; /* 0xxxxxxx - ASCII */
+	if ((c & 0xE0) == 0xC0)
+		return 2; /* 110xxxxx - 2-byte */
+	if ((c & 0xF0) == 0xE0)
+		return 3; /* 1110xxxx - 3-byte */
+	if ((c & 0xF8) == 0xF0)
+		return 4; /* 11110xxx - 4-byte */
+	return 1;         /* Invalid UTF-8, treat as single byte */
 }
 
 /*
  * Find a safe UTF-8 boundary at or before the given byte offset
  * Returns adjusted offset that doesn't split a multi-byte character
  */
-static size_t utf8_safe_offset(const char *str, size_t offset)
-{
-    if (offset == 0 || str[offset] == '\0')
-        return offset;
-    
-    /* Walk backwards to find start of UTF-8 character */
-    while (offset > 0 && ((unsigned char)str[offset] & 0xC0) == 0x80) {
-        offset--;  /* Continuation byte (10xxxxxx) */
-    }
-    
-    return offset;
+static size_t utf8_safe_offset(const char *str, size_t offset) {
+	if (offset == 0 || str[offset] == '\0')
+		return offset;
+
+	/* Walk backwards to find start of UTF-8 character */
+	while (offset > 0 && ((unsigned char)str[offset] & 0xC0) == 0x80) {
+		offset--; /* Continuation byte (10xxxxxx) */
+	}
+
+	return offset;
 }
 
 /*
  * Truncate string at safe UTF-8 boundary without splitting characters
  * Returns actual length after truncation
  */
-static size_t utf8_safe_truncate(char *str, size_t max_bytes)
-{
-    if (!str || max_bytes == 0)
-        return 0;
-    
-    size_t len = strlen(str);
-    if (len <= max_bytes) {
-        return len;
-    }
-    
-    /* Find safe truncation point */
-    size_t safe_len = utf8_safe_offset(str, max_bytes);
-    str[safe_len] = '\0';
-    return safe_len;
+static size_t utf8_safe_truncate(char *str, size_t max_bytes) {
+	if (!str || max_bytes == 0)
+		return 0;
+
+	size_t len = strlen(str);
+	if (len <= max_bytes) {
+		return len;
+	}
+
+	/* Find safe truncation point */
+	size_t safe_len = utf8_safe_offset(str, max_bytes);
+	str[safe_len] = '\0';
+	return safe_len;
 }
 
 /*
@@ -822,891 +921,878 @@ static size_t utf8_safe_truncate(char *str, size_t max_bytes)
  * to        "aaa - bbb - ccc - ddd"
  * UTF-8 safe version that handles substrings correctly
  */
-void depath(char *dst, char *src)
-{
-    /* If src is null or empty, nothing to do */
-    if (!src || !*src) {
-        *dst = 0;
-        return;
-    }
+void depath(char *dst, char *src) {
+	/* If src is null or empty, nothing to do */
+	if (!src || !*src) {
+		*dst = 0;
+		return;
+	}
 
-    /* Find start of first complete UTF-8 character in substring */
-    char *start = src;
-    while (*start) {
-        /* Check if this byte starts a valid UTF-8 sequence */
-        unsigned char c = (unsigned char)*start;
-        if ((c & 0x80) == 0x00) break;      /* ASCII character */
-        if ((c & 0xE0) == 0xC0) break;      /* 2-byte start */
-        if ((c & 0xF0) == 0xE0) break;      /* 3-byte start */
-        if ((c & 0xF8) == 0xF0) break;      /* 4-byte start */
+	/* Find start of first complete UTF-8 character in substring */
+	char *start = src;
+	while (*start) {
+		/* Check if this byte starts a valid UTF-8 sequence */
+		unsigned char c = (unsigned char)*start;
+		if ((c & 0x80) == 0x00)
+			break; /* ASCII character */
+		if ((c & 0xE0) == 0xC0)
+			break; /* 2-byte start */
+		if ((c & 0xF0) == 0xE0)
+			break; /* 3-byte start */
+		if ((c & 0xF8) == 0xF0)
+			break; /* 4-byte start */
 
-        /* This is a continuation byte, skip it */
-        start++;
-        if (!*start) {
-            *dst = 0;
-            return;
-        }
-    }
+		/* This is a continuation byte, skip it */
+		start++;
+		if (!*start) {
+			*dst = 0;
+			return;
+		}
+	}
 
-    /* If we reached end without finding a valid start, nothing to do */
-    if (!*start) {
-        *dst = 0;
-        return;
-    }
+	/* If we reached end without finding a valid start, nothing to do */
+	if (!*start) {
+		*dst = 0;
+		return;
+	}
 
-    /* Now process from the safe starting point */
-    while (*start) {
-        if ('/' != *start) {
-            /* Copy complete UTF-8 character */
-            int char_len = utf8_char_len_ui((unsigned char)*start);
-            for (int i = 0; i < char_len && start[i]; i++) {
-                *dst++ = start[i];
-            }
-            start += char_len;
-        } else {
-            *dst++ = ' ';
-            *dst++ = '-';
-            *dst++ = ' ';
-            start++;
-        }
-    }
-    *dst = 0;
+	/* Now process from the safe starting point */
+	while (*start) {
+		if ('/' != *start) {
+			/* Copy complete UTF-8 character */
+			int char_len = utf8_char_len_ui((unsigned char)*start);
+			for (int i = 0; i < char_len && start[i]; i++) {
+				*dst++ = start[i];
+			}
+			start += char_len;
+		} else {
+			*dst++ = ' ';
+			*dst++ = '-';
+			*dst++ = ' ';
+			start++;
+		}
+	}
+	*dst = 0;
 }
 
-void draw_one_song(int row, int item, int highlight)
-{
+void draw_one_song(int row, int item, int highlight) {
 #define FILLER ' '
-    struct tune *tune;
-    char buf[512];
-    int colorpair;
-    int hours;
-    struct tm tm;
-    char *p;
+	struct tune *tune;
+	char buf[512];
+	int colorpair;
+	int hours;
+	struct tm tm;
+	char *p;
 
-    tune = displaytunes[item];
+	tune = displaytunes[item];
 
-    memset(buf, FILLER, sizeof(buf));
-    buf[0] = 0;
+	memset(buf, FILLER, sizeof(buf));
+	buf[0] = 0;
 
-    switch (sort_arg) {
-        case ARG_NORMAL:
-            break;		
-        case ARG_LENGTH:
-            hours = tune->ti->duration / 60;
-            if (hours > 999)
-                snprintf(buf, sizeof(buf), "%6d ", hours);
-            else
-                snprintf(buf, sizeof(buf), "%3d:%02d ", hours, tune->ti->duration % 60);
-            break;		
-        case ARG_SIZE:
-            snprintf(buf, sizeof(buf), "%9d ", tune->ti->filesize);
-            break;		
-        case ARG_DATE:
-            localtime_r(&tune->ti->filedate, &tm);
-            snprintf(buf, sizeof(buf), "%4d-%02d-%02d ",
-                    1900 + tm.tm_year,
-                    1 + tm.tm_mon, tm.tm_mday);
-            break;		
-        case ARG_BITRATE:
-            snprintf(buf, sizeof(buf), "%3d ", tune->ti->bitrate);
-            break;		
-        case ARG_GENRE:
-            snprintf(buf, sizeof(buf), "%-18s ", genrename(tune->ti->genre));
-            break;
-        case ARG_RATING:
-            switch (tune->ti->rating) {
-                case 1: strcat(buf, "*     "); break;
-                case 2: strcat(buf, "**    "); break;
-                case 3: strcat(buf, "***   "); break;
-                case 4: strcat(buf, "****  "); break;
-                case 5: strcat(buf, "***** "); break;
-                default:strcat(buf, "      "); break;
-            }
-            break;
+	switch (sort_arg) {
+	case ARG_NORMAL:
+		break;
+	case ARG_LENGTH:
+		hours = tune->ti->duration / 60;
+		if (hours > 999)
+			snprintf(buf, sizeof(buf), "%6d ", hours);
+		else
+			snprintf(buf, sizeof(buf), "%3d:%02d ", hours, tune->ti->duration % 60);
+		break;
+	case ARG_SIZE:
+		snprintf(buf, sizeof(buf), "%9d ", tune->ti->filesize);
+		break;
+	case ARG_DATE:
+		localtime_r(&tune->ti->filedate, &tm);
+		snprintf(buf, sizeof(buf), "%4d-%02d-%02d ", 1900 + tm.tm_year, 1 + tm.tm_mon,
+			 tm.tm_mday);
+		break;
+	case ARG_BITRATE:
+		snprintf(buf, sizeof(buf), "%3d ", tune->ti->bitrate);
+		break;
+	case ARG_GENRE:
+		snprintf(buf, sizeof(buf), "%-18s ", genrename(tune->ti->genre));
+		break;
+	case ARG_RATING:
+		switch (tune->ti->rating) {
+		case 1:
+			strcat(buf, "*     ");
+			break;
+		case 2:
+			strcat(buf, "**    ");
+			break;
+		case 3:
+			strcat(buf, "***   ");
+			break;
+		case 4:
+			strcat(buf, "****  ");
+			break;
+		case 5:
+			strcat(buf, "***** ");
+			break;
+		default:
+			strcat(buf, "      ");
+			break;
+		}
+		break;
 #ifdef USE_FINISH
-        case ARG_FINISH:
-            time_t t = displaytimes[item] + started_playing_time; /*time(NULL) */
-            localtime_r(&t, &tm);
-            snprintf(buf, sizeof(buf), "%02d:%02d:%02d ", tm.tm_hour, tm.tm_min, tm.tm_sec);
-            break;
+	case ARG_FINISH:
+		time_t t = displaytimes[item] + started_playing_time; /*time(NULL) */
+		localtime_r(&t, &tm);
+		snprintf(buf, sizeof(buf), "%02d:%02d:%02d ", tm.tm_hour, tm.tm_min, tm.tm_sec);
+		break;
 #endif
-    }
+	}
 
-    const int step = col_step;
-    if (ARG_PATH == sort_arg) {
-        const size_t path_len = strlen(tune->path);
-        /* Use UTF-8 safe offset for horizontal scrolling */
-        size_t safe_step = (step < 0 || (size_t)step > path_len) ? 0 : utf8_safe_offset(tune->path, step);
-        p = tune->path + safe_step;
-        
-        /* UTF-8 safe copy - copy up to COLS characters, not bytes */
-        size_t copied = 0;
-        size_t remaining = COLS;
-        while (*p && copied < remaining) {
-            int char_len = utf8_char_len_ui((unsigned char)*p);
-            if ((size_t)char_len > remaining) break;  /* Don't split character */
-            
-            for (int i = 0; i < char_len && *p; i++) {
-                buf[strlen(buf)] = *p++;
-            }
-            copied += char_len;
-        }
-    } else {
-        const size_t display_len = strlen(tune->display);
-        /* Use UTF-8 safe offset for horizontal scrolling */
-        size_t safe_step = (step < 0 || (size_t)step > display_len) ? 0 : utf8_safe_offset(tune->display, step);
-        p = tune->display + safe_step;
-        depath(buf + strlen(buf), p);
-    }
+	const int step = col_step;
+	if (ARG_PATH == sort_arg) {
+		const size_t path_len = strlen(tune->path);
+		/* Use UTF-8 safe offset for horizontal scrolling */
+		size_t safe_step =
+		    (step < 0 || (size_t)step > path_len) ? 0 : utf8_safe_offset(tune->path, step);
+		p = tune->path + safe_step;
 
-    /* UTF-8 safe truncation at screen width */
-    size_t buf_len = utf8_safe_truncate(buf, COLS);
-    /* Fill remaining space with FILLER */
-    while (buf_len < (size_t)COLS) {
-        buf[buf_len++] = FILLER;
-    }
-    buf[COLS] = 0;
+		/* UTF-8 safe copy - copy up to COLS characters, not bytes */
+		size_t copied = 0;
+		size_t remaining = COLS;
+		while (*p && copied < remaining) {
+			int char_len = utf8_char_len_ui((unsigned char)*p);
+			if ((size_t)char_len > remaining)
+				break; /* Don't split character */
 
-    /*
-     * Show markers if we're horizontal scrolling
-     */
-    if (col_step) {
-        buf[0] = '<';
-        if (COLS >= 2)
-            buf[COLS-2] = '>';
-    }
+			for (int i = 0; i < char_len && *p; i++) {
+				buf[strlen(buf)] = *p++;
+			}
+			copied += char_len;
+		}
+	} else {
+		const size_t display_len = strlen(tune->display);
+		/* Use UTF-8 safe offset for horizontal scrolling */
+		size_t safe_step = (step < 0 || (size_t)step > display_len)
+				       ? 0
+				       : utf8_safe_offset(tune->display, step);
+		p = tune->display + safe_step;
+		depath(buf + strlen(buf), p);
+	}
 
-    /*
-     * Find the color of the string
-     */
-    if (tune && now_playing_tune && tune->path == now_playing_tune->path)
-        colorpair = highlight ? COLOR_PAIR(4) : COLOR_PAIR(3);
-    else if (tune_in_playlist(tune))
-        colorpair = highlight ? COLOR_PAIR(7) : COLOR_PAIR(6);
-    else if (highlight)
-        colorpair = COLOR_PAIR(5);
-    else
-        colorpair = 0;
+	/* UTF-8 safe truncation at screen width */
+	size_t buf_len = utf8_safe_truncate(buf, COLS);
+	/* Fill remaining space with FILLER */
+	while (buf_len < (size_t)COLS) {
+		buf[buf_len++] = FILLER;
+	}
+	buf[COLS] = 0;
 
-    if (colorpair)
-        wattron(win_middle, colorpair);
-    mvwaddstr(win_middle, row, 0, buf);
-    if (colorpair)
-        wattroff(win_middle, colorpair);
+	/*
+	 * Show markers if we're horizontal scrolling
+	 */
+	if (col_step) {
+		buf[0] = '<';
+		if (COLS >= 2)
+			buf[COLS - 2] = '>';
+	}
+
+	/*
+	 * Find the color of the string
+	 */
+	if (tune && now_playing_tune && tune->path == now_playing_tune->path)
+		colorpair = highlight ? COLOR_PAIR(4) : COLOR_PAIR(3);
+	else if (tune_in_playlist(tune))
+		colorpair = highlight ? COLOR_PAIR(7) : COLOR_PAIR(6);
+	else if (highlight)
+		colorpair = COLOR_PAIR(5);
+	else
+		colorpair = 0;
+
+	if (colorpair)
+		wattron(win_middle, colorpair);
+	mvwaddstr(win_middle, row, 0, buf);
+	if (colorpair)
+		wattroff(win_middle, colorpair);
 }
 
-void draw_bottom_FXX_help(const char *key, const char *help)
-{
-    wstandout(win_bottom);
-    waddstr(win_bottom, key);
-    wstandend(win_bottom);
-    waddstr(win_bottom, help);
+void draw_bottom_FXX_help(const char *key, const char *help) {
+	wstandout(win_bottom);
+	waddstr(win_bottom, key);
+	wstandend(win_bottom);
+	waddstr(win_bottom, help);
 }
 
-void draw_centered(WINDOW *w, int row, const char *format, ...)
-{
-    va_list va;
-    char buf[1024];
+void draw_centered(WINDOW *w, int row, const char *format, ...) {
+	va_list va;
+	char buf[1024];
 
-    va_start(va, format);
-    vsnprintf(buf, sizeof(buf), format, va);
-    va_end(va);
+	va_start(va, format);
+	vsnprintf(buf, sizeof(buf), format, va);
+	va_end(va);
 
-    mvwaddstr(w, row, (COLS - strlen(buf)) / 2, buf);
+	mvwaddstr(w, row, (COLS - strlen(buf)) / 2, buf);
 }
 
-void refresh_screen(void)
-{
-    static bool show_splash = true;
-    int row;
+void refresh_screen(void) {
+	static bool show_splash = true;
+	int row;
 
-    /*
-     * top
-     */
-    werase(win_top);
-    mvwaddstr(win_top, 0, 0, search_string);
+	/*
+	 * top
+	 */
+	werase(win_top);
+	mvwaddstr(win_top, 0, 0, search_string);
 
-    /*
-     * info
-     */
-    wbkgd(win_info, COLOR_PAIR(2));
-    werase(win_info);
-    if (now_playing_tune)
-        mvwaddstr(win_info, 0, 0, now_playing_tune->display);
+	/*
+	 * info
+	 */
+	wbkgd(win_info, COLOR_PAIR(2));
+	werase(win_info);
+	if (now_playing_tune)
+		mvwaddstr(win_info, 0, 0, now_playing_tune->display);
 
-    /*
-     * middle
-     */
-    wbkgd(win_middle, COLOR_PAIR(1));
-    werase(win_middle);  
-    if (show_splash) {
-        draw_centered(win_middle,  3, "  ________.__                .__                     ");
-        draw_centered(win_middle,  4, " /  _____/|  | _____    ____ |__| ________________   ");
-        draw_centered(win_middle,  5, "/   \\  ___|  | \\__  \\ _/ ___\\|  |/ __ \\_  __ \\__  \\  ");
-        draw_centered(win_middle,  6, "\\    \\_\\  \\  |__/ __ \\\\  \\___|  \\  ___/|  | \\/\\/ __ \\_");
-        draw_centered(win_middle,  7, " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
-        draw_centered(win_middle,  8, "        \\/          \\/     \\/        \\/           \\/  ");
-        draw_centered(win_middle,  10, "- Heavy Duty Jukebox -");
-        draw_centered(win_middle, 11, complete_version());
-        draw_centered(win_middle, 12, "Copyright (c) Plux Stahre 2025");
-        draw_centered(win_middle, 14, _("%d songs in database"), allcount);
-        show_splash = false;
-    } else {
-        for (row = 0; row < middlesize; row++) {
-            if (row + toptunenr >= displaycount)
-                break;
-            draw_one_song(row, row + toptunenr, (row + toptunenr) == tunenr);
-        }
-        draw_scrollbar();
-    }
+	/*
+	 * middle
+	 */
+	wbkgd(win_middle, COLOR_PAIR(1));
+	werase(win_middle);
+	if (show_splash) {
+		draw_centered(win_middle, 3,
+			      "  ________.__                .__                     ");
+		draw_centered(win_middle, 4,
+			      " /  _____/|  | _____    ____ |__| ________________   ");
+		draw_centered(win_middle, 5,
+			      "/   \\  ___|  | \\__  \\ _/ ___\\|  |/ __ \\_  __ \\__  \\  ");
+		draw_centered(win_middle, 6,
+			      "\\    \\_\\  \\  |__/ __ \\\\  \\___|  \\  ___/|  | \\/\\/ __ \\_");
+		draw_centered(win_middle, 7,
+			      " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
+		draw_centered(win_middle, 8,
+			      "        \\/          \\/     \\/        \\/           \\/  ");
+		draw_centered(win_middle, 10, "- Heavy Duty Jukebox -");
+		draw_centered(win_middle, 11, complete_version());
+		draw_centered(win_middle, 12, "Copyright (c) Plux Stahre 2025");
+		draw_centered(win_middle, 14, _("%d songs in database"), allcount);
+		show_splash = false;
+	} else {
+		for (row = 0; row < middlesize; row++) {
+			if (row + toptunenr >= displaycount)
+				break;
+			draw_one_song(row, row + toptunenr, (row + toptunenr) == tunenr);
+		}
+		draw_scrollbar();
+	}
 
-    /*
-     * bottom
-     */
-    wbkgd(win_bottom, COLOR_PAIR(2));
-    werase(win_bottom);
-    wmove(win_bottom, 0, 0);
-    draw_bottom_FXX_help("F1", _("Info"));
-    draw_bottom_FXX_help("F2", _("View"));
-    draw_bottom_FXX_help("F3", _("Sort"));
-    draw_bottom_FXX_help("F4", _("Context"));
-    draw_bottom_FXX_help("F5", _("ShowPL"));
-    draw_bottom_FXX_help("F6", _("LoadPL"));
-    draw_bottom_FXX_help("F7", _("SavePL"));
-    draw_bottom_FXX_help("F8", _("Burn"));
-    draw_bottom_FXX_help("F9", _("Time"));
-#ifdef USE_BACK	
-    draw_bottom_FXX_help("F11", _("Back"));
-#endif	
-    draw_bottom_FXX_help("+*", _("Tag"));
+	/*
+	 * bottom
+	 */
+	wbkgd(win_bottom, COLOR_PAIR(2));
+	werase(win_bottom);
+	wmove(win_bottom, 0, 0);
+	draw_bottom_FXX_help("F1", _("Info"));
+	draw_bottom_FXX_help("F2", _("View"));
+	draw_bottom_FXX_help("F3", _("Sort"));
+	draw_bottom_FXX_help("F4", _("Context"));
+	draw_bottom_FXX_help("F5", _("ShowPL"));
+	draw_bottom_FXX_help("F6", _("LoadPL"));
+	draw_bottom_FXX_help("F7", _("SavePL"));
+	draw_bottom_FXX_help("F8", _("Burn"));
+	draw_bottom_FXX_help("F9", _("Time"));
+#ifdef USE_BACK
+	draw_bottom_FXX_help("F11", _("Back"));
+#endif
+	draw_bottom_FXX_help("+*", _("Tag"));
 
-    wnoutrefresh(win_top);
-    wnoutrefresh(win_info);
-    wnoutrefresh(win_middle);
-    wnoutrefresh(win_bottom);
+	wnoutrefresh(win_top);
+	wnoutrefresh(win_info);
+	wnoutrefresh(win_middle);
+	wnoutrefresh(win_bottom);
 }
 
-void user_move_cursor(int delta, int redraw)
-{
-    int count;
+void user_move_cursor(int delta, int redraw) {
+	int count;
 
-    count = abs(delta);
-    delta = (delta < 0) ? -1 : +1;
+	count = abs(delta);
+	delta = (delta < 0) ? -1 : +1;
 
-    while (count--) {
-        if (redraw)
-            draw_one_song(tunenr - toptunenr, tunenr, false);
+	while (count--) {
+		if (redraw)
+			draw_one_song(tunenr - toptunenr, tunenr, false);
 
-        tunenr += delta;
-        if (tunenr >= displaycount - 1)
-            tunenr = displaycount - 1;
-        if (tunenr < 0)
-            tunenr = 0;
+		tunenr += delta;
+		if (tunenr >= displaycount - 1)
+			tunenr = displaycount - 1;
+		if (tunenr < 0)
+			tunenr = 0;
 
-        if ((tunenr - toptunenr >= middlesize) || (tunenr - toptunenr < 0)) {
-            toptunenr += delta;
-            if (redraw) {
-                scrollok(win_middle, true);
-                wscrl(win_middle, delta);
-                scrollok(win_middle, false);
-            }
-        }
+		if ((tunenr - toptunenr >= middlesize) || (tunenr - toptunenr < 0)) {
+			toptunenr += delta;
+			if (redraw) {
+				scrollok(win_middle, true);
+				wscrl(win_middle, delta);
+				scrollok(win_middle, false);
+			}
+		}
 
-        if (redraw) {
-            draw_one_song(tunenr - toptunenr, tunenr, true);
-            draw_scrollbar();
-        }
-    }
+		if (redraw) {
+			draw_one_song(tunenr - toptunenr, tunenr, true);
+			draw_scrollbar();
+		}
+	}
 }
 
-void after_move(void)
-{
-    /* UTF-8 aware cursor positioning */
-    size_t char_pos = 0;
-    for (int i = 0; search_string[i]; ) {
-        int char_len = utf8_char_len_ui((unsigned char)search_string[i]);
-        i += char_len;
-        char_pos++;
-    }
-    wmove(win_top, 0, char_pos);
-    wnoutrefresh(win_top);
+void after_move(void) {
+	/* UTF-8 aware cursor positioning */
+	size_t char_pos = 0;
+	for (int i = 0; search_string[i];) {
+		int char_len = utf8_char_len_ui((unsigned char)search_string[i]);
+		i += char_len;
+		char_pos++;
+	}
+	wmove(win_top, 0, char_pos);
+	wnoutrefresh(win_top);
 }
 
-void update_searchstring(void)
-{
-    werase(win_top);
-    mvwaddstr(win_top, 0, 0, search_string);
+void update_searchstring(void) {
+	werase(win_top);
+	mvwaddstr(win_top, 0, 0, search_string);
 }
 
-void show_info(char *format, ...)
-{
-    va_list va;
+void show_info(char *format, ...) {
+	va_list va;
 
-    va_start(va, format);
-    werase(win_info);
-    vwprintw(win_info, format, va);
-    va_end(va);
+	va_start(va, format);
+	werase(win_info);
+	vwprintw(win_info, format, va);
+	va_end(va);
 
-    wnoutrefresh(win_info);
-    doupdate();
-    showprogressagain = time(NULL) + 5;
+	wnoutrefresh(win_info);
+	doupdate();
+	showprogressagain = time(NULL) + 5;
 }
 
 /* --------------------- E N D  O F  S C R E E N  S T U F F ---------------- */
 
-void append_tune_to_history(struct tune *tune, time_t timestarted)
-{
-    time_t t;
-    struct tm tm;
-    char historyfilename[512];
-    FILE *f;
+void append_tune_to_history(struct tune *tune, time_t timestarted) {
+	time_t t;
+	struct tm tm;
+	char historyfilename[512];
+	FILE *f;
 
-    t = time(NULL);
-    if (!timestarted)
-        timestarted = t;
-    localtime_r(&t, &tm);
-    snprintf(historyfilename, sizeof(historyfilename), "%s%4d_%02d_%02d.list",
-            playlist_dir,
-            1900 + tm.tm_year,
-            1 + tm.tm_mon,
-            tm.tm_mday);
-    f = fopen(historyfilename, "a");
-    if (f) {
-        fprintf(f, "%s\n", tune->display);
-        fprintf(f, "%d\n", (int) timestarted);
-        fclose(f);
-    }
+	t = time(NULL);
+	if (!timestarted)
+		timestarted = t;
+	localtime_r(&t, &tm);
+	snprintf(historyfilename, sizeof(historyfilename), "%s%4d_%02d_%02d.list", playlist_dir,
+		 1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday);
+	f = fopen(historyfilename, "a");
+	if (f) {
+		fprintf(f, "%s\n", tune->display);
+		fprintf(f, "%d\n", (int)timestarted);
+		fclose(f);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-void save_playlist(const char *playlistname)
-{
-    FILE *f;
-    int i;
-    char filename[512];
+void save_playlist(const char *playlistname) {
+	FILE *f;
+	int i;
+	char filename[512];
 
-    strcpy(latest_playlist_name, playlistname);
+	strcpy(latest_playlist_name, playlistname);
 
-    strcpy(filename, playlist_dir);
-    strcat(filename, playlistname);
-    if (!strstr(filename, ".list"))
-        strcat(filename, ".list");
-    f = fopen(filename, "w");
-    if (f) {
-        for (i = 0; i < playlistcount; i++)
-            fprintf(f, "%s\n", playlist[i]->display);
-        fclose(f);
-    }
+	strcpy(filename, playlist_dir);
+	strcat(filename, playlistname);
+	if (!strstr(filename, ".list"))
+		strcat(filename, ".list");
+	f = fopen(filename, "w");
+	if (f) {
+		for (i = 0; i < playlistcount; i++)
+			fprintf(f, "%s\n", playlist[i]->display);
+		fclose(f);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-int alltunes_sort(const void *a, const void *b)
-{
-    return strcasecmp(((struct tune *) a)->display,
-            ((struct tune *) b)->display);
+int alltunes_sort(const void *a, const void *b) {
+	return strcasecmp(((struct tune *)a)->display, ((struct tune *)b)->display);
 }
 
-void store_to_cache(const char *badname, const char *goodname)
-{
-    char cachefilename[512];
-    FILE *f;
+void store_to_cache(const char *badname, const char *goodname) {
+	char cachefilename[512];
+	FILE *f;
 
-    snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache", playlist_dir);
-    f = fopen(cachefilename, "a");
-    if (f) {
-        fprintf(f, "%s\n", badname);
-        fprintf(f, "%s\n", goodname);
-        fclose(f);
-    }
+	snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache",
+		 playlist_dir);
+	f = fopen(cachefilename, "a");
+	if (f) {
+		fprintf(f, "%s\n", badname);
+		fprintf(f, "%s\n", goodname);
+		fclose(f);
+	}
 }
 
-struct tune *get_from_cache(const char *badname)
-{
-    char cachefilename[512];
-    FILE *f;
-    char buf[1024];
-    struct tune *tune = NULL;
-    struct tune key;
+struct tune *get_from_cache(const char *badname) {
+	char cachefilename[512];
+	FILE *f;
+	char buf[1024];
+	struct tune *tune = NULL;
+	struct tune key;
 
-    snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache", playlist_dir);
-    f = fopen(cachefilename, "r");
-    if (!f)
-        return NULL;
+	snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache",
+		 playlist_dir);
+	f = fopen(cachefilename, "r");
+	if (!f)
+		return NULL;
 
-    while (fgets(buf, sizeof(buf), f)) {
-        chop(buf);
-        if (0 == strcmp(badname, buf)) {
-            if (!fgets(buf, sizeof(buf), f))
-                break;
-            chop(buf);
-            key.display = buf;
-            tune = bsearch(&key, (void *) alltunes, allcount, sizeof(struct tune), alltunes_sort);
-            if (tune)
-                break;
-        } else {
-            if (!fgets(buf, sizeof(buf), f))
-                break;
-        }
-    }
-    fclose(f);
+	while (fgets(buf, sizeof(buf), f)) {
+		chop(buf);
+		if (0 == strcmp(badname, buf)) {
+			if (!fgets(buf, sizeof(buf), f))
+				break;
+			chop(buf);
+			key.display = buf;
+			tune = bsearch(&key, (void *)alltunes, allcount, sizeof(struct tune),
+				       alltunes_sort);
+			if (tune)
+				break;
+		} else {
+			if (!fgets(buf, sizeof(buf), f))
+				break;
+		}
+	}
+	fclose(f);
 
-    return tune;
+	return tune;
 }
 
-struct tune *find_tune_by_displayname_harder(const char *buf)
-{
-    int ch;
-    int i;
+struct tune *find_tune_by_displayname_harder(const char *buf) {
+	int ch;
+	int i;
 
-    ch = buf[0];
-    for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
-        if (0 == strcmp(alltunes[i].search, buf))
-            return &alltunes[i];
-    }
+	ch = buf[0];
+	for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
+		if (0 == strcmp(alltunes[i].search, buf))
+			return &alltunes[i];
+	}
 
-    return NULL;
+	return NULL;
 }
 
-struct tune *find_tune_by_displayname(char *displayname, int hardness)
-{
-    struct tune *tune;
-    struct tune key;
-    int i;
-    char buf[1024];
-    int bestresult;
-    int res;
-    int ch;
+struct tune *find_tune_by_displayname(char *displayname, int hardness) {
+	struct tune *tune;
+	struct tune key;
+	int i;
+	char buf[1024];
+	int bestresult;
+	int res;
+	int ch;
 
-    key.display = displayname;
-    tune = bsearch(&key, (void *) alltunes, allcount, sizeof(struct tune), alltunes_sort);
+	key.display = displayname;
+	tune = bsearch(&key, (void *)alltunes, allcount, sizeof(struct tune), alltunes_sort);
 
-    if (!tune && hardness > 0) {
-        tune = get_from_cache(displayname);
-        if (!tune) {
-            strcpy(buf, displayname);
-            only_searchables(buf);
-            tune = find_tune_by_displayname_harder(buf);
+	if (!tune && hardness > 0) {
+		tune = get_from_cache(displayname);
+		if (!tune) {
+			strcpy(buf, displayname);
+			only_searchables(buf);
+			tune = find_tune_by_displayname_harder(buf);
 
-            if (!tune && hardness > 1) {
-                bestresult = -1;
-                ch = buf[0];
-                for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
-                    res = fuzzy(alltunes[i].search, buf);
-                    if (res > 50 && res > bestresult) {
-                        tune = &alltunes[i];
-                        bestresult = res;
-                    }
-                }
-            }
+			if (!tune && hardness > 1) {
+				bestresult = -1;
+				ch = buf[0];
+				for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
+					res = fuzzy(alltunes[i].search, buf);
+					if (res > 50 && res > bestresult) {
+						tune = &alltunes[i];
+						bestresult = res;
+					}
+				}
+			}
 
-            if (tune)
-                store_to_cache(displayname, tune->display);
-        }
-    }
+			if (tune)
+				store_to_cache(displayname, tune->display);
+		}
+	}
 
-    return tune;
+	return tune;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void add_tune_to_playlist(struct tune *tune)
-{
-    if (!tune)
-        return;
+void add_tune_to_playlist(struct tune *tune) {
+	if (!tune)
+		return;
 
-    /*
-     * Is this tune already in the list?
-     * Don't put it there again
-     */
-    if (tune_in_playlist(tune))
-        return;
+	/*
+	 * Is this tune already in the list?
+	 * Don't put it there again
+	 */
+	if (tune_in_playlist(tune))
+		return;
 
-    /*
-     * Make room for one more song in the playlist and insert it.
-     */
-    playlist = realloc(playlist, (playlistcount + 1) * sizeof(void *));
-    playlist[playlistcount++] = tune;
+	/*
+	 * Make room for one more song in the playlist and insert it.
+	 */
+	playlist = realloc(playlist, (playlistcount + 1) * sizeof(void *));
+	playlist[playlistcount++] = tune;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void do_load_playlist(const char *playlistname)
-{
-    FILE *f;
-    char filename[512];
-    char buf[1024];
-    struct tune *tune;
+void do_load_playlist(const char *playlistname) {
+	FILE *f;
+	char filename[512];
+	char buf[1024];
+	struct tune *tune;
 
-    strcpy(filename, playlist_dir);
-    strcat(filename, playlistname);
-    if (!strstr(filename, ".list"))
-        strcat(filename, ".list");
-    f = fopen(filename, "r");
-    if (!f)
-        return;
+	strcpy(filename, playlist_dir);
+	strcat(filename, playlistname);
+	if (!strstr(filename, ".list"))
+		strcat(filename, ".list");
+	f = fopen(filename, "r");
+	if (!f)
+		return;
 
-    playlistcount = 0;
-    strcpy(latest_playlist_name, playlistname);
-    while (fgets(buf, sizeof(buf), f)) {
-        /*
-         * Ignore the "this-song-was-played-on-this-date" line
-         */
-        if (is_all_digits(buf))
-            continue;
+	playlistcount = 0;
+	strcpy(latest_playlist_name, playlistname);
+	while (fgets(buf, sizeof(buf), f)) {
+		/*
+		 * Ignore the "this-song-was-played-on-this-date" line
+		 */
+		if (is_all_digits(buf))
+			continue;
 
-        chop(buf);
-        tune = find_tune_by_displayname(buf, 2);
-        if (!tune) {
-            /*
-             * Oops! The song in the playlist was not found
-             * in the big list! Perhaps it has been renamed?
-             * Indicate with ???'s that this song _is_ in the
-             * list but not available at the moment.
-             */
-            char buf2[1024];
-            strcpy(buf2, "??? ");
-            strcat(buf2, buf);
+		chop(buf);
+		tune = find_tune_by_displayname(buf, 2);
+		if (!tune) {
+			/*
+			 * Oops! The song in the playlist was not found
+			 * in the big list! Perhaps it has been renamed?
+			 * Indicate with ???'s that this song _is_ in the
+			 * list but not available at the moment.
+			 */
+			char buf2[1024];
+			strcpy(buf2, "??? ");
+			strcat(buf2, buf);
 
-            tune = malloc(sizeof(struct tune));
-            tune->path = strdup(buf2);
-            tune->display = strdup(buf2);
-            tune->search = EMPTY_SEARCH;
-            tune->ti = malloc(sizeof(struct tuneinfo));
-            tune->ti->filesize = 0;
-            tune->ti->filedate = 0;
-            tune->ti->duration = 0;
-            tune->ti->bitrate  = 0;
-            tune->ti->genre    = 0;
-            tune->ti->rating   = 0;
-        }
+			tune = malloc(sizeof(struct tune));
+			tune->path = strdup(buf2);
+			tune->display = strdup(buf2);
+			tune->search = EMPTY_SEARCH;
+			tune->ti = malloc(sizeof(struct tuneinfo));
+			tune->ti->filesize = 0;
+			tune->ti->filedate = 0;
+			tune->ti->duration = 0;
+			tune->ti->bitrate = 0;
+			tune->ti->genre = 0;
+			tune->ti->rating = 0;
+		}
 
-        add_tune_to_playlist(tune);
-    }
-    fclose(f);
+		add_tune_to_playlist(tune);
+	}
+	fclose(f);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void precache_a_song(struct tune *tune)
-{
-    int fd;
-    int i;
-    char buf[4096];
+void precache_a_song(struct tune *tune) {
+	int fd;
+	int i;
+	char buf[4096];
 
-    if (!tune)
-        return;
+	if (!tune)
+		return;
 
-    /*
-     * Read the first two 4K pages of the file.
-     * This helps avoid disk I/O latency during playback transitions.
-     */
-    fd = open(tune->path, O_RDONLY);
-    if (-1 != fd) {
-        for (i = 0; i < 2; i++) {
-            if (read(fd, buf, sizeof(buf)) < 0)
-                break;
-        }
-        close(fd);
-    }
+	/*
+	 * Read the first two 4K pages of the file.
+	 * This helps avoid disk I/O latency during playback transitions.
+	 */
+	fd = open(tune->path, O_RDONLY);
+	if (-1 != fd) {
+		for (i = 0; i < 2; i++) {
+			if (read(fd, buf, sizeof(buf)) < 0)
+				break;
+		}
+		close(fd);
+	}
 }
 
 pthread_t cache_next_song_thread_id = 0;
-void *cache_next_song_in_advance_thread(void *arg)
-{
-    precache_a_song(find_next_song(arg));
-    cache_next_song_thread_id = 0;
-    return NULL;
+void *cache_next_song_in_advance_thread(void *arg) {
+	precache_a_song(find_next_song(arg));
+	cache_next_song_thread_id = 0;
+	return NULL;
 }
 
 pthread_t append_tune_to_history_thread_id = 0;
-void *append_tune_to_history_thread(void *arg)
-{
-    append_tune_to_history(arg, started_playing_time);
-    tune_to_save_to_history = NULL;
-    append_tune_to_history_thread_id = 0;
-    return NULL;
+void *append_tune_to_history_thread(void *arg) {
+	append_tune_to_history(arg, started_playing_time);
+	tune_to_save_to_history = NULL;
+	append_tune_to_history_thread_id = 0;
+	return NULL;
 }
 
 pthread_t readahead_thread_id = 0;
 int g_percentplayed = 0;
-void *readahead_thread(void *arg)
-{
-    struct tune *tune = arg;
-    int fd;
-    int percentplayed = g_percentplayed;	
-    char buf[4096];
-    off_t readpos;
-    int i;
+void *readahead_thread(void *arg) {
+	struct tune *tune = arg;
+	int fd;
+	int percentplayed = g_percentplayed;
+	char buf[4096];
+	off_t readpos;
+	int i;
 
-    if (percentplayed < 100 
-            && tune 
-            && tune->ti 
-            && tune->ti->filesize) {
-        fd = open(tune->path, O_RDONLY);
-        if (fd != -1) {
-            readpos = (tune->ti->filesize / 100L) * percentplayed;
-            if (-1 != lseek(fd, readpos, SEEK_SET)) {
-                for (i = 0; i < 16; i++) {
-                    if (read(fd, buf, sizeof(buf)) < 0)
-                        break;
-                }
-            }
-            close(fd);
-        }
-    }
+	if (percentplayed < 100 && tune && tune->ti && tune->ti->filesize) {
+		fd = open(tune->path, O_RDONLY);
+		if (fd != -1) {
+			readpos = (tune->ti->filesize / 100L) * percentplayed;
+			if (-1 != lseek(fd, readpos, SEEK_SET)) {
+				for (i = 0; i < 16; i++) {
+					if (read(fd, buf, sizeof(buf)) < 0)
+						break;
+				}
+			}
+			close(fd);
+		}
+	}
 
-    readahead_thread_id = 0;
-    return NULL;
+	readahead_thread_id = 0;
+	return NULL;
 }
 
-void parse_shoutcaststream_log(char *result)
-{
-    FILE *f;
-    char buf[1024];
-    char *p;
+void parse_shoutcaststream_log(char *result) {
+	FILE *f;
+	char buf[1024];
+	char *p;
 
-    f = fopen(GLACIERA_PIPE, "r");
-    if (!f)
-        return;
+	f = fopen(GLACIERA_PIPE, "r");
+	if (!f)
+		return;
 
-    /*
-     * The logfile from mplayer contains lines looking like this; 	
-     * ICY Info: StreamTitle='Diskonnekted - Eternal [v2.0 break]';StreamUrl='http://www.rantradio.com';
-     *                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     *                        This is what we want, the title of the song
-     */
-    while (fgets(buf, sizeof(buf), f)) {
-        if (strstr(buf, "StreamTitle")) {	/* Don't localize */
-            p = strstr(buf, "='");
-            if (p) {
-                strcpy(result, p + 2);
-                p = strstr(result, "';");
-                if (p)
-                    *p = '\0';
-            }
-        }
-    }
-    fclose(f);
+	/*
+	 * The logfile from mplayer contains lines looking like this;
+	 * ICY Info: StreamTitle='Diskonnekted - Eternal [v2.0
+	 * break]';StreamUrl='http://www.rantradio.com';
+	 *                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	 *                        This is what we want, the title of the song
+	 */
+	while (fgets(buf, sizeof(buf), f)) {
+		if (strstr(buf, "StreamTitle")) { /* Don't localize */
+			p = strstr(buf, "='");
+			if (p) {
+				strcpy(result, p + 2);
+				p = strstr(result, "';");
+				if (p)
+					*p = '\0';
+			}
+		}
+	}
+	fclose(f);
 }
 
+void update_song_progress_handler(int sig) {
+	(void)sig;
+	char buf[255];
+	int percentplayed;
+	int secondsleft;
+	int secondsplayed;
+	char bar[1024];
+	int barlength;
 
-void update_song_progress_handler(int sig)
-{
-    (void)sig;
-    char buf[255];
-    int percentplayed;
-    int secondsleft;
-    int secondsplayed;
-    char bar[1024];
-    int barlength;
-
-    if (in_input_mode)
-        goto just_renew_timer;
-    if (in_action)
-        goto just_renew_timer;
+	if (in_input_mode)
+		goto just_renew_timer;
+	if (in_action)
+		goto just_renew_timer;
 
 #ifdef USE_FINISH
-    if (ARG_FINISH == sort_arg) {
-        refresh_screen();
-        after_move();
-        doupdate();
-    }
+	if (ARG_FINISH == sort_arg) {
+		refresh_screen();
+		after_move();
+		doupdate();
+	}
 #endif
 
-    if (time(NULL) < showprogressagain)
-        goto just_renew_timer;
-    if (!now_playing_tune)
-        goto just_renew_timer;
-    if (paused)
-        goto just_renew_timer;
+	if (time(NULL) < showprogressagain)
+		goto just_renew_timer;
+	if (!now_playing_tune)
+		goto just_renew_timer;
+	if (paused)
+		goto just_renew_timer;
 
-    if (!started_playing_time)
-        started_playing_time = time(NULL);
-    secondsplayed = time(NULL) - started_playing_time;
-    secondsleft = now_playing_tune->ti->duration - secondsplayed;
-    if (now_playing_tune->ti->duration)
-        percentplayed = (100 * secondsplayed) / now_playing_tune->ti->duration;
-    else {
-        /*
-         * Don't mess up the display for songs that has no duration
-         */
-        percentplayed = 100;
-        secondsleft = secondsplayed;
-    }
+	if (!started_playing_time)
+		started_playing_time = time(NULL);
+	secondsplayed = time(NULL) - started_playing_time;
+	secondsleft = now_playing_tune->ti->duration - secondsplayed;
+	if (now_playing_tune->ti->duration)
+		percentplayed = (100 * secondsplayed) / now_playing_tune->ti->duration;
+	else {
+		/*
+		 * Don't mess up the display for songs that has no duration
+		 */
+		percentplayed = 100;
+		secondsleft = secondsplayed;
+	}
 
-    /*
-     * Sanity checks to avoid messing up the display.
-     * The maximium allowed songlength is 999 minutes (16 hours)
-     */
-    if (percentplayed < 0)
-        percentplayed = 0;
-    if (percentplayed > 100)
-        percentplayed = 100;
-    if (secondsleft < 0)
-        secondsleft = 0;
-    if (secondsleft > 999*60)
-        secondsleft = 999*60;
+	/*
+	 * Sanity checks to avoid messing up the display.
+	 * The maximium allowed songlength is 999 minutes (16 hours)
+	 */
+	if (percentplayed < 0)
+		percentplayed = 0;
+	if (percentplayed > 100)
+		percentplayed = 100;
+	if (secondsleft < 0)
+		secondsleft = 0;
+	if (secondsleft > 999 * 60)
+		secondsleft = 999 * 60;
 
-    barlength = COLS - 7;
-    memset(bar, ' ', barlength);
-    sprintf(&bar[barlength-4], "%3d%%", percentplayed); 	/* Yes, use plain old sprintf() */
-    memset(bar, '#', (percentplayed * barlength) / 100);
+	barlength = COLS - 7;
+	memset(bar, ' ', barlength);
+	sprintf(&bar[barlength - 4], "%3d%%", percentplayed); /* Yes, use plain old sprintf() */
+	memset(bar, '#', (percentplayed * barlength) / 100);
 
-    /*
-     * When we're streaming, show the name of the 
-     * current song instead of the #######-bar.  
-     */
-    if (!now_playing_tune->ti->duration)
-        parse_shoutcaststream_log(bar);
+	/*
+	 * When we're streaming, show the name of the
+	 * current song instead of the #######-bar.
+	 */
+	if (!now_playing_tune->ti->duration)
+		parse_shoutcaststream_log(bar);
 
-    /*
-     * Limit the length of the bar so it doesn't go beyond the screen.
-     */
-    bar[barlength] = 0;
+	/*
+	 * Limit the length of the bar so it doesn't go beyond the screen.
+	 */
+	bar[barlength] = 0;
 
-    snprintf(buf, sizeof(buf), "%3d:%02d %s", secondsleft / 60, secondsleft % 60, bar);
-    werase(win_info);
-    mvwaddstr(win_info, 0, 0, buf);
-    wnoutrefresh(win_info);
-    after_move();
-    doupdate();
+	snprintf(buf, sizeof(buf), "%3d:%02d %s", secondsleft / 60, secondsleft % 60, bar);
+	werase(win_info);
+	mvwaddstr(win_info, 0, 0, buf);
+	wnoutrefresh(win_info);
+	after_move();
+	doupdate();
 
-    /*
-     * Pre-load the next song ten seconds before this song ends
-     */
-    if (secondsleft < 10 && !cache_next_song_thread_id) {
-        pthread_create(&cache_next_song_thread_id,
-                &detachedattr,
-                &cache_next_song_in_advance_thread,
-                now_playing_tune);
-    }
+	/*
+	 * Pre-load the next song ten seconds before this song ends
+	 */
+	if (secondsleft < 10 && !cache_next_song_thread_id) {
+		pthread_create(&cache_next_song_thread_id, &detachedattr,
+			       &cache_next_song_in_advance_thread, now_playing_tune);
+	}
 
-    /*
-     * !!2005-05-12 KB
-     * Save to history if song has been played at least 50% of its length
-     * or for at least 240 seconds (4minutes)
-     */
-    if (percentplayed >= 50 || secondsplayed >= 240) {
-        if (tune_to_save_to_history && !append_tune_to_history_thread_id) {
-            pthread_create(&append_tune_to_history_thread_id,
-                    &detachedattr,
-                    &append_tune_to_history_thread,
-                    tune_to_save_to_history);
-        }
-    }
+	/*
+	 * !!2005-05-12 KB
+	 * Save to history if song has been played at least 50% of its length
+	 * or for at least 240 seconds (4minutes)
+	 */
+	if (percentplayed >= 50 || secondsplayed >= 240) {
+		if (tune_to_save_to_history && !append_tune_to_history_thread_id) {
+			pthread_create(&append_tune_to_history_thread_id, &detachedattr,
+				       &append_tune_to_history_thread, tune_to_save_to_history);
+		}
+	}
 
-    /*
-     * !!2005-05-13 KB
-     * To avoid skips, cache a few seconds ahead from the 
-     * current position in the file
-     */
-    if (opt_read_ahead && !readahead_thread_id) {
-        g_percentplayed = percentplayed;
-        pthread_create(&readahead_thread_id,
-                &detachedattr,
-                &readahead_thread,
-                now_playing_tune);
-    }
+	/*
+	 * !!2005-05-13 KB
+	 * To avoid skips, cache a few seconds ahead from the
+	 * current position in the file
+	 */
+	if (opt_read_ahead && !readahead_thread_id) {
+		g_percentplayed = percentplayed;
+		pthread_create(&readahead_thread_id, &detachedattr, &readahead_thread,
+			       now_playing_tune);
+	}
 
 just_renew_timer:
-    alarm(1);
+	alarm(1);
 }
 
 /* -------------------------------------------------------------------------- */
 
-void stop_playing(pid_t pid)
-{
-    signal(SIGCHLD, SIG_IGN);
+void stop_playing(pid_t pid) {
+	signal(SIGCHLD, SIG_IGN);
 
-    /*
-     * !!2005-05-19KB 
-     * Changed from SIGKILL to SIGTERM.
-     * Fixes the annoying SAMBA error messages on Red Hat 9.
-     */
-    kill(pid, SIGTERM);
+	/*
+	 * !!2005-05-19KB
+	 * Changed from SIGKILL to SIGTERM.
+	 * Fixes the annoying SAMBA error messages on Red Hat 9.
+	 */
+	kill(pid, SIGTERM);
 
-    waitpid(pid, NULL, 0);
+	waitpid(pid, NULL, 0);
 }
 
-void start_play(int userpressed_enter, struct tune *tune)
-{
-    /* TODO: display only the n last characters if the string is long */
-    if (userpressed_enter)
-        show_info(_("Loading '%s'..."), tune->display);
+void start_play(int userpressed_enter, struct tune *tune) {
+	/* TODO: display only the n last characters if the string is long */
+	if (userpressed_enter)
+		show_info(_("Loading '%s'..."), tune->display);
 
-    /*
-     * Cache (preload) the intro of the new song before we stop the
-     * current one to avoid embarrassing silences in the music flow.
-     */
-    precache_a_song(tune);
+	/*
+	 * Cache (preload) the intro of the new song before we stop the
+	 * current one to avoid embarrassing silences in the music flow.
+	 */
+	precache_a_song(tune);
 
-    /*
-     * Now stop the current playing song.
-     */
-    if (player_pid) {
-        stop_playing(player_pid);
-        player_pid = 0;
-    }
+	/*
+	 * Now stop the current playing song.
+	 */
+	if (player_pid) {
+		stop_playing(player_pid);
+		player_pid = 0;
+	}
 
-    now_playing_tune = find_in_alltunes_by_display_pointer(tune->display);
-    
-    /* Use the path directly - UTF-8 is now handled properly throughout */
-    if (!can_open(now_playing_tune->path)) {
-        /*
-         * Yes, finally got rid of the ugly "execl-$JUST$PLAY$NEXT$SONG" hack.
-         */
-        find_and_play_next_handler(0);
-    } else {
-        started_playing_time = time(NULL);
-        tune_to_save_to_history = now_playing_tune;
-        player_pid = fork();
-        if (0 == player_pid) {
-            /*
-             * Redirect the new process' stdout to /tmp/glaciera.stdout,
-             * so we can scan it for lines containing "StreamTitle". 
-             */
-            freopen(GLACIERA_PIPE, "w", stdout);
-            freopen("/dev/null", "w", stderr);
+	now_playing_tune = find_in_alltunes_by_display_pointer(tune->display);
 
-            music_play(now_playing_tune->path);
+	/* Use the path directly - UTF-8 is now handled properly throughout */
+	if (!can_open(now_playing_tune->path)) {
+		/*
+		 * Yes, finally got rid of the ugly "execl-$JUST$PLAY$NEXT$SONG" hack.
+		 */
+		find_and_play_next_handler(0);
+	} else {
+		started_playing_time = time(NULL);
+		tune_to_save_to_history = now_playing_tune;
+		player_pid = fork();
+		if (0 == player_pid) {
+			/*
+			 * Redirect the new process' stdout to /tmp/glaciera.stdout,
+			 * so we can scan it for lines containing "StreamTitle".
+			 */
+			freopen(GLACIERA_PIPE, "w", stdout);
+			freopen("/dev/null", "w", stderr);
 
-            /*
-             * Only reached if, for some reason, the call to execl() fails
-             */        
-            exit(EXIT_FAILURE);
-        }
-    }
+			music_play(now_playing_tune->path);
 
-    /* Adding a new function, to tell other programs
-     * what we are playing.
-     * // Plux
-     */
-    FILE *f;
-    f = fopen("/tmp/glaciera-nowplaying", "w");
-    fprintf(f, "%s", tune->display);
-    fclose(f);
+			/*
+			 * Only reached if, for some reason, the call to execl() fails
+			 */
+			exit(EXIT_FAILURE);
+		}
+	}
 
-    signal(SIGCHLD, find_and_play_next_handler);
-    update_song_progress_handler(0);
+	/* Adding a new function, to tell other programs
+	 * what we are playing.
+	 * // Plux
+	 */
+	FILE *f;
+	f = fopen("/tmp/glaciera-nowplaying", "w");
+	fprintf(f, "%s", tune->display);
+	fclose(f);
+
+	signal(SIGCHLD, find_and_play_next_handler);
+	update_song_progress_handler(0);
 }
 
-void find_and_play_next_handler(int dummyparam)
-{
-    (void)dummyparam;
-    if (wanna_quit)
-        return;
+void find_and_play_next_handler(int dummyparam) {
+	(void)dummyparam;
+	if (wanna_quit)
+		return;
 
-
-    /*
-     * !!20080427 - Fix ugly segfault
-     */
-    if (now_playing_tune)
-        start_play(false, find_next_song(now_playing_tune));
-    refresh_screen();
-    after_move();
-    doupdate();
+	/*
+	 * !!20080427 - Fix ugly segfault
+	 */
+	if (now_playing_tune)
+		start_play(false, find_next_song(now_playing_tune));
+	refresh_screen();
+	after_move();
+	doupdate();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1714,222 +1800,223 @@ void find_and_play_next_handler(int dummyparam)
 int sort_sort_direction = +1;
 
 /*
- * In sort_ARG_DATE() divide by both dates by 86400, (60*60*24) 
- * to discard the hh:mm:ss part of the date since we 
- * don't want the tunes sorted by "yyyy-mm-dd hh:mm:ss", 
+ * In sort_ARG_DATE() divide by both dates by 86400, (60*60*24)
+ * to discard the hh:mm:ss part of the date since we
+ * don't want the tunes sorted by "yyyy-mm-dd hh:mm:ss",
  * "yyyy-mm-dd" is enough.
  */
-int sort_ARG_NORMAL (struct tune *a, struct tune *b) 
-{ 
-    if (needs_strcasecmp_sort)	
-        return strcasecmp(a->display, b->display);
-    else
-        return (BIGPTR)a->display - (BIGPTR) b->display; 
+int sort_ARG_NORMAL(struct tune *a, struct tune *b) {
+	if (needs_strcasecmp_sort)
+		return strcasecmp(a->display, b->display);
+	else
+		return (BIGPTR)a->display - (BIGPTR)b->display;
 }
-int sort_ARG_LENGTH (struct tune *a, struct tune *b) { return a->ti->duration - b->ti->duration;              }
-int sort_ARG_SIZE   (struct tune *a, struct tune *b) { return a->ti->filesize - b->ti->filesize;              }
-int sort_ARG_DATE   (struct tune *a, struct tune *b) { return a->ti->filedate/86400 - b->ti->filedate/86400;  }
-int sort_ARG_BITRATE(struct tune *a, struct tune *b) { return a->ti->bitrate  - b->ti->bitrate;               }
-int sort_ARG_GENRE  (struct tune *a, struct tune *b) { return a->ti->genre    - b->ti->genre;                 }
-int sort_ARG_RATING (struct tune *a, struct tune *b) { return a->ti->rating   - b->ti->rating;                }
-int sort_ARG_PATH   (struct tune *a, struct tune *b) { return strcmp(a->path, b->path);                       }
-int sort_ARG_FINISH (struct tune *a, struct tune *b) { return sort_ARG_NORMAL(a, b);                          }
+int sort_ARG_LENGTH(struct tune *a, struct tune *b) {
+	return a->ti->duration - b->ti->duration;
+}
+int sort_ARG_SIZE(struct tune *a, struct tune *b) {
+	return a->ti->filesize - b->ti->filesize;
+}
+int sort_ARG_DATE(struct tune *a, struct tune *b) {
+	return a->ti->filedate / 86400 - b->ti->filedate / 86400;
+}
+int sort_ARG_BITRATE(struct tune *a, struct tune *b) {
+	return a->ti->bitrate - b->ti->bitrate;
+}
+int sort_ARG_GENRE(struct tune *a, struct tune *b) {
+	return a->ti->genre - b->ti->genre;
+}
+int sort_ARG_RATING(struct tune *a, struct tune *b) {
+	return a->ti->rating - b->ti->rating;
+}
+int sort_ARG_PATH(struct tune *a, struct tune *b) {
+	return strcmp(a->path, b->path);
+}
+int sort_ARG_FINISH(struct tune *a, struct tune *b) {
+	return sort_ARG_NORMAL(a, b);
+}
 
-int (*sort_funcs[]) (struct tune *a, struct tune *b) = {
-    &sort_ARG_NORMAL,
-    &sort_ARG_LENGTH, 	
-    &sort_ARG_SIZE,   	
-    &sort_ARG_DATE,   	
-    &sort_ARG_BITRATE,	
-    &sort_ARG_GENRE,  	
-    &sort_ARG_RATING, 	
-    &sort_ARG_PATH,   	
-    &sort_ARG_FINISH,
+int (*sort_funcs[])(struct tune *a, struct tune *b) = {
+    &sort_ARG_NORMAL, &sort_ARG_LENGTH, &sort_ARG_SIZE, &sort_ARG_DATE,   &sort_ARG_BITRATE,
+    &sort_ARG_GENRE,  &sort_ARG_RATING, &sort_ARG_PATH, &sort_ARG_FINISH,
 };
 
-int sort_sort_function(const void *a, const void *b)
-{
-    struct tune *ta = *((struct tune **) a);
-    struct tune *tb = *((struct tune **) b);
-    int result;
+int sort_sort_function(const void *a, const void *b) {
+	struct tune *ta = *((struct tune **)a);
+	struct tune *tb = *((struct tune **)b);
+	int result;
 
-    result = sort_funcs[sort_arg](ta,tb);
+	result = sort_funcs[sort_arg](ta, tb);
 
-    /*
-     * We have a duplicate (on length, size or date).
-     */
-    if (!result && (sort_arg != ARG_NORMAL))
-        result = sort_ARG_NORMAL(ta, tb);
+	/*
+	 * We have a duplicate (on length, size or date).
+	 */
+	if (!result && (sort_arg != ARG_NORMAL))
+		result = sort_ARG_NORMAL(ta, tb);
 
-    return result * sort_sort_direction;
+	return result * sort_sort_direction;
 }
 
-void do_sort_work(int asort_arg, int asort_direction)
-{
-    int save_sort_arg = sort_arg;
-    int save_sort_sort_direction = sort_sort_direction;
+void do_sort_work(int asort_arg, int asort_direction) {
+	int save_sort_arg = sort_arg;
+	int save_sort_sort_direction = sort_sort_direction;
 
-    sort_arg = asort_arg;
-    sort_sort_direction = asort_direction;
-    qsort((void *) displaytunes, displaycount, sizeof(void *), sort_sort_function);
+	sort_arg = asort_arg;
+	sort_sort_direction = asort_direction;
+	qsort((void *)displaytunes, displaycount, sizeof(void *), sort_sort_function);
 
-    sort_arg = save_sort_arg;
-    sort_sort_direction = save_sort_sort_direction;
+	sort_arg = save_sort_arg;
+	sort_sort_direction = save_sort_sort_direction;
 }
 
-void do_sort(void)
-{
-    static int last_key_count = 0;
+void do_sort(void) {
+	static int last_key_count = 0;
 
-    if (same_key_twice_in_a_row(&last_key_count))
-        sort_sort_direction *= -1;
-    else
-        sort_sort_direction = +1;
+	if (same_key_twice_in_a_row(&last_key_count))
+		sort_sort_direction *= -1;
+	else
+		sort_sort_direction = +1;
 
-    qsort((void *) displaytunes, displaycount, sizeof(void *), sort_sort_function);
-    refresh_screen();
+	qsort((void *)displaytunes, displaycount, sizeof(void *), sort_sort_function);
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
 
-int find_duration_of_playlist(const char *playlistname)
-{
-    FILE *f;
-    char buf[1024];
-    struct tune *tune;
-    int duration;
+int find_duration_of_playlist(const char *playlistname) {
+	FILE *f;
+	char buf[1024];
+	struct tune *tune;
+	int duration;
 
-    /* return 0 for now... */
-    return 0;
+	/* return 0 for now... */
+	return 0;
 
-    f = fopen(playlistname, "r");
-    if (!f)
-        return 0;
+	f = fopen(playlistname, "r");
+	if (!f)
+		return 0;
 
-    duration = 0;
-    while (fgets(buf, sizeof(buf), f)) {
-        /*
-         * Ignore the "this-song-was-played-on-this-date" line
-         */
-        if (is_all_digits(buf))
-            continue;
+	duration = 0;
+	while (fgets(buf, sizeof(buf), f)) {
+		/*
+		 * Ignore the "this-song-was-played-on-this-date" line
+		 */
+		if (is_all_digits(buf))
+			continue;
 
-        chop(buf);
-        tune = find_tune_by_displayname(buf, 0);
-        if (tune)
-            duration += tune->ti->duration;
-    }
-    fclose(f);
+		chop(buf);
+		tune = find_tune_by_displayname(buf, 0);
+		if (tune)
+			duration += tune->ti->duration;
+	}
+	fclose(f);
 
-    return duration;
+	return duration;
 }
 
-void do_show_available_playlists(int all)
-{
-    DIR *pdir;
-    struct dirent *pde;
-    char fullname[1024];
-    struct stat statbuf;
+void do_show_available_playlists(int all) {
+	DIR *pdir;
+	struct dirent *pde;
+	char fullname[1024];
+	struct stat statbuf;
 
-    show_info(_("Generating list..."));
+	show_info(_("Generating list..."));
 
-    pdir = opendir(playlist_dir);
-    if (!pdir)
-        return;
+	pdir = opendir(playlist_dir);
+	if (!pdir)
+		return;
 
-    clear_displaytunes();
-    while (NULL != (pde = readdir(pdir))) {
-        if (!strstr(pde->d_name, ".list"))
-            continue;
+	clear_displaytunes();
+	while (NULL != (pde = readdir(pdir))) {
+		if (!strstr(pde->d_name, ".list"))
+			continue;
 
-        /*
-         * Don't show the autogenerated .list's (2003_12_14)
-         */
-        if ((strlen(pde->d_name)==(4+2+2+4+1+1+1)) && isdigit(pde->d_name[0]) && !all)
-            continue;
+		/*
+		 * Don't show the autogenerated .list's (2003_12_14)
+		 */
+		if ((strlen(pde->d_name) == (4 + 2 + 2 + 4 + 1 + 1 + 1)) &&
+		    isdigit(pde->d_name[0]) && !all)
+			continue;
 
-        strcpy(fullname, playlist_dir);
-        strcat(fullname, pde->d_name);
+		strcpy(fullname, playlist_dir);
+		strcat(fullname, pde->d_name);
 
-        memset(&statbuf, 0, sizeof(statbuf));
-        stat(fullname, &statbuf);
+		memset(&statbuf, 0, sizeof(statbuf));
+		stat(fullname, &statbuf);
 
-        addtexttodisplay(pde->d_name,
-                all ? 0 : find_duration_of_playlist(fullname),
-                statbuf.st_size,
-                statbuf.st_mtime);
-    }
-    closedir(pdir);
+		addtexttodisplay(pde->d_name, all ? 0 : find_duration_of_playlist(fullname),
+				 statbuf.st_size, statbuf.st_mtime);
+	}
+	closedir(pdir);
 
-    /*
-     * Sort playlist in alpha-order
-     */
-    do_sort_work(ARG_NORMAL, 1);
-    refresh_screen();
-    show_info(_("Available play-lists."));
+	/*
+	 * Sort playlist in alpha-order
+	 */
+	do_sort_work(ARG_NORMAL, 1);
+	refresh_screen();
+	show_info(_("Available play-lists."));
 }
 
 /* -------------------------------------------------------------------------- */
 
-void do_view_artists(void)
-{
-    char buf[1024];
-    int i;
-    char *s, *p;
-    struct hashnode *wp;
-    int cmd;
-    int ch;
-    int lo_ch;
-    int hi_ch;
+void do_view_artists(void) {
+	char buf[1024];
+	int i;
+	char *s, *p;
+	struct hashnode *wp;
+	int cmd;
+	int ch;
+	int lo_ch;
+	int hi_ch;
 
-    show_info(_("Enter first letter (A..Z, 0..9) or SPACE for all. "));
-    cmd = wgetch(win_top);
-    if (cmd != ' ' && !isalnum(cmd)) {
-        action(cmd);
-        return;
-    }
+	show_info(_("Enter first letter (A..Z, 0..9) or SPACE for all. "));
+	cmd = wgetch(win_top);
+	if (cmd != ' ' && !isalnum(cmd)) {
+		action(cmd);
+		return;
+	}
 
-    if (' ' == cmd) {
-        lo_ch = '0';
-        hi_ch = 'Z';
-    } else {
-        lo_ch = toupper(cmd);
-        hi_ch = toupper(cmd);
-    }
+	if (' ' == cmd) {
+		lo_ch = '0';
+		hi_ch = 'Z';
+	} else {
+		lo_ch = toupper(cmd);
+		hi_ch = toupper(cmd);
+	}
 
-    hash_init();
-    for (ch = lo_ch; ch <= hi_ch; ch++) {
-        for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
-            strcpy(buf, alltunes[i].display);			
-            s = strstr(buf, " - ");
-            if (s) {
-                while (' ' == *s)
-                    *s-- = 0;
-                p = strrchr(buf, '/');
-                if (p)
-                    *p = 0;
-                if (buf[0])
-                    hash_incword(buf, alltunes[i].ti->duration);
-            }
-        }
-    }
+	hash_init();
+	for (ch = lo_ch; ch <= hi_ch; ch++) {
+		for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
+			strcpy(buf, alltunes[i].display);
+			s = strstr(buf, " - ");
+			if (s) {
+				while (' ' == *s)
+					*s-- = 0;
+				p = strrchr(buf, '/');
+				if (p)
+					*p = 0;
+				if (buf[0])
+					hash_incword(buf, alltunes[i].ti->duration);
+			}
+		}
+	}
 
-    /*
-     * Put the unique words (artists),
-     * into the (unsorted) display list.
-     */
-    clear_displaytunes();
-    for (i = 0; i < NHASH; i++) {
-        for (wp = hashnodebin[i]; wp; wp = wp->next)
-            addtexttodisplay(wp->word, wp->duration, wp->count, 0);
-    }
-    hash_done();
+	/*
+	 * Put the unique words (artists),
+	 * into the (unsorted) display list.
+	 */
+	clear_displaytunes();
+	for (i = 0; i < NHASH; i++) {
+		for (wp = hashnodebin[i]; wp; wp = wp->next)
+			addtexttodisplay(wp->word, wp->duration, wp->count, 0);
+	}
+	hash_done();
 
-    /*
-     * Sort the names of the bands in alpha-order.
-     */
-    do_sort_work(ARG_NORMAL, 1);
-    refresh_screen();
+	/*
+	 * Sort the names of the bands in alpha-order.
+	 */
+	do_sort_work(ARG_NORMAL, 1);
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1939,132 +2026,128 @@ void do_view_artists(void)
  * display
  */
 
-void do_view_toplist(void)
-{
-    DIR *pdir;
-    struct dirent *pde;
-    char fullname[1024];
-    int i;
-    struct tune *findtune;
-    struct tune *tune;
-    struct hashnode *wp;
-    FILE *f;
-    char buf[1024];
+void do_view_toplist(void) {
+	DIR *pdir;
+	struct dirent *pde;
+	char fullname[1024];
+	int i;
+	struct tune *findtune;
+	struct tune *tune;
+	struct hashnode *wp;
+	FILE *f;
+	char buf[1024];
 
-    pdir = opendir(playlist_dir);
-    if (!pdir) {
-        show_info(_("Can't open playlist directory!"));
-        return;
-    }
+	pdir = opendir(playlist_dir);
+	if (!pdir) {
+		show_info(_("Can't open playlist directory!"));
+		return;
+	}
 
-    show_info(_("Generating list, step 1..."));
+	show_info(_("Generating list, step 1..."));
 
-    hash_init();
-    while (NULL != (pde = readdir(pdir))) {
-        if (!isdigit(pde->d_name[0]) || !strstr(pde->d_name, ".list"))
-            continue;
+	hash_init();
+	while (NULL != (pde = readdir(pdir))) {
+		if (!isdigit(pde->d_name[0]) || !strstr(pde->d_name, ".list"))
+			continue;
 
-        strcpy(fullname, playlist_dir);
-        strcat(fullname, pde->d_name);
+		strcpy(fullname, playlist_dir);
+		strcat(fullname, pde->d_name);
 
-        f = fopen(fullname, "r");
-        if (!f)
-            continue;
+		f = fopen(fullname, "r");
+		if (!f)
+			continue;
 
-        while (fgets(buf, sizeof(buf), f)) {
-            /*
-             * Ignore the "this-song-was-played-on-this-date" line
-             */
-            if (is_all_digits(buf))
-                continue;
+		while (fgets(buf, sizeof(buf), f)) {
+			/*
+			 * Ignore the "this-song-was-played-on-this-date" line
+			 */
+			if (is_all_digits(buf))
+				continue;
 
-            chop(buf);
-            hash_incword(buf, 0);
-        }
-        fclose(f);
-    }
-    closedir(pdir);
+			chop(buf);
+			hash_incword(buf, 0);
+		}
+		fclose(f);
+	}
+	closedir(pdir);
 
-    show_info(_("Generating list, step 2..."));
+	show_info(_("Generating list, step 2..."));
 
-    clear_displaytunes();
-    for (i = 0; i < NHASH; i++) {
-        for (wp = hashnodebin[i]; wp; wp = wp->next) {
-            if (wp->count < 10)
-                continue;
+	clear_displaytunes();
+	for (i = 0; i < NHASH; i++) {
+		for (wp = hashnodebin[i]; wp; wp = wp->next) {
+			if (wp->count < 10)
+				continue;
 
-            findtune = find_tune_by_displayname(wp->word, 0);
-            if (findtune && !tune_in_displaylist(findtune)) {
-                tune = malloc(sizeof(struct tune));
-                tune->display  = findtune->display;
-                tune->path     = findtune->path;
-                tune->search   = findtune->search;
-                tune->ti = malloc(sizeof(struct tuneinfo));
-                tune->ti->filesize = wp->count;
-                tune->ti->filedate = findtune->ti->filedate;
-                tune->ti->duration = findtune->ti->duration;
-                tune->ti->bitrate  = findtune->ti->bitrate;
-                tune->ti->genre    = findtune->ti->genre;
-                tune->ti->rating   = findtune->ti->rating;
-                addtunetodisplay(tune);  /* TODO malloc/free */
-            }
-        }
-    }
-    hash_done();
+			findtune = find_tune_by_displayname(wp->word, 0);
+			if (findtune && !tune_in_displaylist(findtune)) {
+				tune = malloc(sizeof(struct tune));
+				tune->display = findtune->display;
+				tune->path = findtune->path;
+				tune->search = findtune->search;
+				tune->ti = malloc(sizeof(struct tuneinfo));
+				tune->ti->filesize = wp->count;
+				tune->ti->filedate = findtune->ti->filedate;
+				tune->ti->duration = findtune->ti->duration;
+				tune->ti->bitrate = findtune->ti->bitrate;
+				tune->ti->genre = findtune->ti->genre;
+				tune->ti->rating = findtune->ti->rating;
+				addtunetodisplay(tune); /* TODO malloc/free */
+			}
+		}
+	}
+	hash_done();
 
-    show_info(_("Generating list 3..."));
+	show_info(_("Generating list 3..."));
 
-    /*
-     * Sort the names of the bands in reverse playcount-alpha-order.
-     */
-    do_sort_work(ARG_SIZE, -1);
-    refresh_screen();
+	/*
+	 * Sort the names of the bands in reverse playcount-alpha-order.
+	 */
+	do_sort_work(ARG_SIZE, -1);
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void do_view_available_genres(void)
-{
-    int genre_count[256];
-    int genre_duration[256];
-    int i;
+void do_view_available_genres(void) {
+	int genre_count[256];
+	int genre_duration[256];
+	int i;
 
-    memset(genre_count, 0, sizeof(genre_count));
-    memset(genre_duration, 0, sizeof(genre_duration));
-    for (i = 0; i < allcount; i++) {
-        genre_count[alltunes[i].ti->genre]++;
-        genre_duration[alltunes[i].ti->genre] += alltunes[i].ti->duration;
-    }
+	memset(genre_count, 0, sizeof(genre_count));
+	memset(genre_duration, 0, sizeof(genre_duration));
+	for (i = 0; i < allcount; i++) {
+		genre_count[alltunes[i].ti->genre]++;
+		genre_duration[alltunes[i].ti->genre] += alltunes[i].ti->duration;
+	}
 
-    clear_displaytunes();
-    for (i = 0; i < 256; i++) {
-        if (genre_count[i] > 10) {
-            addtexttodisplay(genrename(i),
-                    genre_duration[i],
-                    genre_count[i], (i + 1) * -1);
-        }
-    }
+	clear_displaytunes();
+	for (i = 0; i < 256; i++) {
+		if (genre_count[i] > 10) {
+			addtexttodisplay(genrename(i), genre_duration[i], genre_count[i],
+					 (i + 1) * -1);
+		}
+	}
 
-    /*
-     * Sort in on song count in each genre in reverse
-     */
-    do_sort_work(ARG_SIZE, -1);
-    refresh_screen();
-    show_info(_("Available genres."));
+	/*
+	 * Sort in on song count in each genre in reverse
+	 */
+	do_sort_work(ARG_SIZE, -1);
+	refresh_screen();
+	show_info(_("Available genres."));
 }
 
-void do_show_one_genre(int genre)
-{
-    int i;
+void do_show_one_genre(int genre) {
+	int i;
 
-    genre = abs(genre) - 1;
+	genre = abs(genre) - 1;
 
-    clear_displaytunes();
-    for (i = 0; i < allcount; i++) {
-        if (genre == alltunes[i].ti->genre)
-            addtunetodisplay(&alltunes[i]);
-    }
-    refresh_screen();
+	clear_displaytunes();
+	for (i = 0; i < allcount; i++) {
+		if (genre == alltunes[i].ti->genre)
+			addtunetodisplay(&alltunes[i]);
+	}
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2079,405 +2162,418 @@ void do_show_one_genre(int genre)
  *   (which uses lower-order bits)."
  */
 
-time_t addweektotime(time_t t, int weeks)
-{
-    return t + (86400 * (7 * weeks));
+time_t addweektotime(time_t t, int weeks) {
+	return t + (86400 * (7 * weeks));
 }
 
-void do_show_new_songs(void)
-{
-    char buf[1024];
-    int i;
-    char *s;
-    struct hashnode *wp;
-    int cmd;
-    time_t newest;
-    time_t lolimit;
-    time_t hilimit;
+void do_show_new_songs(void) {
+	char buf[1024];
+	int i;
+	char *s;
+	struct hashnode *wp;
+	int cmd;
+	time_t newest;
+	time_t lolimit;
+	time_t hilimit;
 
-    show_info(_("Enter weeks back (1..9) "));
-    cmd = wgetch(win_top);
-    if (!isdigit(cmd)) {
-        action(cmd);
-        return;
-    }
+	show_info(_("Enter weeks back (1..9) "));
+	cmd = wgetch(win_top);
+	if (!isdigit(cmd)) {
+		action(cmd);
+		return;
+	}
 
-    newest = -1;
-    for (i = 0; i < allcount; i++)
-        if (alltunes[i].ti->filedate > newest)
-            newest = alltunes[i].ti->filedate;
-    lolimit = addweektotime(newest, -(cmd - '0'));
-    hilimit = addweektotime(lolimit, 1);
+	newest = -1;
+	for (i = 0; i < allcount; i++)
+		if (alltunes[i].ti->filedate > newest)
+			newest = alltunes[i].ti->filedate;
+	lolimit = addweektotime(newest, -(cmd - '0'));
+	hilimit = addweektotime(lolimit, 1);
 
-    hash_init();
-    for (i = 0; i < allcount; i++) {
-        if (inrange(alltunes[i].ti->filedate, lolimit, hilimit)) {
-            strcpy(buf, alltunes[i].display);
-            s = strchr(buf, '/');
-            if (s)
-                *s = 0;
-            hash_incword(buf, alltunes[i].ti->duration);
-        }
-    }
+	hash_init();
+	for (i = 0; i < allcount; i++) {
+		if (inrange(alltunes[i].ti->filedate, lolimit, hilimit)) {
+			strcpy(buf, alltunes[i].display);
+			s = strchr(buf, '/');
+			if (s)
+				*s = 0;
+			hash_incword(buf, alltunes[i].ti->duration);
+		}
+	}
 
-    /*
-     * Put the unique words (artists),
-     * into the (unsorted) display list.
-     */
-    clear_displaytunes();
-    for (i = 0; i < NHASH; i++) {
-        for (wp = hashnodebin[i]; wp; wp = wp->next)
-            if (wp->count > 1)
-                addtexttodisplay(wp->word, wp->duration, wp->count, 0);
-    }
-    hash_done();
+	/*
+	 * Put the unique words (artists),
+	 * into the (unsorted) display list.
+	 */
+	clear_displaytunes();
+	for (i = 0; i < NHASH; i++) {
+		for (wp = hashnodebin[i]; wp; wp = wp->next)
+			if (wp->count > 1)
+				addtexttodisplay(wp->word, wp->duration, wp->count, 0);
+	}
+	hash_done();
 
-    /*
-     * Sort the names of the bands in alpha-order.
-     */
-    do_sort_work(ARG_NORMAL, 1);
-    refresh_screen();
+	/*
+	 * Sort the names of the bands in alpha-order.
+	 */
+	do_sort_work(ARG_NORMAL, 1);
+	refresh_screen();
 }
 
-void do_view(void)
-{
-    int cmd;
-    int i;
-    time_t newest;
-    time_t lolimit;
-    time_t hilimit;
-    int randomnr;
-    struct tm lotm;
-    struct tm hitm;
+void do_view(void) {
+	int cmd;
+	int i;
+	time_t newest;
+	time_t lolimit;
+	time_t hilimit;
+	int randomnr;
+	struct tm lotm;
+	struct tm hitm;
 
-    show_info(_("View: 0-9=Weeks back  R)andom  T)opList  A)rtists  G)enre  N)ew "));
-    cmd = wgetch(win_top);
-    switch (cmd)
-    {
-        case '0': case '1': case '2': case '3': case '4': 
-        case '5': case '6': case '7': case '8': case '9':
-            if ('0' == cmd)
-                lolimit = time(NULL) - 86400;
-            else {
-                newest = -1;
-                for (i = 0; i < allcount; i++) {
-                    if (alltunes[i].ti->filedate > newest)
-                        newest = alltunes[i].ti->filedate;
-                }
-                lolimit = addweektotime(newest, -(cmd - '0'));
-            }
-            hilimit = addweektotime(lolimit, 1);
+	show_info(_("View: 0-9=Weeks back  R)andom  T)opList  A)rtists  G)enre  N)ew "));
+	cmd = wgetch(win_top);
+	switch (cmd) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		if ('0' == cmd)
+			lolimit = time(NULL) - 86400;
+		else {
+			newest = -1;
+			for (i = 0; i < allcount; i++) {
+				if (alltunes[i].ti->filedate > newest)
+					newest = alltunes[i].ti->filedate;
+			}
+			lolimit = addweektotime(newest, -(cmd - '0'));
+		}
+		hilimit = addweektotime(lolimit, 1);
 
-            clear_displaytunes();
-            for (i = 0; i < allcount; i++) {
-                if (inrange(alltunes[i].ti->filedate, lolimit, hilimit))
-                    addtunetodisplay(&alltunes[i]);
-            }
-            refresh_screen();
+		clear_displaytunes();
+		for (i = 0; i < allcount; i++) {
+			if (inrange(alltunes[i].ti->filedate, lolimit, hilimit))
+				addtunetodisplay(&alltunes[i]);
+		}
+		refresh_screen();
 
-            localtime_r(&lolimit, &lotm);
-            localtime_r(&hilimit, &hitm);
-            show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
-                    1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday,
-                    1900 + hitm.tm_year, 1 + hitm.tm_mon, hitm.tm_mday);
-            break;
+		localtime_r(&lolimit, &lotm);
+		localtime_r(&hilimit, &hitm);
+		show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
+			  1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
+			  1 + hitm.tm_mon, hitm.tm_mday);
+		break;
 
-        case 'R': case 'r':
-            clear_displaytunes();
-            for (i = 0; i < 100; i++) {
-                randomnr = (int) ((1.0*allcount)*random()/(RAND_MAX+1.0));
-                addtunetodisplay(&alltunes[randomnr]);
-            }
-            refresh_screen();
-            break;
+	case 'R':
+	case 'r':
+		clear_displaytunes();
+		for (i = 0; i < 100; i++) {
+			randomnr = (int)((1.0 * allcount) * random() / (RAND_MAX + 1.0));
+			addtunetodisplay(&alltunes[randomnr]);
+		}
+		refresh_screen();
+		break;
 
-        case 'G': case 'g':
-            do_view_available_genres();
-            break;
+	case 'G':
+	case 'g':
+		do_view_available_genres();
+		break;
 
-        case 'T': case 't':
-            do_view_toplist();
-            break;
+	case 'T':
+	case 't':
+		do_view_toplist();
+		break;
 
-        case 'A': case 'a':
-            do_view_artists();
-            break;
+	case 'A':
+	case 'a':
+		do_view_artists();
+		break;
 
-        case 'N': case 'n':
-            do_show_new_songs();
-            break;
+	case 'N':
+	case 'n':
+		do_show_new_songs();
+		break;
 
-        case 'd':
-            clear_displaytunes();
-            for (i = 0; i < allcount-1; i++) {
-                if (0 == strcmp(alltunes[i].search, alltunes[i+1].search)) {
-                    addtunetodisplay(&alltunes[i]);
-                    addtunetodisplay(&alltunes[i+1]);
-                    i++;
-                }
-            }
-            refresh_screen();
-            break;
+	case 'd':
+		clear_displaytunes();
+		for (i = 0; i < allcount - 1; i++) {
+			if (0 == strcmp(alltunes[i].search, alltunes[i + 1].search)) {
+				addtunetodisplay(&alltunes[i]);
+				addtunetodisplay(&alltunes[i + 1]);
+				i++;
+			}
+		}
+		refresh_screen();
+		break;
 
-        case 'D':
-            clear_displaytunes();
-            for (i = 0; i < allcount-1; i++) {
-                if (0 == strcmp(alltunes[i].search, alltunes[i+1].search) &&
-                        (alltunes[i].ti->filesize == alltunes[i+1].ti->filesize ||
-                         alltunes[i].ti->filedate == alltunes[i+1].ti->filedate)) {
-                    addtunetodisplay(&alltunes[i]);
-                    addtunetodisplay(&alltunes[i+1]);
-                    i++;
-                }
-            }
-            refresh_screen();
-            break;
+	case 'D':
+		clear_displaytunes();
+		for (i = 0; i < allcount - 1; i++) {
+			if (0 == strcmp(alltunes[i].search, alltunes[i + 1].search) &&
+			    (alltunes[i].ti->filesize == alltunes[i + 1].ti->filesize ||
+			     alltunes[i].ti->filedate == alltunes[i + 1].ti->filedate)) {
+				addtunetodisplay(&alltunes[i]);
+				addtunetodisplay(&alltunes[i + 1]);
+				i++;
+			}
+		}
+		refresh_screen();
+		break;
 
-        default:
-            action(cmd);
-    }
+	default:
+		action(cmd);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-int is_infofile(const char *filename)
-{
-    char *ext;
+int is_infofile(const char *filename) {
+	char *ext;
 
-    ext = strrchr(filename, '.');
-    if (ext) {
-        if (0 == strcasecmp(ext, ".nfo")) return true;
-        if (0 == strcasecmp(ext, ".txt")) return true;
-        if (0 == strcasecmp(ext, ".doc")) return true;
-    }
+	ext = strrchr(filename, '.');
+	if (ext) {
+		if (0 == strcasecmp(ext, ".nfo"))
+			return true;
+		if (0 == strcasecmp(ext, ".txt"))
+			return true;
+		if (0 == strcasecmp(ext, ".doc"))
+			return true;
+	}
 
-    return false;
+	return false;
 }
 
-void trim_trail(char *s)
-{
-    int i;
+void trim_trail(char *s) {
+	int i;
 
-    for (i = strlen(s) - 1; i >= 0 && isspace(s[i]); i--)
-        s[i] = 0;
+	for (i = strlen(s) - 1; i >= 0 && isspace(s[i]); i--)
+		s[i] = 0;
 }
 
-void do_show_infofiles(void)
-{
-    DIR *pdir;
-    FILE *f;
-    struct dirent *pde;
-    char fullname[1024];
-    char workdir[1024];
-    char text[255];
-    char *p;
-    bool hasinfo = false;
-    int c;
-    int colpos;
-    bool lastempty = true;
+void do_show_infofiles(void) {
+	DIR *pdir;
+	FILE *f;
+	struct dirent *pde;
+	char fullname[1024];
+	char workdir[1024];
+	char text[255];
+	char *p;
+	bool hasinfo = false;
+	int c;
+	int colpos;
+	bool lastempty = true;
 
-    /*
-     * TODO: if no files found in the current directory.
-     *       try the parent directory.
-     */
-    /*
-     * Find the path to the song we're playing now.
-     * Construct "/mp3/thepath/" from "/mp3/thepath/thesong.mp3"
-     */
-    strcpy(workdir, now_playing_tune->path);
-    p = strrchr(workdir, '/');
-    if (p)
-        *++p = 0;
+	/*
+	 * TODO: if no files found in the current directory.
+	 *       try the parent directory.
+	 */
+	/*
+	 * Find the path to the song we're playing now.
+	 * Construct "/mp3/thepath/" from "/mp3/thepath/thesong.mp3"
+	 */
+	strcpy(workdir, now_playing_tune->path);
+	p = strrchr(workdir, '/');
+	if (p)
+		*++p = 0;
 
-    pdir = opendir(workdir);
-    if (!pdir)
-        return;
+	pdir = opendir(workdir);
+	if (!pdir)
+		return;
 
-    while (NULL != (pde = readdir(pdir))) {
-        if (!is_infofile(pde->d_name))
-            continue;
+	while (NULL != (pde = readdir(pdir))) {
+		if (!is_infofile(pde->d_name))
+			continue;
 
-        strcpy(fullname, workdir);
-        strcat(fullname, pde->d_name);
+		strcpy(fullname, workdir);
+		strcat(fullname, pde->d_name);
 
-        f = fopen(fullname, "r");
-        if (!f)
-            continue;
+		f = fopen(fullname, "r");
+		if (!f)
+			continue;
 
-        colpos = 0;
-        while ((c = fgetc(f)) != EOF) {
-            /*
-             * 1. Strip those silly ANSIGRAPH characters
-             * 2. Strip CR & LF characters.
-             *    File can be DOS- or *NIX-style...
-             */
-            if (13 == c)
-                continue;
-            text[colpos++] = c > ' ' ? c : ' ';
-            text[colpos] = 0;
+		colpos = 0;
+		while ((c = fgetc(f)) != EOF) {
+			/*
+			 * 1. Strip those silly ANSIGRAPH characters
+			 * 2. Strip CR & LF characters.
+			 *    File can be DOS- or *NIX-style...
+			 */
+			if (13 == c)
+				continue;
+			text[colpos++] = c > ' ' ? c : ' ';
+			text[colpos] = 0;
 
-            if (colpos > COLS - 2 || 10 == c) {
-                trim_trail(text);
+			if (colpos > COLS - 2 || 10 == c) {
+				trim_trail(text);
 
-                /*
-                 * Don't show two empty lines in a row
-                 */
-                if (!(lastempty && !strlen(text))) {
-                    if (!hasinfo) {
-                        clear_displaytunes();
-                        hasinfo = true;
-                    }
-                    addtexttodisplay(text, 0, 0, 0);
-                }
-                lastempty = !strlen(text);
-                colpos = 0;
-            }
-        }
+				/*
+				 * Don't show two empty lines in a row
+				 */
+				if (!(lastempty && !strlen(text))) {
+					if (!hasinfo) {
+						clear_displaytunes();
+						hasinfo = true;
+					}
+					addtexttodisplay(text, 0, 0, 0);
+				}
+				lastempty = !strlen(text);
+				colpos = 0;
+			}
+		}
 
-        if (hasinfo) {
-            trim_trail(text);
-            if (strlen(text))
-                addtexttodisplay(text, 0, 0, 0);
-        }
-        fclose(f);
-    }
-    closedir(pdir);
+		if (hasinfo) {
+			trim_trail(text);
+			if (strlen(text))
+				addtexttodisplay(text, 0, 0, 0);
+		}
+		fclose(f);
+	}
+	closedir(pdir);
 
-    refresh_screen();
-    if (!hasinfo)
-        show_info(_("No information available."));
+	refresh_screen();
+	if (!hasinfo)
+		show_info(_("No information available."));
 }
 
 /* -------------------------------------------------------------------------- */
 
 #define CONTEXT_LINES 20
 
-void do_context(void)
-{
-    static int last_key_count = 0;
-    static int context_lines = CONTEXT_LINES;
-    int i;
-    int start;
-    int stop;
-    int cmd;
-    char buf[1024];
-    char *s;
-    time_t lolimit;
-    time_t hilimit;
-    struct tm lotm;
-    struct tm hitm;
-    int r1;
-    int r2;
+void do_context(void) {
+	static int last_key_count = 0;
+	static int context_lines = CONTEXT_LINES;
+	int i;
+	int start;
+	int stop;
+	int cmd;
+	char buf[1024];
+	char *s;
+	time_t lolimit;
+	time_t hilimit;
+	struct tm lotm;
+	struct tm hitm;
+	int r1;
+	int r2;
 
-    /*
-     * We must have a song playing to do any of these functions
-     */
-    if (!now_playing_tune) {
-        show_info(_("Nothing is playing!"));
-        return;
-    }
+	/*
+	 * We must have a song playing to do any of these functions
+	 */
+	if (!now_playing_tune) {
+		show_info(_("Nothing is playing!"));
+		return;
+	}
 
-    /*  L=Length  S=Size  P=Path  "); */
-    show_info(_("Context: F4=Songlist  G)enre  A)rtist  D)ate  I)nformation  R)andom "));
-    cmd = wgetch(win_top);
-    switch (cmd) {
-        case KEY_F(4):
-            if (same_key_twice_in_a_row(&last_key_count))
-            context_lines += CONTEXT_LINES;
-            else
-                context_lines = CONTEXT_LINES;
+	/*  L=Length  S=Size  P=Path  "); */
+	show_info(_("Context: F4=Songlist  G)enre  A)rtist  D)ate  I)nformation  R)andom "));
+	cmd = wgetch(win_top);
+	switch (cmd) {
+	case KEY_F(4):
+		if (same_key_twice_in_a_row(&last_key_count))
+			context_lines += CONTEXT_LINES;
+		else
+			context_lines = CONTEXT_LINES;
 
-            start = 0;
-            stop = 0;
-            for (i = 0; i < allcount; i++) { /* TODO: Binary search*/
-                if (&alltunes[i] == now_playing_tune) {
-                    start = i - context_lines;
-                    stop = i + context_lines;
-                    break;
-                }
-            }
+		start = 0;
+		stop = 0;
+		for (i = 0; i < allcount; i++) { /* TODO: Binary search*/
+			if (&alltunes[i] == now_playing_tune) {
+				start = i - context_lines;
+				stop = i + context_lines;
+				break;
+			}
+		}
 
-            if (start < 0)
-                start = 0;
-            if (stop > allcount)
-                stop = allcount;
+		if (start < 0)
+			start = 0;
+		if (stop > allcount)
+			stop = allcount;
 
-            clear_displaytunes();
-            for (i = start; i < stop; i++)
-                addtunetodisplay(&alltunes[i]);
+		clear_displaytunes();
+		for (i = start; i < stop; i++)
+			addtunetodisplay(&alltunes[i]);
 
-            for (i = start; i < stop; i++) {
-                if (&alltunes[i] == now_playing_tune)
-                    break;
-                user_move_cursor(+1, false);
-            }
-            refresh_screen();
+		for (i = start; i < stop; i++) {
+			if (&alltunes[i] == now_playing_tune)
+				break;
+			user_move_cursor(+1, false);
+		}
+		refresh_screen();
 
-            show_info(_("Showing songlist context."));
-            break;
+		show_info(_("Showing songlist context."));
+		break;
 
-        case 'G': case 'g':
-            clear_displaytunes();
-            for (i = 0; i < allcount; i++) {
-                if (now_playing_tune->ti->genre == alltunes[i].ti->genre)
-                    addtunetodisplay(&alltunes[i]);
-            }
-            refresh_screen();
+	case 'G':
+	case 'g':
+		clear_displaytunes();
+		for (i = 0; i < allcount; i++) {
+			if (now_playing_tune->ti->genre == alltunes[i].ti->genre)
+				addtunetodisplay(&alltunes[i]);
+		}
+		refresh_screen();
 
-            show_info(_("Showing genre context (%s)."), genrename(now_playing_tune->ti->genre));
-            break;
+		show_info(_("Showing genre context (%s)."), genrename(now_playing_tune->ti->genre));
+		break;
 
-        case 'A': case 'a':
-            clear_displaytunes();
+	case 'A':
+	case 'a':
+		clear_displaytunes();
 
-            strcpy(buf, now_playing_tune->display);
-            s = strtok(buf, "-");
-            if (s) {
-                only_searchables(s);
-                for (i = 0; i < allcount; i++) {
-                    if (strstr(alltunes[i].search, s))
-                        addtunetodisplay(&alltunes[i]);
-                }
-            }
+		strcpy(buf, now_playing_tune->display);
+		s = strtok(buf, "-");
+		if (s) {
+			only_searchables(s);
+			for (i = 0; i < allcount; i++) {
+				if (strstr(alltunes[i].search, s))
+					addtunetodisplay(&alltunes[i]);
+			}
+		}
 
-            refresh_screen();
-            show_info(_("Showing artist context (%s)."), s);
-            break;
+		refresh_screen();
+		show_info(_("Showing artist context (%s)."), s);
+		break;
 
-        case 'D': case 'd':
-            lolimit = addweektotime(now_playing_tune->ti->filedate, -1);
-            hilimit = addweektotime(now_playing_tune->ti->filedate, +1);
-            clear_displaytunes();
-            for (i = 0; i < allcount; i++) {
-                if (inrange(alltunes[i].ti->filedate, lolimit, hilimit))
-                    addtunetodisplay(&alltunes[i]);
-            }
-            refresh_screen();
+	case 'D':
+	case 'd':
+		lolimit = addweektotime(now_playing_tune->ti->filedate, -1);
+		hilimit = addweektotime(now_playing_tune->ti->filedate, +1);
+		clear_displaytunes();
+		for (i = 0; i < allcount; i++) {
+			if (inrange(alltunes[i].ti->filedate, lolimit, hilimit))
+				addtunetodisplay(&alltunes[i]);
+		}
+		refresh_screen();
 
-            localtime_r(&lolimit, &lotm);
-            localtime_r(&hilimit, &hitm);
-            show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
-                    1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday,
-                    1900 + hitm.tm_year, 1 + hitm.tm_mon, hitm.tm_mday);
-            break;
+		localtime_r(&lolimit, &lotm);
+		localtime_r(&hilimit, &hitm);
+		show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
+			  1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
+			  1 + hitm.tm_mon, hitm.tm_mday);
+		break;
 
-        case 'I': case 'i':
-            do_show_infofiles();
-            break;
+	case 'I':
+	case 'i':
+		do_show_infofiles();
+		break;
 
-        case 'R': case 'r':
-            for (i = 0; i < displaycount; i++) {
-                r1 = (int) ((1.0*displaycount)*random()/(RAND_MAX+1.0));
-                r2 = (int) ((1.0*displaycount)*random()/(RAND_MAX+1.0));
-                if (r1 != r2)
-                    swap(&displaytunes[r1], &displaytunes[r2]);
-            }
-            refresh_screen();
-            break;
+	case 'R':
+	case 'r':
+		for (i = 0; i < displaycount; i++) {
+			r1 = (int)((1.0 * displaycount) * random() / (RAND_MAX + 1.0));
+			r2 = (int)((1.0 * displaycount) * random() / (RAND_MAX + 1.0));
+			if (r1 != r2)
+				swap(&displaytunes[r1], &displaytunes[r2]);
+		}
+		refresh_screen();
+		break;
 
-        default:
-            action(cmd);
-    }
+	default:
+		action(cmd);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2492,40 +2588,40 @@ void do_context(void)
  * can burn the files as a MP3-CD or a real Audio-CD.
  */
 
-void do_burn_playlist(void)
-{
-    int i;
-    char symname[1024];
-    int burned = 0;
-    int error;
-    char *p;
+void do_burn_playlist(void) {
+	int i;
+	char symname[1024];
+	int burned = 0;
+	int error;
+	char *p;
 
-    error = access("/burn", W_OK);
-    if (error) {
-        show_info(_("error: Can't write to directory '/burn'!"));
-        return;
-    }
+	error = access("/burn", W_OK);
+	if (error) {
+		show_info(_("error: Can't write to directory '/burn'!"));
+		return;
+	}
 
-    show_info(_("Preparing for burning..."));
-    for (i = 0; i < playlistcount; i++) {
-        snprintf(symname, sizeof(symname), "/burn/%03d_%s.mp3", 1 + i, playlist[i]->display);
+	show_info(_("Preparing for burning..."));
+	for (i = 0; i < playlistcount; i++) {
+		snprintf(symname, sizeof(symname), "/burn/%03d_%s.mp3", 1 + i,
+			 playlist[i]->display);
 
-        /*
-         * !!2005-04-23 KB
-         * Start replacing /'s with '-' one step beyond the "/burn/" string.
-         */
-        for (p = symname + 7; *p; p++) {
-            if ('/' == *p)
-                *p = '-';
-        }
+		/*
+		 * !!2005-04-23 KB
+		 * Start replacing /'s with '-' one step beyond the "/burn/" string.
+		 */
+		for (p = symname + 7; *p; p++) {
+			if ('/' == *p)
+				*p = '-';
+		}
 
-        if (can_open(playlist[i]->path)) {
-            error = symlink(playlist[i]->path, symname);
-            if (!error)
-                burned++;
-        }
-        show_info(_("%d of %d songs prepared for burning."), burned, playlistcount);
-    }
+		if (can_open(playlist[i]->path)) {
+			error = symlink(playlist[i]->path, symname);
+			if (!error)
+				burned++;
+		}
+		show_info(_("%d of %d songs prepared for burning."), burned, playlistcount);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2535,72 +2631,90 @@ void do_burn_playlist(void)
  */
 #define ONE_KiB 1024
 
-void do_time(void)
-{
-    double total_size;
-    double total_duration;
-    int i;
-    double s, m, h;
-    int ss, mm, hh, days;
-    time_t playends;
-    char suffix[5];
-    int base;
+void do_time(void) {
+	double total_size;
+	double total_duration;
+	int i;
+	double s, m, h;
+	int ss, mm, hh, days;
+	time_t playends;
+	char suffix[5];
+	int base;
 
-    total_size = 0.0;
-    total_duration = 0.0;
-    for (i = 0; i < displaycount; i++) {
-        total_size += displaytunes[i]->ti->filesize;
-        total_duration += displaytunes[i]->ti->duration;
-    }
+	total_size = 0.0;
+	total_duration = 0.0;
+	for (i = 0; i < displaycount; i++) {
+		total_size += displaytunes[i]->ti->filesize;
+		total_duration += displaytunes[i]->ti->duration;
+	}
 
-    base = 0;
-    while (total_size > ONE_KiB) {
-        total_size /= ONE_KiB;
-        base += 3;
-    }
+	base = 0;
+	while (total_size > ONE_KiB) {
+		total_size /= ONE_KiB;
+		base += 3;
+	}
 
-    switch (base) {
-        case  0 : strcpy(suffix, "");    break;
-        case  3 : strcpy(suffix, "Ki");  break;
-        case  6 : strcpy(suffix, "Mi");  break;
-        case  9 : strcpy(suffix, "Gi");  break; /* Giga  2^30 = 1KSongs */
-        case 12 : strcpy(suffix, "Ti");  break; /* Tera  2^40 = 1MSongs */
-        case 15 : strcpy(suffix, "Pi");  break; /* Peta  2^50 = 1GSongs */
-        case 18 : strcpy(suffix, "Ei");  break; /* Exa   2^60 = 1TSongs */
-        case 21 : strcpy(suffix, "Zi");  break; /* Zetta 2^70 = 1PSongs */
-        case 24 : strcpy(suffix, "Yi");  break; /* Yotta 2^80 = 1ESongs */
-        default : strcpy(suffix, "duh"); break; /* can't happen */
-    }
+	switch (base) {
+	case 0:
+		strcpy(suffix, "");
+		break;
+	case 3:
+		strcpy(suffix, "Ki");
+		break;
+	case 6:
+		strcpy(suffix, "Mi");
+		break;
+	case 9:
+		strcpy(suffix, "Gi");
+		break; /* Giga  2^30 = 1KSongs */
+	case 12:
+		strcpy(suffix, "Ti");
+		break; /* Tera  2^40 = 1MSongs */
+	case 15:
+		strcpy(suffix, "Pi");
+		break; /* Peta  2^50 = 1GSongs */
+	case 18:
+		strcpy(suffix, "Ei");
+		break; /* Exa   2^60 = 1TSongs */
+	case 21:
+		strcpy(suffix, "Zi");
+		break; /* Zetta 2^70 = 1PSongs */
+	case 24:
+		strcpy(suffix, "Yi");
+		break; /* Yotta 2^80 = 1ESongs */
+	default:
+		strcpy(suffix, "duh");
+		break; /* can't happen */
+	}
 
-    /*
-     * number of seconds
-     * Seconds to display
-     */
-    s = total_duration;
-    ss = (int) s % 60;
+	/*
+	 * number of seconds
+	 * Seconds to display
+	 */
+	s = total_duration;
+	ss = (int)s % 60;
 
-    /*
-     * number of minutes
-     * Minutes to display
-     */
-    m = (s - ss) / 60;
-    mm = (int) m % 60;
+	/*
+	 * number of minutes
+	 * Minutes to display
+	 */
+	m = (s - ss) / 60;
+	mm = (int)m % 60;
 
-    /*
-     * number of hours
-     */
-    h = (m - mm) / 60;
-    hh = (int) h % 24;
+	/*
+	 * number of hours
+	 */
+	h = (m - mm) / 60;
+	hh = (int)h % 24;
 
-    /*
-     * number of days
-     */
-    days = (h - hh) / 24;
+	/*
+	 * number of days
+	 */
+	days = (h - hh) / 24;
 
-    playends = time(NULL) + total_duration;
-    show_info(_("%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"),
-            displaycount, total_size, suffix, days, hh, mm, ss,
-            ctime(&playends));
+	playends = time(NULL) + total_duration;
+	show_info(_("%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"), displaycount,
+		  total_size, suffix, days, hh, mm, ss, ctime(&playends));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2609,291 +2723,285 @@ void do_time(void)
  * Show the songs in the playlist
  */
 
-void do_show_playlist(void)
-{
-    int i;
+void do_show_playlist(void) {
+	int i;
 
-    clear_displaytunes();
-    for (i = 0; i < playlistcount; i++)
-        addtunetodisplay(playlist[i]);
+	clear_displaytunes();
+	for (i = 0; i < playlistcount; i++)
+		addtunetodisplay(playlist[i]);
 
-    /*
-     * !!2004-01-25 KB
-     * If the current song is in the playlist,
-     * put the cursor at that song.
-     */
-    if (tune_in_playlist(now_playing_tune)) {
-        for (i = 0; i < playlistcount; i++) {
-            if (now_playing_tune == playlist[i])
-                break;
-            user_move_cursor(+1, false);
-        }
-    }
+	/*
+	 * !!2004-01-25 KB
+	 * If the current song is in the playlist,
+	 * put the cursor at that song.
+	 */
+	if (tune_in_playlist(now_playing_tune)) {
+		for (i = 0; i < playlistcount; i++) {
+			if (now_playing_tune == playlist[i])
+				break;
+			user_move_cursor(+1, false);
+		}
+	}
 
-    refresh_screen();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void do_search(void)
-{
-    int matchfirstchar;
-    int matchdirectory;
-    int fuzzysearch;
-    char *p;
-    char lookfor[100];
-    int i;
-    int j;
-    char ** wordlist;
-    int *negatelist;
-    int words;
-    int matches;
-    char buf[1024];
-    int onematch;
-
-    matchfirstchar = isupper(search_string[0]);
-    matchdirectory = '/' == search_string[0];
-    fuzzysearch = '%' == search_string[0];
-
-    /*
-     * !!2005-07-27 KB
-     * If this is a barcode (containing all digits), 
-     * look for a playlist with the name 123456.list.
-     * If there is such a playlist, load it and start
-     * play the first song in that list.	 
-     */
-    if (is_all_digits(search_string)) {
-        do_load_playlist(search_string);
-        if (playlistcount) {
-            do_show_playlist();
-            start_play(true, displaytunes[0]);
-            search_string[0] = last_search_string[0] = 0;
-            return;
-        }
-    }
-
-    /*
-     * How many words is in the search string?
-     */
-    words = 0;
-    strcpy(lookfor, search_string);
-    for (p = strtok(lookfor, " "); p; p = strtok(NULL, " "))
-        words++;
-
-    /*
-     * Construct the wordlist array and each string
-     */
-    wordlist = malloc(words * sizeof(char *));
-    negatelist = malloc(words * sizeof(int));
-    words = 0;
-    strcpy(lookfor, search_string);
-    for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
-        negatelist[words] = strchr(p, '!') ? 1 : 0;
-        wordlist[words] = strdup(p);
-        only_searchables(wordlist[words]);
-        words++;
-    }
-
-    /*
-     * Search for it using SQLite!
-     */
-    clear_displaytunes();
-
-    if (fuzzysearch) {
-        /* Fuzzy search - for now, just do a simple search */
-        strcpy(lookfor, search_string);
-        only_searchables(lookfor);
-
-        /* Use SQLite search */
-        int count = 0;
-        struct db_track **tracks = db_search_tracks(lookfor, &count);
-
-        for (i = 0; i < count; i++) {
-            struct db_track *db_track = tracks[i];
-
-            /* Convert to tune structure and add to display */
-            struct tune *tune = malloc(sizeof(struct tune));
-            if (!tune) {
-                db_free_track(db_track);
-                continue;
-            }
-
-            tune->path = strdup(db_track->filepath);
-            tune->display = strdup(db_track->display_name);
-            tune->search = strdup(db_track->search_text);
-            tune->ti = malloc(sizeof(struct tuneinfo));
-            memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
-
-            addtunetodisplay(tune);
-            db_free_track(db_track);
-        }
-
-        free(tracks);
-    } else {
-        /*
-         * !!2005-09-15 KB
-         * If the first letter is in uppercase, as in the search
-         * string "Cure", we use the qsearch array to do speedy
-         * searches among all artists that begin with "C".
-         * This trick reduces the number of calls to the
-         * strstr() and strcpy() functions, and most importantly
-         * it greatly reduces the accesses to the database.
-         */
-        if (matchfirstchar) {
-            /* For SQLite, we can use LIKE queries for first character matching */
-            /* For now, just do a regular search */
-        }
-
-        /* Build search query for SQLite */
-        char query[1024] = "";
-        for (j = 0; j < words; j++) {
-            if (j > 0) {
-                if (negatelist[j])
-                    strcat(query, " AND ");
-                else
-                    strcat(query, " OR ");
-            } else {
-                if (negatelist[j])
-                    strcpy(query, " NOT ");
-            }
-
-            if (matchdirectory) {
-                strcat(query, "filepath LIKE '%");
-                strcat(query, wordlist[j]);
-                strcat(query, "%'");
-            } else if (matchfirstchar && j == 0) {
-                /* First character match */
-                char first_char[2] = {toupper(wordlist[j][0]), '\0'};
-                strcat(query, "(display_name LIKE '");
-                strcat(query, first_char);
-                strcat(query, "%' OR search_text LIKE '");
-                strcat(query, first_char);
-                strcat(query, "%')");
-            } else {
-                /* Regular search */
-                strcat(query, "(display_name LIKE '%");
-                strcat(query, wordlist[j]);
-                strcat(query, "%' OR search_text LIKE '%");
-                strcat(query, wordlist[j]);
-                strcat(query, "%')");
-            }
-        }
-
-        /* Execute search query */
-        int count = 0;
-        struct db_track **tracks = db_search_tracks(search_string, &count);
-
-        for (i = 0; i < count; i++) {
-            struct db_track *db_track = tracks[i];
-
-            /* Additional filtering for complex search logic */
-            if (matchdirectory) {
-                strcpy(buf, db_track->filepath);
-                only_searchables(buf);
-                p = buf;
-            } else {
-                p = db_track->search_text;
-            }
-
-            matches = 0;
-            for (j = 0; j < words; j++) {
-                if (matchfirstchar && 0 == j) {
-                    /* First character match */
-                    onematch = (p[0] == toupper(wordlist[j][0]));
-                } else {
-                    onematch = (strstr(p, wordlist[j]) != NULL);
-                }
-                if (negatelist[j])
-                    onematch = !onematch;
-                matches += onematch;
-            }
-
-            if (matches == words) {
-                /* Convert to tune structure and add to display */
-                struct tune *tune = malloc(sizeof(struct tune));
-                if (!tune) {
-                    db_free_track(db_track);
-                    continue;
-                }
-
-                tune->path = strdup(db_track->filepath);
-                tune->display = strdup(db_track->display_name);
-                tune->search = strdup(db_track->search_text);
-                tune->ti = malloc(sizeof(struct tuneinfo));
-                memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
-
-                addtunetodisplay(tune);
-            }
-
-            db_free_track(db_track);
-        }
-
-        free(tracks);
-    }
-
-    /*
-     * Free each string and the array
-     */
-    for (i = 0; i < words; i++)
-        free(wordlist[i]);
-    free(negatelist);
-    free(wordlist);
-}
-
-void do_enter(void)
-{
-    if (0 == strcmp(search_string, "zxcv") || 0 == strcmp(search_string, ":wq"))
-    {
-        wanna_quit = true;
-        return;
-    }
-
-    if (0 != strcmp(search_string, last_search_string)) {
-        /*
-         * User has typed new characters since the last <enter>
-         */
-        do_search();
-    } else if (displaycount) {
-        if (displaytunes[tunenr]->search) {
-            start_play(true, displaytunes[tunenr]);
-        } else if (displaytunes[tunenr]->ti->filedate < 0) {
-            do_show_one_genre(displaytunes[tunenr]->ti->filedate);
-        } else if (strstr(displaytunes[tunenr]->display, ".list")) {
-            do_load_playlist(displaytunes[tunenr]->display);
-            do_show_playlist();
-        } else {
-            strcpy(search_string, displaytunes[tunenr]->display);
-            only_searchables(search_string);
-            do_search();
-        }
-    }
-    strcpy(last_search_string, search_string);
-    refresh_screen();
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void do_move_song(int delta)
-{
-    void *here;
-    int newpos;
+void do_search(void) {
+	int matchfirstchar;
+	int matchdirectory;
+	int fuzzysearch;
+	char *p;
+	char lookfor[100];
+	int i;
+	int j;
+	char **wordlist;
+	int *negatelist;
+	int words;
+	int matches;
+	char buf[1024];
+	int onematch;
 
-    newpos = tunenr + delta;
-    if (newpos < 0 || newpos >= displaycount)
-        return;
+	matchfirstchar = isupper(search_string[0]);
+	matchdirectory = '/' == search_string[0];
+	fuzzysearch = '%' == search_string[0];
 
-    here = displaytunes[tunenr];
+	/*
+	 * !!2005-07-27 KB
+	 * If this is a barcode (containing all digits),
+	 * look for a playlist with the name 123456.list.
+	 * If there is such a playlist, load it and start
+	 * play the first song in that list.
+	 */
+	if (is_all_digits(search_string)) {
+		do_load_playlist(search_string);
+		if (playlistcount) {
+			do_show_playlist();
+			start_play(true, displaytunes[0]);
+			search_string[0] = last_search_string[0] = 0;
+			return;
+		}
+	}
 
-    swap(&displaytunes[newpos], &displaytunes[tunenr]);
+	/*
+	 * How many words is in the search string?
+	 */
+	words = 0;
+	strcpy(lookfor, search_string);
+	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " "))
+		words++;
 
-    /*
-     * Are we in the playlist?
-     */
-    if (tunenr < playlistcount && (here == playlist[tunenr]))
-        swap(&playlist[newpos], &playlist[tunenr]);
+	/*
+	 * Construct the wordlist array and each string
+	 */
+	wordlist = malloc(words * sizeof(char *));
+	negatelist = malloc(words * sizeof(int));
+	words = 0;
+	strcpy(lookfor, search_string);
+	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
+		negatelist[words] = strchr(p, '!') ? 1 : 0;
+		wordlist[words] = strdup(p);
+		only_searchables(wordlist[words]);
+		words++;
+	}
 
-    refresh_screen();
+	/*
+	 * Search for it using SQLite!
+	 */
+	clear_displaytunes();
+
+	if (fuzzysearch) {
+		/* Fuzzy search - for now, just do a simple search */
+		strcpy(lookfor, search_string);
+		only_searchables(lookfor);
+
+		/* Use SQLite search */
+		int count = 0;
+		struct db_track **tracks = db_search_tracks(lookfor, &count);
+
+		for (i = 0; i < count; i++) {
+			struct db_track *db_track = tracks[i];
+
+			/* Convert to tune structure and add to display */
+			struct tune *tune = malloc(sizeof(struct tune));
+			if (!tune) {
+				db_free_track(db_track);
+				continue;
+			}
+
+			tune->path = strdup(db_track->filepath);
+			tune->display = strdup(db_track->display_name);
+			tune->search = strdup(db_track->search_text);
+			tune->ti = malloc(sizeof(struct tuneinfo));
+			memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
+
+			addtunetodisplay(tune);
+			db_free_track(db_track);
+		}
+
+		free(tracks);
+	} else {
+		/*
+		 * !!2005-09-15 KB
+		 * If the first letter is in uppercase, as in the search
+		 * string "Cure", we use the qsearch array to do speedy
+		 * searches among all artists that begin with "C".
+		 * This trick reduces the number of calls to the
+		 * strstr() and strcpy() functions, and most importantly
+		 * it greatly reduces the accesses to the database.
+		 */
+		if (matchfirstchar) {
+			/* For SQLite, we can use LIKE queries for first character matching */
+			/* For now, just do a regular search */
+		}
+
+		/* Build search query for SQLite */
+		char query[1024] = "";
+		for (j = 0; j < words; j++) {
+			if (j > 0) {
+				if (negatelist[j])
+					strcat(query, " AND ");
+				else
+					strcat(query, " OR ");
+			} else {
+				if (negatelist[j])
+					strcpy(query, " NOT ");
+			}
+
+			if (matchdirectory) {
+				strcat(query, "filepath LIKE '%");
+				strcat(query, wordlist[j]);
+				strcat(query, "%'");
+			} else if (matchfirstchar && j == 0) {
+				/* First character match */
+				char first_char[2] = {toupper(wordlist[j][0]), '\0'};
+				strcat(query, "(display_name LIKE '");
+				strcat(query, first_char);
+				strcat(query, "%' OR search_text LIKE '");
+				strcat(query, first_char);
+				strcat(query, "%')");
+			} else {
+				/* Regular search */
+				strcat(query, "(display_name LIKE '%");
+				strcat(query, wordlist[j]);
+				strcat(query, "%' OR search_text LIKE '%");
+				strcat(query, wordlist[j]);
+				strcat(query, "%')");
+			}
+		}
+
+		/* Execute search query */
+		int count = 0;
+		struct db_track **tracks = db_search_tracks(search_string, &count);
+
+		for (i = 0; i < count; i++) {
+			struct db_track *db_track = tracks[i];
+
+			/* Additional filtering for complex search logic */
+			if (matchdirectory) {
+				strcpy(buf, db_track->filepath);
+				only_searchables(buf);
+				p = buf;
+			} else {
+				p = db_track->search_text;
+			}
+
+			matches = 0;
+			for (j = 0; j < words; j++) {
+				if (matchfirstchar && 0 == j) {
+					/* First character match */
+					onematch = (p[0] == toupper(wordlist[j][0]));
+				} else {
+					onematch = (strstr(p, wordlist[j]) != NULL);
+				}
+				if (negatelist[j])
+					onematch = !onematch;
+				matches += onematch;
+			}
+
+			if (matches == words) {
+				/* Convert to tune structure and add to display */
+				struct tune *tune = malloc(sizeof(struct tune));
+				if (!tune) {
+					db_free_track(db_track);
+					continue;
+				}
+
+				tune->path = strdup(db_track->filepath);
+				tune->display = strdup(db_track->display_name);
+				tune->search = strdup(db_track->search_text);
+				tune->ti = malloc(sizeof(struct tuneinfo));
+				memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
+
+				addtunetodisplay(tune);
+			}
+
+			db_free_track(db_track);
+		}
+
+		free(tracks);
+	}
+
+	/*
+	 * Free each string and the array
+	 */
+	for (i = 0; i < words; i++)
+		free(wordlist[i]);
+	free(negatelist);
+	free(wordlist);
+}
+
+void do_enter(void) {
+	if (0 == strcmp(search_string, "zxcv") || 0 == strcmp(search_string, ":wq")) {
+		wanna_quit = true;
+		return;
+	}
+
+	if (0 != strcmp(search_string, last_search_string)) {
+		/*
+		 * User has typed new characters since the last <enter>
+		 */
+		do_search();
+	} else if (displaycount) {
+		if (displaytunes[tunenr]->search) {
+			start_play(true, displaytunes[tunenr]);
+		} else if (displaytunes[tunenr]->ti->filedate < 0) {
+			do_show_one_genre(displaytunes[tunenr]->ti->filedate);
+		} else if (strstr(displaytunes[tunenr]->display, ".list")) {
+			do_load_playlist(displaytunes[tunenr]->display);
+			do_show_playlist();
+		} else {
+			strcpy(search_string, displaytunes[tunenr]->display);
+			only_searchables(search_string);
+			do_search();
+		}
+	}
+	strcpy(last_search_string, search_string);
+	refresh_screen();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void do_move_song(int delta) {
+	void *here;
+	int newpos;
+
+	newpos = tunenr + delta;
+	if (newpos < 0 || newpos >= displaycount)
+		return;
+
+	here = displaytunes[tunenr];
+
+	swap(&displaytunes[newpos], &displaytunes[tunenr]);
+
+	/*
+	 * Are we in the playlist?
+	 */
+	if (tunenr < playlistcount && (here == playlist[tunenr]))
+		swap(&playlist[newpos], &playlist[tunenr]);
+
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2902,33 +3010,30 @@ void do_move_song(int delta)
  * Show some info about the selected song
  */
 
-void do_query_info(void)
-{
-    static int last_key_count = 0;
-    static bool show_path = false;
-    struct tune *tune;
-    struct tm tm;
+void do_query_info(void) {
+	static int last_key_count = 0;
+	static bool show_path = false;
+	struct tune *tune;
+	struct tm tm;
 
-    if (same_key_twice_in_a_row(&last_key_count))
-        show_path = !show_path;
-    else
-        show_path = false;
+	if (same_key_twice_in_a_row(&last_key_count))
+		show_path = !show_path;
+	else
+		show_path = false;
 
-    tune = displaytunes[tunenr];
+	tune = displaytunes[tunenr];
 
-    if (tune && tune->ti) {	
-        if (show_path) {
-            show_info(tune->path);
-        } else {
-            localtime_r(&tune->ti->filedate, &tm);
-            show_info(_("%4d-%02d-%02d %9d bytes, %02d:%02d minutes, %d kbps, '%s'"),
-                    1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday,
-                    tune->ti->filesize,
-                    tune->ti->duration / 60, tune->ti->duration % 60,
-                    tune->ti->bitrate,
-                    genrename(tune->ti->genre));
-        }
-    }
+	if (tune && tune->ti) {
+		if (show_path) {
+			show_info(tune->path);
+		} else {
+			localtime_r(&tune->ti->filedate, &tm);
+			show_info(_("%4d-%02d-%02d %9d bytes, %02d:%02d minutes, %d kbps, '%s'"),
+				  1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tune->ti->filesize,
+				  tune->ti->duration / 60, tune->ti->duration % 60,
+				  tune->ti->bitrate, genrename(tune->ti->genre));
+		}
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2937,128 +3042,155 @@ void do_query_info(void)
  * Let user select what is displayed to the left of each song
  */
 
-void do_info(void)
-{
-    int cmd;
+void do_info(void) {
+	int cmd;
 
-    show_info(_("Info: N)ormal  L)ength  S)ize  D)ate  B)itrate  G)enre  R)ating  P)ath  F)inish "));
-    cmd = wgetch(win_top);
-    switch (cmd) {
-        case ' ':
-        case 'N': case 'n': sort_arg = ARG_NORMAL;      break;
-        case 'L': case 'l': sort_arg = ARG_LENGTH;      break;
-        case 'S': case 's': sort_arg = ARG_SIZE;        break;
-        case 'D': case 'd': sort_arg = ARG_DATE;        break;
-        case 'B': case 'b': sort_arg = ARG_BITRATE;     break;
-        case 'G': case 'g': sort_arg = ARG_GENRE;       break;
-        case 'R': case 'r': sort_arg = ARG_RATING;      break;
-        case 'P': case 'p': sort_arg = ARG_PATH;        break;
+	show_info(
+	    _("Info: N)ormal  L)ength  S)ize  D)ate  B)itrate  G)enre  R)ating  P)ath  F)inish "));
+	cmd = wgetch(win_top);
+	switch (cmd) {
+	case ' ':
+	case 'N':
+	case 'n':
+		sort_arg = ARG_NORMAL;
+		break;
+	case 'L':
+	case 'l':
+		sort_arg = ARG_LENGTH;
+		break;
+	case 'S':
+	case 's':
+		sort_arg = ARG_SIZE;
+		break;
+	case 'D':
+	case 'd':
+		sort_arg = ARG_DATE;
+		break;
+	case 'B':
+	case 'b':
+		sort_arg = ARG_BITRATE;
+		break;
+	case 'G':
+	case 'g':
+		sort_arg = ARG_GENRE;
+		break;
+	case 'R':
+	case 'r':
+		sort_arg = ARG_RATING;
+		break;
+	case 'P':
+	case 'p':
+		sort_arg = ARG_PATH;
+		break;
 #ifdef USE_FINISH
-        case 'F': case 'f': sort_arg = ARG_FINISH;      break;
+	case 'F':
+	case 'f':
+		sort_arg = ARG_FINISH;
+		break;
 #endif
-        case KEY_F(1):
-                            sort_arg++;
-                            sort_arg %= ARG_MAXVAL;
-                            break;
-        default:
-                            action(cmd);
-                            return;
-    }
+	case KEY_F(1):
+		sort_arg++;
+		sort_arg %= ARG_MAXVAL;
+		break;
+	default:
+		action(cmd);
+		return;
+	}
 
-    show_info(displaytunes[tunenr]->path);
-    refresh_screen();
+	show_info(displaytunes[tunenr]->path);
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
 
-void do_save_displaystate(int state_num)
-{
-    char statefilename[1024];
-    FILE *f;
-    int i;
+void do_save_displaystate(int state_num) {
+	char statefilename[1024];
+	FILE *f;
+	int i;
 
-    snprintf(statefilename, sizeof(statefilename), "%s%d.state", playlist_dir, state_num);
-    f = fopen(statefilename, "w");
-    if (f) {
-        fprintf(f, "%s\n", last_search_string);
-        fprintf(f, "%d\n", tunenr);
-        fprintf(f, "%d\n", toptunenr);
-        fclose(f);
+	snprintf(statefilename, sizeof(statefilename), "%s%d.state", playlist_dir, state_num);
+	f = fopen(statefilename, "w");
+	if (f) {
+		fprintf(f, "%s\n", last_search_string);
+		fprintf(f, "%d\n", tunenr);
+		fprintf(f, "%d\n", toptunenr);
+		fclose(f);
 
-        strcat(statefilename, ".bin");
-        f = fopen(statefilename, "w");
-        if (f) {
-            for (i = 0; i < displaycount; i++)
-                fwrite(&displaytunes[i]->display, sizeof(char *), 1, f);
-            fclose(f);
-        }
-    }
+		strcat(statefilename, ".bin");
+		f = fopen(statefilename, "w");
+		if (f) {
+			for (i = 0; i < displaycount; i++)
+				fwrite(&displaytunes[i]->display, sizeof(char *), 1, f);
+			fclose(f);
+		}
+	}
 }
 
-void do_restore_displaystate(int state_num)
-{
-    char statefilename[1024];
-    char buf[1024];
-    FILE *f;
-    int cnt = 0;
-    char *address;
+void do_restore_displaystate(int state_num) {
+	char statefilename[1024];
+	char buf[1024];
+	FILE *f;
+	int cnt = 0;
+	char *address;
 
-    snprintf(statefilename, sizeof(statefilename), "%s%d.state", playlist_dir, state_num);
-    f = fopen(statefilename, "r");
-    if (!f)
-        return;
+	snprintf(statefilename, sizeof(statefilename), "%s%d.state", playlist_dir, state_num);
+	f = fopen(statefilename, "r");
+	if (!f)
+		return;
 
-    clear_displaytunes_prim(false);
-    while (fgets(buf, sizeof(buf), f)) {
-        chop(buf);
-        switch (cnt++) {
-            case 0 :
-                strcpy(search_string, buf);
-                strcpy(last_search_string, buf);
-                break;
-            case 1 :
-                tunenr = atoi(buf);
-                break;
-            case 2 :
-                toptunenr = atoi(buf);
-                break;
-        }
-    }
-    fclose(f);
+	clear_displaytunes_prim(false);
+	while (fgets(buf, sizeof(buf), f)) {
+		chop(buf);
+		switch (cnt++) {
+		case 0:
+			strcpy(search_string, buf);
+			strcpy(last_search_string, buf);
+			break;
+		case 1:
+			tunenr = atoi(buf);
+			break;
+		case 2:
+			toptunenr = atoi(buf);
+			break;
+		}
+	}
+	fclose(f);
 
-    strcat(statefilename, ".bin");
-    f = fopen(statefilename, "r");
-    if (f) {
-        while (fread(&address, sizeof(char*), 1, f)) 
-            addtunetodisplay(find_in_alltunes_by_display_pointer(address));
-        fclose(f);
-    }
+	strcat(statefilename, ".bin");
+	f = fopen(statefilename, "r");
+	if (f) {
+		while (fread(&address, sizeof(char *), 1, f))
+			addtunetodisplay(find_in_alltunes_by_display_pointer(address));
+		fclose(f);
+	}
 }
 
-void do_state(int cmd)
-{
-    static int state_num = 0;
+void do_state(int cmd) {
+	static int state_num = 0;
 
-    show_info(_("State: S)ave  R)estore D=DEBUG"));
-    if (!cmd)
-        cmd = wgetch(win_top);
-    switch (cmd) {
-        case 'S': case 's':
-            do_save_displaystate(++state_num);
-            show_info(_("State saved (%d)."), state_num);
-            break;
-        case 'R': case 'r':
-            if (state_num)
-                do_restore_displaystate(state_num--);
-            show_info(_("State restored (%d)."), state_num);
-            break;
-        case 'D': case 'd':
-            break;
-        default:
-            action(cmd);
-            return;
-    }
-    refresh_screen();
+	show_info(_("State: S)ave  R)estore D=DEBUG"));
+	if (!cmd)
+		cmd = wgetch(win_top);
+	switch (cmd) {
+	case 'S':
+	case 's':
+		do_save_displaystate(++state_num);
+		show_info(_("State saved (%d)."), state_num);
+		break;
+	case 'R':
+	case 'r':
+		if (state_num)
+			do_restore_displaystate(state_num--);
+		show_info(_("State restored (%d)."), state_num);
+		break;
+	case 'D':
+	case 'd':
+		break;
+	default:
+		action(cmd);
+		return;
+	}
+	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3066,481 +3198,474 @@ void do_state(int cmd)
 /*
  * Handle search string input (backspace and character entry)
  */
-static bool handle_search_input(int key, int *last_space_count)
-{
-    int i;
+static bool handle_search_input(int key, int *last_space_count) {
+	int i;
 
-    /* Handle backspace */
-    if (KEY_BACKSPACE == key || 0x07f == key) {
-        i = strlen(search_string);
-        if (i)
-            search_string[i - 1] = 0;
-        update_searchstring();
-        return true;
-    }
+	/* Handle backspace */
+	if (KEY_BACKSPACE == key || 0x07f == key) {
+		i = strlen(search_string);
+		if (i)
+			search_string[i - 1] = 0;
+		update_searchstring();
+		return true;
+	}
 
-    /* Handle typeable characters and special search chars */
-    if ('!' == key || ':' == key || '%' == key || '/' == key ||
-        ' ' == key || is_typeable_key(key)) {
-        
-        i = strlen(search_string);
-        
-        /* Validate special characters */
-        switch (key) {
-            case ':':
-                /* Don't allow : at beginning or more than one : */
-                if (0 == i || strchr(search_string, ':') != NULL)
-                    return true;
-                break;
+	/* Handle typeable characters and special search chars */
+	if ('!' == key || ':' == key || '%' == key || '/' == key || ' ' == key ||
+	    is_typeable_key(key)) {
+		i = strlen(search_string);
 
-            case ' ':
-                /* Double-tap spacebar advances to next song */
-                if (same_key_twice_in_a_row(last_space_count)) {
-                    if (i)
-                        search_string[i - 1] = 0;
-                    update_searchstring();
-                    *last_space_count = 0;
-                    find_and_play_next_handler(0);
-                    return true;
-                }
-                /* Don't allow space at beginning or double spaces */
-                if (0 == i || ' ' == search_string[i - 1])
-                    return true;
-                break;
+		/* Validate special characters */
+		switch (key) {
+		case ':':
+			/* Don't allow : at beginning or more than one : */
+			if (0 == i || strchr(search_string, ':') != NULL)
+				return true;
+			break;
 
-            case '/':
-                /* Only one '/' at the beginning allowed */
-                if (0 != i)
-                    return true;
-                break;
+		case ' ':
+			/* Double-tap spacebar advances to next song */
+			if (same_key_twice_in_a_row(last_space_count)) {
+				if (i)
+					search_string[i - 1] = 0;
+				update_searchstring();
+				*last_space_count = 0;
+				find_and_play_next_handler(0);
+				return true;
+			}
+			/* Don't allow space at beginning or double spaces */
+			if (0 == i || ' ' == search_string[i - 1])
+				return true;
+			break;
 
-            case '!':
-                /* Don't allow double !'s */
-                if ('!' == search_string[i - 1])
-                    return true;
-                break;
+		case '/':
+			/* Only one '/' at the beginning allowed */
+			if (0 != i)
+				return true;
+			break;
 
-            case '%':
-                /* %'s must be in the beginning */
-                if (0 != i)
-                    return true;
-                break;
-        }
+		case '!':
+			/* Don't allow double !'s */
+			if ('!' == search_string[i - 1])
+				return true;
+			break;
 
-        /* Add character to search string */
-        if (i < 70) {
-            search_string[i++] = key;
-            search_string[i++] = 0;
-            update_searchstring();
-        }
-        return true;
-    }
+		case '%':
+			/* %'s must be in the beginning */
+			if (0 != i)
+				return true;
+			break;
+		}
 
-    return false;
+		/* Add character to search string */
+		if (i < 70) {
+			search_string[i++] = key;
+			search_string[i++] = 0;
+			update_searchstring();
+		}
+		return true;
+	}
+
+	return false;
 }
 
 /*
  * Handle playlist input mode (save or cancel)
  */
-static bool handle_input_mode(int key)
-{
-    if (!in_input_mode)
-        return false;
+static bool handle_input_mode(int key) {
+	if (!in_input_mode)
+		return false;
 
-    switch (key) {
-        case 13:  /* Enter */
-            save_playlist(search_string);
-            show_info(_("Playlist '%s' saved."), search_string);
-            in_input_mode = false;
-            search_string[0] = last_search_string[0] = 0;
-            update_searchstring();
-            break;
-        case 27:  /* Escape */
-            show_info(_("Save cancelled."));
-            in_input_mode = false;
-            search_string[0] = last_search_string[0] = 0;
-            update_searchstring();
-            break;
-    }
-    return true;
+	switch (key) {
+	case 13: /* Enter */
+		save_playlist(search_string);
+		show_info(_("Playlist '%s' saved."), search_string);
+		in_input_mode = false;
+		search_string[0] = last_search_string[0] = 0;
+		update_searchstring();
+		break;
+	case 27: /* Escape */
+		show_info(_("Save cancelled."));
+		in_input_mode = false;
+		search_string[0] = last_search_string[0] = 0;
+		update_searchstring();
+		break;
+	}
+	return true;
 }
 
 /*
  * Handle function keys (F1-F12)
  */
-static bool handle_function_keys(int key)
-{
-    switch (key) {
-        case KEY_F(1):
-            if (!displaycount)
-                return true;
-            do_info();
-            return true;
+static bool handle_function_keys(int key) {
+	switch (key) {
+	case KEY_F(1):
+		if (!displaycount)
+			return true;
+		do_info();
+		return true;
 
-        case KEY_F(2):
-            do_view();
-            return true;
+	case KEY_F(2):
+		do_view();
+		return true;
 
-        case KEY_F(3):
-            do_sort();
-            return true;
+	case KEY_F(3):
+		do_sort();
+		return true;
 
-        case KEY_F(4):
-            do_context();
-            return true;
+	case KEY_F(4):
+		do_context();
+		return true;
 
-        case KEY_F(5):
-            do_show_playlist();
-            return true;
+	case KEY_F(5):
+		do_show_playlist();
+		return true;
 
-        case KEY_F(6):
-            do_show_available_playlists(false);
-            search_string[0] = last_search_string[0] = 0;
-            update_searchstring();
-            return true;
+	case KEY_F(6):
+		do_show_available_playlists(false);
+		search_string[0] = last_search_string[0] = 0;
+		update_searchstring();
+		return true;
 
-        case KEY_F(7):
-            show_info(_("Enter a playlist name."));
-            in_input_mode = true;
-            strcpy(search_string, latest_playlist_name);
-            update_searchstring();
-            return true;
+	case KEY_F(7):
+		show_info(_("Enter a playlist name."));
+		in_input_mode = true;
+		strcpy(search_string, latest_playlist_name);
+		update_searchstring();
+		return true;
 
-        case KEY_F(8):
-            do_burn_playlist();
-            return true;
+	case KEY_F(8):
+		do_burn_playlist();
+		return true;
 
-        case KEY_F(9):
-            do_time();
-            return true;
+	case KEY_F(9):
+		do_time();
+		return true;
 
-        case KEY_F(10):
-            return true;
+	case KEY_F(10):
+		return true;
 
-        case KEY_F(11):
-            load_all_songs();
-            refresh_screen();
-            return true;
+	case KEY_F(11):
+		load_all_songs();
+		refresh_screen();
+		return true;
 
-        case KEY_F(12):
-            do_show_available_playlists(true);
-            search_string[0] = last_search_string[0] = 0;
-            update_searchstring();
-            return true;
-    }
-    return false;
+	case KEY_F(12):
+		do_show_available_playlists(true);
+		search_string[0] = last_search_string[0] = 0;
+		update_searchstring();
+		return true;
+	}
+	return false;
 }
 
 /*
  * Handle navigation keys (arrows, Home, End, Page Up/Down)
  */
-static bool handle_navigation_keys(int key)
-{
-    switch (key) {
-        case KEY_LEFT:
-            col_step -= COLUMN_DELTA;
-            if (col_step < 0)
-                col_step = 0;
-            refresh_screen();
-            return true;
+static bool handle_navigation_keys(int key) {
+	switch (key) {
+	case KEY_LEFT:
+		col_step -= COLUMN_DELTA;
+		if (col_step < 0)
+			col_step = 0;
+		refresh_screen();
+		return true;
 
-        case KEY_RIGHT:
-            if (col_step < 150)
-                col_step += COLUMN_DELTA;
-            refresh_screen();
-            return true;
+	case KEY_RIGHT:
+		if (col_step < 150)
+			col_step += COLUMN_DELTA;
+		refresh_screen();
+		return true;
 
-        case KEY_HOME:
-            tunenr = 0;
-            toptunenr = 0;
-            refresh_screen();
-            return true;
+	case KEY_HOME:
+		tunenr = 0;
+		toptunenr = 0;
+		refresh_screen();
+		return true;
 
-        case KEY_END:
-            tunenr = displaycount - 1;
-            toptunenr = tunenr - middlesize + 1;
-            if (toptunenr < 0)
-                toptunenr = 0;
-            refresh_screen();
-            return true;
+	case KEY_END:
+		tunenr = displaycount - 1;
+		toptunenr = tunenr - middlesize + 1;
+		if (toptunenr < 0)
+			toptunenr = 0;
+		refresh_screen();
+		return true;
 
-        case KEY_DOWN:
-            if (!displaycount)
-                return true;
-            user_move_cursor(+1, true);
-            wnoutrefresh(win_middle);
-            return true;
+	case KEY_DOWN:
+		if (!displaycount)
+			return true;
+		user_move_cursor(+1, true);
+		wnoutrefresh(win_middle);
+		return true;
 
-        case KEY_UP:
-            if (!displaycount)
-                return true;
-            user_move_cursor(-1, true);
-            wnoutrefresh(win_middle);
-            return true;
+	case KEY_UP:
+		if (!displaycount)
+			return true;
+		user_move_cursor(-1, true);
+		wnoutrefresh(win_middle);
+		return true;
 
-        case KEY_NPAGE:
-            if (!displaycount)
-                return true;
-            user_move_cursor(+1*(middlesize - 1), false);
-            wnoutrefresh(win_middle);
-            refresh_screen();
-            return true;
+	case KEY_NPAGE:
+		if (!displaycount)
+			return true;
+		user_move_cursor(+1 * (middlesize - 1), false);
+		wnoutrefresh(win_middle);
+		refresh_screen();
+		return true;
 
-        case KEY_PPAGE:
-            if (!displaycount)
-                return true;
-            user_move_cursor(-1*(middlesize - 1), false);
-            wnoutrefresh(win_middle);
-            refresh_screen();
-            return true;
-    }
-    return false;
+	case KEY_PPAGE:
+		if (!displaycount)
+			return true;
+		user_move_cursor(-1 * (middlesize - 1), false);
+		wnoutrefresh(win_middle);
+		refresh_screen();
+		return true;
+	}
+	return false;
 }
 
 /*
  * Handle special commands (Ctrl keys, +, *, Tab, etc.)
  */
-static bool handle_special_commands(int key)
-{
-    switch (key) {
-        case 27:  /* Escape - clear search */
-            search_string[0] = last_search_string[0] = 0;
-            update_searchstring();
-            return true;
+static bool handle_special_commands(int key) {
+	switch (key) {
+	case 27: /* Escape - clear search */
+		search_string[0] = last_search_string[0] = 0;
+		update_searchstring();
+		return true;
 
-        case 16:  /* Ctrl-P - pause/unpause */
-            if (player_pid) {
-                signal(SIGCHLD, SIG_IGN);
-                kill(player_pid, paused ? SIGCONT : SIGSTOP);
-                if (paused) 
-                    signal(SIGCHLD, find_and_play_next_handler);
-                paused = !paused;
-            }
-            return true;
+	case 16: /* Ctrl-P - pause/unpause */
+		if (player_pid) {
+			signal(SIGCHLD, SIG_IGN);
+			kill(player_pid, paused ? SIGCONT : SIGSTOP);
+			if (paused)
+				signal(SIGCHLD, find_and_play_next_handler);
+			paused = !paused;
+		}
+		return true;
 
-        case 21:  /* Ctrl-U - move song up */
-            if (!displaycount)
-                return true;
-            do_move_song(-1);
-            action(KEY_UP);
-            return true;
+	case 21: /* Ctrl-U - move song up */
+		if (!displaycount)
+			return true;
+		do_move_song(-1);
+		action(KEY_UP);
+		return true;
 
-        case 4:  /* Ctrl-D - move song down */
-            if (!displaycount)
-                return true;
-            do_move_song(+1);
-            action(KEY_DOWN);
-            return true;
+	case 4: /* Ctrl-D - move song down */
+		if (!displaycount)
+			return true;
+		do_move_song(+1);
+		action(KEY_DOWN);
+		return true;
 
-        case '+':
-            if (!displaycount)
-                return true;
-            add_tune_to_playlist(displaytunes[tunenr]); 
-            action(KEY_DOWN);
-            return true;
+	case '+':
+		if (!displaycount)
+			return true;
+		add_tune_to_playlist(displaytunes[tunenr]);
+		action(KEY_DOWN);
+		return true;
 
-        case '*':
-            if (!displaycount)
-                return true;
-            if (now_playing_tune)
-                add_tune_to_playlist(now_playing_tune);
-            add_tune_to_playlist(displaytunes[tunenr]); 
-            action(KEY_DOWN);
-            return true;
+	case '*':
+		if (!displaycount)
+			return true;
+		if (now_playing_tune)
+			add_tune_to_playlist(now_playing_tune);
+		add_tune_to_playlist(displaytunes[tunenr]);
+		action(KEY_DOWN);
+		return true;
 
-        case 9:  /* Tab - query info */
-            if (!displaycount)
-                return true;
-            do_query_info();
-            return true;
+	case 9: /* Tab - query info */
+		if (!displaycount)
+			return true;
+		do_query_info();
+		return true;
 
-        case 12:  /* Ctrl-L - redraw screen */
-            wclear(win_top);
-            wclear(win_info);
-            wclear(win_middle);
-            wclear(win_bottom);
-            refresh_screen();
-            return true;
+	case 12: /* Ctrl-L - redraw screen */
+		wclear(win_top);
+		wclear(win_info);
+		wclear(win_middle);
+		wclear(win_bottom);
+		refresh_screen();
+		return true;
 
-        case KEY_RESIZE:
-            endwin();
-            make_ui();
-            refresh_screen();
-            wclear(win_top);
-            wclear(win_info);
-            wclear(win_middle);
-            wclear(win_bottom);
-            refresh_screen();
-            doupdate();
-            return true;
+	case KEY_RESIZE:
+		endwin();
+		make_ui();
+		refresh_screen();
+		wclear(win_top);
+		wclear(win_info);
+		wclear(win_middle);
+		wclear(win_bottom);
+		refresh_screen();
+		doupdate();
+		return true;
 
-        case 13:  /* Enter */
-        case '>':
-            do_enter();
-            return true;
-    }
-    return false;
+	case 13: /* Enter */
+	case '>':
+		do_enter();
+		return true;
+	}
+	return false;
 }
 
 /*
  * Main keyboard action handler
  * Dispatches to specialized handlers based on key type
  */
-void action(int key)
-{
-    static int last_space_count = 0;
+void action(int key) {
+	static int last_space_count = 0;
 
-    /* Handle search string input */
-    if (handle_search_input(key, &last_space_count))
-        return;
+	/* Handle search string input */
+	if (handle_search_input(key, &last_space_count))
+		return;
 
-    /* Handle playlist input mode */
-    if (handle_input_mode(key))
-        return;
+	/* Handle playlist input mode */
+	if (handle_input_mode(key))
+		return;
 
-    /* Handle function keys */
-    if (handle_function_keys(key))
-        return;
+	/* Handle function keys */
+	if (handle_function_keys(key))
+		return;
 
-    /* Handle navigation keys */
-    if (handle_navigation_keys(key))
-        return;
+	/* Handle navigation keys */
+	if (handle_navigation_keys(key))
+		return;
 
-    /* Handle special commands */
-    if (handle_special_commands(key))
-        return;
+	/* Handle special commands */
+	if (handle_special_commands(key))
+		return;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void print_version(void)
-{
-    printf("GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(), __DATE__ " " __TIME__);
-    printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
-    printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
+void print_version(void) {
+	printf("GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(),
+	       __DATE__ " " __TIME__);
+	printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
+	printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
 }
 
-int main(int argc, char **argv)
-{
-    int arg;
+int main(int argc, char **argv) {
+	int arg;
 
-    /* 
-     * CRITICAL: Set locale before any curses initialization
-     * This enables UTF-8 support in ncurses
-     */
-    setlocale(LC_ALL, "");
+	/*
+	 * CRITICAL: Set locale before any curses initialization
+	 * This enables UTF-8 support in ncurses
+	 */
+	setlocale(LC_ALL, "");
 
 #ifdef USE_GETTEXT
-    /* setup internationalization of message-strings via gettext(): */
-    bindtextdomain("glaciera", "./locale");
-    textdomain("glaciera");
+	/* setup internationalization of message-strings via gettext(): */
+	bindtextdomain("glaciera", "./locale");
+	textdomain("glaciera");
 #endif
 
-    while ((arg = getopt(argc, argv, "hvrs:")) > -1) {
-        switch (arg) {
-            case 'r':
-                opt_read_ahead = 0;
-                break;
-            case 'h':
-            case '?':
-                print_version();
-                printf("usage: glaciera [-h] [-v] [-r]\n");
-                printf("options:\n");
-                printf("	-r                  *Don't* use read ahead\n");
-                exit(0);
-                break;
-            case 'v':
-                print_version();
-                exit(0);
-        }
-    }
+	while ((arg = getopt(argc, argv, "hvrs:")) > -1) {
+		switch (arg) {
+		case 'r':
+			opt_read_ahead = 0;
+			break;
+		case 'h':
+		case '?':
+			print_version();
+			printf("usage: glaciera [-h] [-v] [-r]\n");
+			printf("options:\n");
+			printf("	-r                  *Don't* use read ahead\n");
+			exit(0);
+			break;
+		case 'v':
+			print_version();
+			exit(0);
+		}
+	}
 
-    /*
-     * Detached threads have all resources freed when they terminate.
-     * Joinable threads have state information about the thread 
-     * kept even after they finish.
-     */
-    pthread_attr_init(&detachedattr);
-    pthread_attr_setdetachstate(&detachedattr, PTHREAD_CREATE_DETACHED);
+	/*
+	 * Detached threads have all resources freed when they terminate.
+	 * Joinable threads have state information about the thread
+	 * kept even after they finish.
+	 */
+	pthread_attr_init(&detachedattr);
+	pthread_attr_setdetachstate(&detachedattr, PTHREAD_CREATE_DETACHED);
 
-    print_version();
+	print_version();
 
-    /* Initialize new XDG-compliant configuration system */
-    if (!config_init()) {
-        fprintf(stderr, "Failed to initialize configuration\n");
-        exit(EXIT_FAILURE);
-    }
+	/* Initialize new XDG-compliant configuration system */
+	if (!config_init()) {
+		fprintf(stderr, "Failed to initialize configuration\n");
+		exit(EXIT_FAILURE);
+	}
 
-    /* Populate legacy variables from new config */
-    strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
-    strcat(opt_datapath, "/");
-    strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
-    strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
-    strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
-    strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
-    strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
-    strncpy(opt_flacplayerpath, global_config.flac_player_path, sizeof(opt_flacplayerpath) - 1);
-    strncpy(opt_flacplayerflags, global_config.flac_player_flags, sizeof(opt_flacplayerflags) - 1);
+	/* Populate legacy variables from new config */
+	strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
+	strcat(opt_datapath, "/");
+	strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
+	strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
+	strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
+	strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
+	strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
+	strncpy(opt_flacplayerpath, global_config.flac_player_path, sizeof(opt_flacplayerpath) - 1);
+	strncpy(opt_flacplayerflags, global_config.flac_player_flags,
+		sizeof(opt_flacplayerflags) - 1);
 
-    music_register_all_modules();
+	music_register_all_modules();
 
-    /*
-     * Save the name of the users home direcory for later use.
-     * !!2004-01-22 KB
-     * Use a subdirectory in users home to avoid cluttering the
-     * base directory with playlist files.
-     * Playlists are now stored in /home/joeuser/playlists
-     * The directory is created with 700 permission
-     */
-    strcpy(playlist_dir, getenv("HOME"));
-    strcat(playlist_dir, "/playlists/");
-    mkdir(playlist_dir, 0700);
+	/*
+	 * Save the name of the users home direcory for later use.
+	 * !!2004-01-22 KB
+	 * Use a subdirectory in users home to avoid cluttering the
+	 * base directory with playlist files.
+	 * Playlists are now stored in /home/joeuser/playlists
+	 * The directory is created with 700 permission
+	 */
+	strcpy(playlist_dir, getenv("HOME"));
+	strcat(playlist_dir, "/playlists/");
+	mkdir(playlist_dir, 0700);
 
-    /*
-     * Initialize SQLite database (using XDG_DATA_HOME)
-     */
-    if (!db_init(config_get_db_path())) {
-        printf(_("Failed to initialize database!\n"));
-        exit(0);
-    }
+	/*
+	 * Initialize SQLite database (using XDG_DATA_HOME)
+	 */
+	if (!db_init(config_get_db_path())) {
+		printf(_("Failed to initialize database!\n"));
+		exit(0);
+	}
 
-    build_fastarrays();
-    load_all_songs();
-    if (!allcount) {
-        printf(_("No songs in song database!\n"));
-        exit(0);
-    }
+	build_fastarrays();
+	load_all_songs();
+	if (!allcount) {
+		printf(_("No songs in song database!\n"));
+		exit(0);
+	}
 
-    /*
-     * make random() generate random numbers...
-     */
-    srandom(time(NULL));
+	/*
+	 * make random() generate random numbers...
+	 */
+	srandom(time(NULL));
 
-    /*
-     * Build initial display list which contains *no* songs...
-     */
-    clear_displaytunes_prim(false);
+	/*
+	 * Build initial display list which contains *no* songs...
+	 */
+	clear_displaytunes_prim(false);
 
-    make_ui();
-    refresh_screen();
+	make_ui();
+	refresh_screen();
 
-    signal(SIGALRM, update_song_progress_handler);
-    update_song_progress_handler(0);
-    do {
-        in_action = true;
-        after_move();
-        doupdate();
-        in_action = false;
-        arg = wgetch(win_top);
-        key_count++;
-        in_action = true;
-        action(arg);
-        in_action = false;
-    } while (!wanna_quit);
+	signal(SIGALRM, update_song_progress_handler);
+	update_song_progress_handler(0);
+	do {
+		in_action = true;
+		after_move();
+		doupdate();
+		in_action = false;
+		arg = wgetch(win_top);
+		key_count++;
+		in_action = true;
+		action(arg);
+		in_action = false;
+	} while (!wanna_quit);
 
-    if (player_pid)
-        stop_playing(player_pid);
+	if (player_pid)
+		stop_playing(player_pid);
 
-    endwin();
-    exit(0);
+	endwin();
+	exit(0);
 }
