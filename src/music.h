@@ -1,5 +1,4 @@
-#ifndef __MUSIC_H__
-#define __MUSIC_H__
+#pragma once
 
 #include "common.h"
 
@@ -15,5 +14,3 @@ bool music_info(char *filename, struct tuneinfo *si);
 bool music_metadata(char *filename, struct track_metadata *meta);
 void music_play(char *filename);
 void music_register_all_modules(void);
-
-#endif

@@ -9,8 +9,7 @@
  * of the License, or (at your option) any later version.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -72,5 +71,3 @@ const char *config_get_db_path(void);
 
 /* Get primary music library path (first index path or default) */
 const char *config_get_music_library_path(void);
-
-#endif /* CONFIG_H */

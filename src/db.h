@@ -1,5 +1,4 @@
-#ifndef __DB_H__
-#define __DB_H__
+#pragma once
 
 #include <stdbool.h>
 #include <sqlite3.h>
@@ -47,5 +46,3 @@ int db_get_track_count(void);
 /* Memory management */
 void db_free_track(struct db_track *track);
 void db_free_track_list(struct db_track **tracks, int count);
-
-#endif
