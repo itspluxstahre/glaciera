@@ -3626,6 +3626,13 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Validate that player binaries exist */
+	if (!config_validate_players()) {
+		fprintf(stderr, "Error: One or more player binaries are missing.\n");
+		fprintf(stderr, "Please install them or update your configuration.\n");
+		exit(EXIT_FAILURE);
+	}
+
 	music_register_all_modules();
 
 	/*

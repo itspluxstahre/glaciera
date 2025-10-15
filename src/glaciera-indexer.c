@@ -950,6 +950,9 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Validate that player binaries exist (informational for indexer) */
+	config_validate_players();
+
 	music_register_all_modules();
 	build_fastarrays();
 

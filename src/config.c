@@ -465,3 +465,71 @@ const char *config_get_flac_player_path(void) { return global_config.flac_player
 const char *config_get_flac_player_flags(void) { return global_config.flac_player_flags; }
 
 const char *config_get_rippers_path(void) { return global_config.rippers_path; }
+
+/* Check if an executable exists in PATH or as absolute path */
+static bool check_executable_exists(const char *program) {
+	if (!program || !*program)
+		return false;
+
+	/* If it's an absolute path, check directly */
+	if (program[0] == '/') {
+		return (access(program, X_OK) == 0);
+	}
+
+	/* Otherwise search in PATH */
+	const char *path = getenv("PATH");
+	if (!path)
+		return false;
+
+	char path_copy[4096];
+	strncpy(path_copy, path, sizeof(path_copy) - 1);
+	path_copy[sizeof(path_copy) - 1] = '\0';
+
+	char full_path[4096];
+	char *dir = strtok(path_copy, ":");
+	while (dir) {
+		snprintf(full_path, sizeof(full_path), "%s/%s", dir, program);
+		if (access(full_path, X_OK) == 0)
+			return true;
+		dir = strtok(NULL, ":");
+	}
+
+	return false;
+}
+
+/* Validate that all configured player binaries exist */
+bool config_validate_players(void) {
+	bool all_valid = true;
+
+	/* Check MP3 player */
+	if (!check_executable_exists(global_config.mp3_player_path)) {
+		fprintf(stderr, "Warning: MP3 player '%s' not found or not executable\n",
+			global_config.mp3_player_path);
+		all_valid = false;
+	}
+
+	/* Check OGG player */
+	if (!check_executable_exists(global_config.ogg_player_path)) {
+		fprintf(stderr, "Warning: OGG player '%s' not found or not executable\n",
+			global_config.ogg_player_path);
+		all_valid = false;
+	}
+
+	/* Check FLAC player */
+	if (!check_executable_exists(global_config.flac_player_path)) {
+		fprintf(stderr, "Warning: FLAC player '%s' not found or not executable\n",
+			global_config.flac_player_path);
+		all_valid = false;
+	}
+
+	if (!all_valid) {
+		fprintf(stderr, "\nPlease install the missing players or update the configuration file:\n");
+		fprintf(stderr, "  %s/glaciera.toml\n\n", xdg_config_dir);
+		fprintf(stderr, "Common players:\n");
+		fprintf(stderr, "  MP3:  mpg321, mpg123, ffplay\n");
+		fprintf(stderr, "  OGG:  ogg123, ffplay\n");
+		fprintf(stderr, "  FLAC: flac123, ogg123, ffplay\n\n");
+	}
+
+	return all_valid;
+}

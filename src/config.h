@@ -83,3 +83,6 @@ const char *config_get_ogg_player_flags(void);
 const char *config_get_flac_player_path(void);
 const char *config_get_flac_player_flags(void);
 const char *config_get_rippers_path(void);
+
+/* Validate that configured player binaries exist */
+bool config_validate_players(void);
