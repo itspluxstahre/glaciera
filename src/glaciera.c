@@ -115,6 +115,7 @@ pthread_attr_t detachedattr;
 void action(int key);
 void find_and_play_next_handler(int dummyparam);
 void do_state(int cmd);
+void do_search(void);
 
 /* -------------------------------------------------------------------------- */
 
@@ -1256,6 +1257,17 @@ void after_move(void) {
 void update_searchstring(void) {
 	werase(win_top);
 	mvwaddstr(win_top, 0, 0, search_string);
+}
+
+/*
+ * Trigger search if search string has changed (real-time filtering)
+ */
+void trigger_realtime_search(void) {
+	if (0 != strcmp(search_string, last_search_string)) {
+		do_search();
+		strcpy(last_search_string, search_string);
+		refresh_screen();
+	}
 }
 
 void show_info(char *format, ...) {
@@ -2957,32 +2969,31 @@ void do_search(void) {
 }
 
 void do_enter(void) {
+	/* Handle special quit commands */
 	if (0 == strcmp(search_string, "zxcv") || 0 == strcmp(search_string, ":wq")) {
 		wanna_quit = true;
 		return;
 	}
 
-	if (0 != strcmp(search_string, last_search_string)) {
-		/*
-		 * User has typed new characters since the last <enter>
-		 */
-		do_search();
-	} else if (displaycount) {
+	/* If there are results, perform action on selected item */
+	if (displaycount) {
 		if (displaytunes[tunenr]->search) {
+			/* Play the selected track */
 			start_play(true, displaytunes[tunenr]);
 		} else if (displaytunes[tunenr]->ti->filedate < 0) {
+			/* Show genre listing */
 			do_show_one_genre(displaytunes[tunenr]->ti->filedate);
 		} else if (strstr(displaytunes[tunenr]->display, ".list")) {
+			/* Load and show playlist */
 			do_load_playlist(displaytunes[tunenr]->display);
 			do_show_playlist();
 		} else {
+			/* Search for the selected item's name */
 			strcpy(search_string, displaytunes[tunenr]->display);
 			only_searchables(search_string);
-			do_search();
+			trigger_realtime_search();
 		}
 	}
-	strcpy(last_search_string, search_string);
-	refresh_screen();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3211,6 +3222,7 @@ static bool handle_search_input(int key, int *last_space_count) {
 		if (i)
 			search_string[i - 1] = 0;
 		update_searchstring();
+		trigger_realtime_search();
 		return true;
 	}
 
@@ -3266,6 +3278,7 @@ static bool handle_search_input(int key, int *last_space_count) {
 			search_string[i++] = key;
 			search_string[i++] = 0;
 			update_searchstring();
+			trigger_realtime_search();
 		}
 		return true;
 	}
