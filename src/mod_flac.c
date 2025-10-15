@@ -131,13 +131,11 @@ bool flac_metadata(char *filename, struct track_metadata *meta) {
 /* -------------------------------------------------------------------------- */
 
 bool flac_isit(char *s, int len) {
-	if ((len > 5) && (s[len - 5] == '.') && (s[len - 4] == 'F' || s[len - 4] == 'f') &&
-	    (s[len - 3] == 'L' || s[len - 3] == 'l') && (s[len - 2] == 'A' || s[len - 2] == 'a') &&
-	    (s[len - 1] == 'C' || s[len - 1] == 'c')) {
-		return true;
-	}
+	if (len < 6)
+		return false;
 
-	return false;
+	const char *ext = s + len - 5;
+	return (strcasecmp(ext, ".flac") == 0);
 }
 
 void flac_play(char *filename) {

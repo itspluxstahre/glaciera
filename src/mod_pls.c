@@ -34,17 +34,11 @@ bool pls_info(char *filename, struct tuneinfo *ti) {
 }
 
 bool pls_isit(char *s, int len) {
-	if ((len > 4) && (s[len - 4] == '.') && (s[len - 3] == 'P' || s[len - 3] == 'p') &&
-	    (s[len - 2] == 'L' || s[len - 2] == 'l') && (s[len - 1] == 'S' || s[len - 1] == 's')) {
-		return true;
-	}
+	if (len < 5)
+		return false;
 
-	if ((len > 4) && (s[len - 4] == '.') && (s[len - 3] == 'M' || s[len - 3] == 'm') &&
-	    (s[len - 2] == '3' || s[len - 2] == '3') && (s[len - 1] == 'U' || s[len - 1] == 'u')) {
-		return true;
-	}
-
-	return false;
+	const char *ext = s + len - 4;
+	return (strcasecmp(ext, ".pls") == 0 || strcasecmp(ext, ".m3u") == 0);
 }
 
 void pls_play(char *filename) {

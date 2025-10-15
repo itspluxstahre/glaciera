@@ -142,12 +142,11 @@ bool ogg_info(char *filename, struct tuneinfo *ti) {
 }
 
 bool ogg_isit(char *s, int len) {
-	if ((len > 4) && (s[len - 4] == '.') && (s[len - 3] == 'O' || s[len - 3] == 'o') &&
-	    (s[len - 2] == 'G' || s[len - 2] == 'g') && (s[len - 1] == 'G' || s[len - 1] == 'g')) {
-		return true;
-	}
+	if (len < 5)
+		return false;
 
-	return false;
+	const char *ext = s + len - 4;
+	return (strcasecmp(ext, ".ogg") == 0);
 }
 
 void ogg_play(char *filename) {

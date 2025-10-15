@@ -623,12 +623,11 @@ bool mp3_metadata(char *filename, struct track_metadata *meta) {
 /* -------------------------------------------------------------------------- */
 
 bool mp3_isit(char *s, int len) {
-	if ((len > 4) && (s[len - 4] == '.') && (s[len - 3] == 'M' || s[len - 3] == 'm') &&
-	    (s[len - 2] == 'P' || s[len - 2] == 'p') && (s[len - 1] == '3')) {
-		return true;
-	}
+	if (len < 5)
+		return false;
 
-	return false;
+	const char *ext = s + len - 4;
+	return (strcasecmp(ext, ".mp3") == 0);
 }
 
 void mp3_play(char *filename) {
