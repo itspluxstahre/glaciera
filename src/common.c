@@ -344,34 +344,6 @@ inline void bitnull(BITS *abits, int bits)  {        memset(abits, 0, CALCBYTES(
  */
 inline BITS *bitalloc(int bits)             { return malloc(CALCBYTES(bits));                           }
 
-/* -------------------------------------------------------------------------- */
-
-char * find_actual_file_name(char *buf, char *fullfilename)
-{
-	glob_t g;
-	char tmp[1000];
-	char *p;
-	char *dst;
-
-	/*
-	 * Translate /dir/subdir/RÄKSMÖRGÅS
-	 *        to /dir/subdir/R*KSM*RG*S
-	 */
-	dst = tmp;
-	for (p = fullfilename; *p; p++)
-		*dst++ = isalnum(*p) || '/' == *p ? *p : '*';
-	*dst = '\0';
-
-	glob(tmp, GLOB_NOSORT, NULL, &g);
-	if (1 == g.gl_pathc)
-		strcpy(buf, g.gl_pathv[0]);
-	else
-		strcpy(buf, fullfilename);
-	globfree(&g);
- 
-	return buf;
-}
-
 /* Old config file parsing removed - now using TOML config in config.c */
 
 /* -------------------------------------------------------------------------- */

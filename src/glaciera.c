@@ -1659,8 +1659,6 @@ void stop_playing(pid_t pid)
 
 void start_play(int userpressed_enter, struct tune *tune)
 {
-    char actual_file_name[1024];
-
     /* TODO: display only the n last characters if the string is long */
     if (userpressed_enter)
         show_info(_("Loading '%s'..."), tune->display);
@@ -1680,8 +1678,9 @@ void start_play(int userpressed_enter, struct tune *tune)
     }
 
     now_playing_tune = find_in_alltunes_by_display_pointer(tune->display);
-    find_actual_file_name(actual_file_name, now_playing_tune->path);
-    if (!can_open(actual_file_name)) {
+    
+    /* Use the path directly - UTF-8 is now handled properly throughout */
+    if (!can_open(now_playing_tune->path)) {
         /*
          * Yes, finally got rid of the ugly "execl-$JUST$PLAY$NEXT$SONG" hack.
          */
@@ -1698,7 +1697,7 @@ void start_play(int userpressed_enter, struct tune *tune)
             freopen(GLACIERA_PIPE, "w", stdout);
             freopen("/dev/null", "w", stderr);
 
-            music_play(actual_file_name);
+            music_play(now_playing_tune->path);
 
             /*
              * Only reached if, for some reason, the call to execl() fails
