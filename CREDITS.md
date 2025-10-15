@@ -25,6 +25,13 @@
   - **Source**: Borrowed from http://www.heise.de/ct/english/97/04/386/
   - **Usage**: String matching functionality in common.c
 
+- **tomlc99 library**
+  - **Author**: CK Tan
+  - **Years**: 2025 (used in this project)
+  - **Source**: https://github.com/cktan/tomlc99
+  - **Usage**: TOML configuration file parsing in config.c
+  - **License**: MIT License
+
 ## License
 This project is licensed under the GNU General Public License version 2 (GPL-2.0).
 See the COPYING file for the full license text.
