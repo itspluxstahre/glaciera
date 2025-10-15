@@ -1,39 +1,21 @@
-Describe how to install it
+Build & Install
+===============
 
-	apt-get install mpg321
-	apt-get install vorbis-tools
+The project is now built with Meson. You will need development headers
+for ncurses (or ncursesw), libogg, libvorbis (including libvorbisfile),
+and libFLAC. On Debian/Ubuntu this roughly equates to:
 
-Compile from source
-===================
+    sudo apt install build-essential meson ninja-build \
+         libncursesw5-dev libogg-dev libvorbis-dev libflac-dev
 
-Debian:
-	apt-get install build-essential
-	apt-get install libc6-dev
-	apt-get install libncurses5-dev
-	apt-get install libvorbis-dev
-	apt-get install libflac-dev
+Once the dependencies are present you can configure, build, and install:
 
-NetBSD:	
-	-I/usr/pkg/include -L/usr/pkg/lib  -Wl,-R/usr/pkg/lib
-	pkg_add ncurses
-	pkg_add libvorbis
-	pkg_add flac
+    meson setup builddir
+    ninja -C builddir
+    sudo ninja -C builddir install
 
-FreeBSD:
-	-I/usr/local/include -L/usr/local/lib
-	
-$ make
-$ sudo make install
-	
-MacOSX: (10.4 or later required)
-    Install Apple's developertools, from cd or internet.
-    Install macports (http://www.macports.org/)
-    sudo port -vd install libogg libvorbis flac mpg321
-    sudo port -vd install vorbis-tools +player +flac +speex
-    
-    In sources directory run:
-    $ xcodebuild
+If you want to run the binaries without installing, execute them directly
+from `builddir/src/mp3berg` and `builddir/src/mp3build`.
 
-
-
-
+Runtime helpers such as mpg321 or vorbis-tools are still useful for playback
+and tagging; install those from your preferred package manager as needed.
