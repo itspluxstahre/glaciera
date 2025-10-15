@@ -5,11 +5,10 @@ project(
   default_options: [
     'c_std=c2x',
     'warning_level=2',
+    'b_pie=true',
   ],
+  meson_version: '>= 0.63.0'
 )
-
-# Build options
-static_binaries = get_option('static')
 
 cc = meson.get_compiler('c')
 
