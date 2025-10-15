@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-output="src/git_version.c"
+output="${1:-src/git_version.c}"
 mkdir -p "$(dirname "$output")"
 
 version="$(git describe --tags --dirty --always 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo unknown)"

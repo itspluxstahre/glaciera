@@ -1,4 +1,5 @@
 build/
+builddir/
 *.o
 src/git_version.c
 mp3berg

@@ -38,7 +38,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <locale.h>
+#if defined(HAVE_LIBINTL_H)
 #include <libintl.h>
+#endif
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -566,7 +568,7 @@ char *genrename(int genre)
 
 /* -------------------------------------------------------------------------- */
 
-inline int is_all_digits(const char *s)
+static bool is_all_digits(const char *s)
 {
     if (!*s)
         return false;
