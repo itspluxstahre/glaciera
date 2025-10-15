@@ -164,28 +164,57 @@ void sanitize_user_input(char *src)
 }
 
 /**
- * Remove trailing newline character from a string buffer.
+ * Remove trailing newline characters from a string buffer.
+ * Handles both Unix (\n) and DOS (\r\n) line endings.
+ * Commonly used after fgets() to strip the trailing newline.
  *
- * @param buf The string buffer to chop
+ * @param buf The string buffer to modify (null-terminated)
  */
 void chop(char *buf)
 {
-        char *p;
-        p = strrchr(buf, '\n');
-        if (p)
-                *p = '\0';
+        if (!buf)
+                return;
+
+        size_t len = strlen(buf);
+        if (len == 0)
+                return;
+
+        /* Remove trailing \n */
+        if (buf[len - 1] == '\n') {
+                buf[len - 1] = '\0';
+                len--;
+        }
+
+        /* Remove trailing \r if present (DOS line endings) */
+        if (len > 0 && buf[len - 1] == '\r') {
+                buf[len - 1] = '\0';
+        }
 }
 
-/* trim: remove trailing blanks, tabs, newlines */
+/**
+ * Remove trailing whitespace (spaces, tabs, newlines) from a string.
+ * Note: This function is currently unused in the codebase.
+ *
+ * @param s The string to trim (modified in-place)
+ * @return The new length of the string after trimming
+ */
 int trim(char s[])
 {
-        int n;
+        if (!s)
+                return 0;
 
-        for (n = strlen(s)-1; n >= 0; n--)
-                if (s[n] != ' ' && s[n] != '\t' && s[n] != '\n')
-                        break;
-        s[n+1] = '\0';
-        return n;
+        size_t len = strlen(s);
+        if (len == 0)
+                return 0;
+
+        /* Find last non-whitespace character */
+        while (len > 0 && (s[len - 1] == ' ' || s[len - 1] == '\t' || s[len - 1] == '\n' || s[len - 1] == '\r')) {
+                len--;
+        }
+
+        /* Null-terminate at new end */
+        s[len] = '\0';
+        return (int)len;
 }
 
 /* -------------------------------------------------------------------------- */
