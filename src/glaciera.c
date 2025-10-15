@@ -3216,6 +3216,20 @@ void do_state(int cmd) {
 static bool handle_search_input(int key, int *last_space_count) {
 	int i;
 
+	/* Explicitly reject arrow keys and navigation keys to prevent escape sequences
+	 * from being interpreted as typeable characters when holding down keys */
+	if (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT ||
+	    key == KEY_HOME || key == KEY_END || key == KEY_PPAGE || key == KEY_NPAGE ||
+	    key == KEY_IC || key == KEY_DC || key == KEY_ENTER ||
+	    (key >= KEY_F(1) && key <= KEY_F(12))) {
+		return false; /* Let these be handled by other key handlers */
+	}
+
+	/* Reject control characters and escape sequences (except typeable ones) */
+	if (key < 32 && key != 13 && key != 27) {
+		return false;
+	}
+
 	/* Handle backspace */
 	if (KEY_BACKSPACE == key || 0x07f == key) {
 		i = strlen(search_string);
