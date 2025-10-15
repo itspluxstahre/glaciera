@@ -1,8 +1,0 @@
-#!/bin/sh
-if [ /mp3/0.db -nt $HOME/playlists/0.db ] ; then
-	echo -n "Copying database..."
-	/bin/tar xf /mp3/db.tgz -C $HOME/playlists
-	echo "done."
-fi
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-"${SCRIPT_DIR}/build/bin/glaciera"
