@@ -2996,260 +2996,198 @@ void do_state(int cmd)
 
 /* -------------------------------------------------------------------------- */
 
-void action(int key)
+/*
+ * Handle search string input (backspace and character entry)
+ */
+static bool handle_search_input(int key, int *last_space_count)
 {
-    static int last_space_count = 0;
     int i;
 
+    /* Handle backspace */
     if (KEY_BACKSPACE == key || 0x07f == key) {
         i = strlen(search_string);
         if (i)
             search_string[i - 1] = 0;
         update_searchstring();
-        return;
-    } else if ('!' == key ||
-            ':' == key ||
-            '%' == key ||
-            '/' == key ||
-            ' ' == key ||
-            is_typeable_key(key)) {
+        return true;
+    }
+
+    /* Handle typeable characters and special search chars */
+    if ('!' == key || ':' == key || '%' == key || '/' == key ||
+        ' ' == key || is_typeable_key(key)) {
+        
         i = strlen(search_string);
+        
+        /* Validate special characters */
         switch (key) {
-            case ':' :
-                /*
-                 * Don't allow : at beginning of search
-                 * or more than one  :
-                 */
-                if (0 == i || (strchr(search_string, ':') != NULL))
-                    return;
+            case ':':
+                /* Don't allow : at beginning or more than one : */
+                if (0 == i || strchr(search_string, ':') != NULL)
+                    return true;
                 break;
 
-            case ' ' :
-                /*
-                 * A double tap on the spacebar advances to the next song
-                 */
-                if (same_key_twice_in_a_row(&last_space_count)) {
+            case ' ':
+                /* Double-tap spacebar advances to next song */
+                if (same_key_twice_in_a_row(last_space_count)) {
                     if (i)
                         search_string[i - 1] = 0;
                     update_searchstring();
-                    last_space_count = 0;
+                    *last_space_count = 0;
                     find_and_play_next_handler(0);
-                    return;
+                    return true;
                 }
-
-                /*
-                 * Don't allow space at beginning of search
-                 * or double spaces
-                 */
-                if (0 == i || ' ' == search_string[i - 1]) {
-                    return;
-                }
+                /* Don't allow space at beginning or double spaces */
+                if (0 == i || ' ' == search_string[i - 1])
+                    return true;
                 break;
 
-            case '/' :
-                /*
-                 * Only one '/' at the beginning allowed
-                 */
+            case '/':
+                /* Only one '/' at the beginning allowed */
                 if (0 != i)
-                    return;
+                    return true;
                 break;
 
-            case '!' :
-                /*
-                 * Don't allow double !'s
-                 */
+            case '!':
+                /* Don't allow double !'s */
                 if ('!' == search_string[i - 1])
-                    return;
+                    return true;
                 break;
 
-            case '%' :
-                /*
-                 * %'s must be in the beginning
-                 */
+            case '%':
+                /* %'s must be in the beginning */
                 if (0 != i)
-                    return;
+                    return true;
                 break;
         }
 
+        /* Add character to search string */
         if (i < 70) {
             search_string[i++] = key;
             search_string[i++] = 0;
             update_searchstring();
         }
-        return;
+        return true;
     }
 
-    if (in_input_mode) {
-        switch (key) {
-            case 13:
-                save_playlist(search_string);
-                show_info(_("Playlist '%s' saved."), search_string);
-                in_input_mode = false;
-                search_string[0] = last_search_string[0] = 0;
-                update_searchstring();
-                break;
-            case 27:
-                show_info(_("Save cancelled."));
-                in_input_mode = false;
-                search_string[0] = last_search_string[0] = 0;
-                update_searchstring();
-                break;
-        }
-        return;
-    }
+    return false;
+}
+
+/*
+ * Handle playlist input mode (save or cancel)
+ */
+static bool handle_input_mode(int key)
+{
+    if (!in_input_mode)
+        return false;
 
     switch (key) {
-        case 27:                        
-            /* 
-             * !!20041001 KB 
-             * Added "clear input row" 
-             */
+        case 13:  /* Enter */
+            save_playlist(search_string);
+            show_info(_("Playlist '%s' saved."), search_string);
+            in_input_mode = false;
             search_string[0] = last_search_string[0] = 0;
             update_searchstring();
             break;
-
-        case 16:
-            /*Ctrl-P*/
-            if (player_pid) {
-                signal(SIGCHLD, SIG_IGN);
-                kill(player_pid, paused ? SIGCONT : SIGSTOP);
-                if (paused) 
-                    signal(SIGCHLD, find_and_play_next_handler);
-                paused = !paused;
-            }
+        case 27:  /* Escape */
+            show_info(_("Save cancelled."));
+            in_input_mode = false;
+            search_string[0] = last_search_string[0] = 0;
+            update_searchstring();
             break;
+    }
+    return true;
+}
 
-        case 21:
-            /*
-             * Ctrl-U(p)
-             */
-            if (!displaycount)
-                break;
-            do_move_song(-1);
-            action(KEY_UP);
-            break;
-
-        case 4:
-            /*
-             * Ctrl-D(own)
-             */
-            if (!displaycount)
-                break;
-            do_move_song(+1);
-            action(KEY_DOWN);
-            break;
-
-        case '+':
-            /*
-             * TODO: Numerical keypad-"+" doesn't work in XTERM. Why?
-             */
-            if (!displaycount)
-                break;
-            add_tune_to_playlist(displaytunes[tunenr]); 
-            action(KEY_DOWN);
-            break;
-
-        case '*':
-            /*
-             * TODO: Numerical keypad-"*" doesn't work in XTERM. Why?
-             */
-            if (!displaycount)
-                break;
-            if (now_playing_tune)
-                add_tune_to_playlist(now_playing_tune);
-            add_tune_to_playlist(displaytunes[tunenr]); 
-            action(KEY_DOWN);
-            break;
-
-        case 9:
-            if (!displaycount)
-                break;
-            do_query_info();
-            break;
-
-        case 12:
-            wclear(win_top);
-            wclear(win_info);
-            wclear(win_middle);
-            wclear(win_bottom);
-            refresh_screen();
-            break;
-
+/*
+ * Handle function keys (F1-F12)
+ */
+static bool handle_function_keys(int key)
+{
+    switch (key) {
         case KEY_F(1):
             if (!displaycount)
-            break;
+                return true;
             do_info();
-            break;
+            return true;
 
         case KEY_F(2):
             do_view();
-            break;
+            return true;
 
         case KEY_F(3):
             do_sort();
-            break;
+            return true;
 
         case KEY_F(4):
             do_context();
-            break;
+            return true;
 
         case KEY_F(5):
             do_show_playlist();
-            break;
+            return true;
 
         case KEY_F(6):
             do_show_available_playlists(false);
             search_string[0] = last_search_string[0] = 0;
             update_searchstring();
-            break;
+            return true;
 
         case KEY_F(7):
             show_info(_("Enter a playlist name."));
             in_input_mode = true;
             strcpy(search_string, latest_playlist_name);
             update_searchstring();
-            break;
+            return true;
 
         case KEY_F(8):
             do_burn_playlist();
-            break;
+            return true;
 
         case KEY_F(9):
             do_time();
-            break;
+            return true;
 
         case KEY_F(10):
-            break;
+            return true;
 
         case KEY_F(11):
             load_all_songs();
             refresh_screen();
-            break;
+            return true;
 
         case KEY_F(12):
             do_show_available_playlists(true);
             search_string[0] = last_search_string[0] = 0;
             update_searchstring();
-            break;
+            return true;
+    }
+    return false;
+}
 
+/*
+ * Handle navigation keys (arrows, Home, End, Page Up/Down)
+ */
+static bool handle_navigation_keys(int key)
+{
+    switch (key) {
         case KEY_LEFT:
             col_step -= COLUMN_DELTA;
             if (col_step < 0)
                 col_step = 0;
             refresh_screen();
-            break;
+            return true;
 
         case KEY_RIGHT:
             if (col_step < 150)
                 col_step += COLUMN_DELTA;
             refresh_screen();
-            break;
+            return true;
 
         case KEY_HOME:
             tunenr = 0;
             toptunenr = 0;
             refresh_screen();
-            break;
+            return true;
 
         case KEY_END:
             tunenr = displaycount - 1;
@@ -3257,37 +3195,105 @@ void action(int key)
             if (toptunenr < 0)
                 toptunenr = 0;
             refresh_screen();
-            break;
+            return true;
 
         case KEY_DOWN:
             if (!displaycount)
-                break;
+                return true;
             user_move_cursor(+1, true);
             wnoutrefresh(win_middle);
-            break;
+            return true;
 
         case KEY_UP:
             if (!displaycount)
-                break;
+                return true;
             user_move_cursor(-1, true);
             wnoutrefresh(win_middle);
-            break;
+            return true;
 
         case KEY_NPAGE:
             if (!displaycount)
-                break;
+                return true;
             user_move_cursor(+1*(middlesize - 1), false);
             wnoutrefresh(win_middle);
             refresh_screen();
-            break;
+            return true;
 
         case KEY_PPAGE:
             if (!displaycount)
-                break;
+                return true;
             user_move_cursor(-1*(middlesize - 1), false);
             wnoutrefresh(win_middle);
             refresh_screen();
-            break;
+            return true;
+    }
+    return false;
+}
+
+/*
+ * Handle special commands (Ctrl keys, +, *, Tab, etc.)
+ */
+static bool handle_special_commands(int key)
+{
+    switch (key) {
+        case 27:  /* Escape - clear search */
+            search_string[0] = last_search_string[0] = 0;
+            update_searchstring();
+            return true;
+
+        case 16:  /* Ctrl-P - pause/unpause */
+            if (player_pid) {
+                signal(SIGCHLD, SIG_IGN);
+                kill(player_pid, paused ? SIGCONT : SIGSTOP);
+                if (paused) 
+                    signal(SIGCHLD, find_and_play_next_handler);
+                paused = !paused;
+            }
+            return true;
+
+        case 21:  /* Ctrl-U - move song up */
+            if (!displaycount)
+                return true;
+            do_move_song(-1);
+            action(KEY_UP);
+            return true;
+
+        case 4:  /* Ctrl-D - move song down */
+            if (!displaycount)
+                return true;
+            do_move_song(+1);
+            action(KEY_DOWN);
+            return true;
+
+        case '+':
+            if (!displaycount)
+                return true;
+            add_tune_to_playlist(displaytunes[tunenr]); 
+            action(KEY_DOWN);
+            return true;
+
+        case '*':
+            if (!displaycount)
+                return true;
+            if (now_playing_tune)
+                add_tune_to_playlist(now_playing_tune);
+            add_tune_to_playlist(displaytunes[tunenr]); 
+            action(KEY_DOWN);
+            return true;
+
+        case 9:  /* Tab - query info */
+            if (!displaycount)
+                return true;
+            do_query_info();
+            return true;
+
+        case 12:  /* Ctrl-L - redraw screen */
+            wclear(win_top);
+            wclear(win_info);
+            wclear(win_middle);
+            wclear(win_bottom);
+            refresh_screen();
+            return true;
 
         case KEY_RESIZE:
             endwin();
@@ -3299,13 +3305,43 @@ void action(int key)
             wclear(win_bottom);
             refresh_screen();
             doupdate();
-            break;
+            return true;
 
-        case 13:
+        case 13:  /* Enter */
         case '>':
             do_enter();
-            break;
+            return true;
     }
+    return false;
+}
+
+/*
+ * Main keyboard action handler
+ * Dispatches to specialized handlers based on key type
+ */
+void action(int key)
+{
+    static int last_space_count = 0;
+
+    /* Handle search string input */
+    if (handle_search_input(key, &last_space_count))
+        return;
+
+    /* Handle playlist input mode */
+    if (handle_input_mode(key))
+        return;
+
+    /* Handle function keys */
+    if (handle_function_keys(key))
+        return;
+
+    /* Handle navigation keys */
+    if (handle_navigation_keys(key))
+        return;
+
+    /* Handle special commands */
+    if (handle_special_commands(key))
+        return;
 }
 
 /* -------------------------------------------------------------------------- */
