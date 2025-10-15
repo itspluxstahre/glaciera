@@ -28,20 +28,22 @@ Glaciera is a fork and modernization of **mp3berg** by Krister Brus, which itsel
 - Audio libraries: libvorbis, libogg, libflac
 - mpg123 and ogg123 for playback
 
-### Build and Install
+### Build Options
+
+Glaciera supports optional static linking:
 
 ```bash
-# Clone the repository
-git clone https://github.com/itspluxstahre/glaciera.git
-cd glaciera
-
-# Configure and build
+# Build with dynamic linking (default)
 meson setup builddir
-ninja -C builddir
 
-# Install (optional)
-sudo ninja -C builddir install
+# Build with static linking
+meson setup -Dstatic=true builddir
+
+# Reconfigure existing build
+meson configure builddir -Dstatic=true
 ```
+
+Static linking creates self-contained binaries that don't depend on shared libraries, but results in larger file sizes.
 
 ### Development
 

@@ -53,6 +53,7 @@ executable(
   include_directories: src_inc,
   dependencies: glaciera_deps,
   c_args: glaciera_c_args,
+  link_args: static_binaries ? ['-static'] : [],
   install: true,
 )
 
@@ -61,5 +62,6 @@ executable(
   glaciera_indexer_sources,
   include_directories: src_inc,
   dependencies: glaciera_indexer_deps,
+  link_args: static_binaries ? ['-static'] : [],
   install: true,
 )

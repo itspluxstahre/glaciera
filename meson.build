@@ -8,6 +8,9 @@ project(
   ],
 )
 
+# Build options
+static_binaries = get_option('static')
+
 cc = meson.get_compiler('c')
 
 ncurses_dep = dependency('ncursesw', required: false)
