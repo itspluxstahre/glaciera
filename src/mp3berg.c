@@ -190,7 +190,7 @@ int find_tune_number_by_alltunes_address(struct tune *t)
     return ((BIGPTR)t - (BIGPTR)&alltunes[0]) / sizeof(struct tune);
 }
 
-void clear_displaytunes_prim(int dosave)
+void clear_displaytunes_prim(bool dosave)
 {
     int i;
     struct tune *tune;
@@ -199,6 +199,8 @@ void clear_displaytunes_prim(int dosave)
 #ifdef USE_BACK	
     if (dosave)
         do_state('S');
+#else
+    (void)dosave;
 #endif		
 
     /*
@@ -843,11 +845,14 @@ void draw_one_song(int row, int item, int highlight)
 #endif
     }
 
+    const int step = col_step;
     if (ARG_PATH == sort_arg) {
-        p = (col_step > strlen(tune->path)) ? "" : tune->path + col_step;
+        const size_t path_len = strlen(tune->path);
+        p = (step < 0 || (size_t)step > path_len) ? "" : tune->path + step;
         strncat(buf, p, COLS);
     } else {
-        p = (col_step > strlen(tune->display)) ? "" : tune->display + col_step;
+        const size_t display_len = strlen(tune->display);
+        p = (step < 0 || (size_t)step > display_len) ? "" : tune->display + step;
         depath(buf + strlen(buf), p);
     }
 
@@ -1398,6 +1403,7 @@ void parse_shoutcaststream_log(char *result)
 
 void update_song_progress_handler(int sig)
 {
+    (void)sig;
     char buf[255];
     int percentplayed;
     int secondsleft;
@@ -1598,6 +1604,7 @@ void start_play(int userpressed_enter, struct tune *tune)
 
 void find_and_play_next_handler(int dummyparam)
 {
+    (void)dummyparam;
     if (wanna_quit)
         return;
 

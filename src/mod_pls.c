@@ -36,6 +36,7 @@
  */
 bool pls_info(char *filename, struct tuneinfo *ti)
 {
+	(void)ti;
 	FILE *f;
 	char buf[1024];
 	bool has_httplines = false;

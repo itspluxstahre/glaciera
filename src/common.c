@@ -326,8 +326,8 @@ void read_rc_file(void)
 
 void sanitize_rc_parameters(bool check_binpaths)
 {
-	bool error = false;
-		
+	(void)check_binpaths;
+
 	if (opt_mp3path[strlen(opt_mp3path) - 1] != '/')
 		strcat(opt_mp3path, "/");
 	

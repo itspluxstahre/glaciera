@@ -430,6 +430,8 @@ char *massage_full_path(char *buf, char *fullpath)
 
 void report_scanning_progress(int sig)
 {
+        (void)sig;
+
         static int prev_total_files = 0;
         static double prev_total_bytes = 0;
 	int megdiff;
