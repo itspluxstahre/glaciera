@@ -1,6 +1,9 @@
 #!/bin/bash
 
-        echo -n 'char* svn_version(void) { static char* SVN_Version = "' \
-                                       > svn_version.c
-        svnversion -n .                   >> svn_version.c
-        echo '"; return SVN_Version; }'   >> svn_version.c
+set -e
+
+output="src/svn_version.c"
+mkdir -p "$(dirname "$output")"
+printf 'char* svn_version(void) { static char* SVN_Version = "' > "$output"
+svnversion -n . >> "$output"
+printf '"; return SVN_Version; }\n' >> "$output"

@@ -4,5 +4,5 @@ if [ /mp3/0.db -nt $HOME/playlists/0.db ] ; then
 	/bin/tar xf /mp3/db.tgz -C $HOME/playlists
 	echo "done."
 fi
-./mp3berg
-
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+"${SCRIPT_DIR}/build/bin/mp3berg"

@@ -1,71 +1,83 @@
 #
 # Makefile for mp3berg
 #
-# 2005-09-14 KB
-#	Yes, we compile with "pentium" as target, so we can
-# 	use old throw-away boxes (P100's) as clients.
-#
-# 2005-09-16 KB
-#	Create the backup archive as bzip2
-#
-# 2006-01-15 KB
-#	Changes for FastCGI-enabled searchmp3berg.fcgi
-#
-# 2007-03-18 KB
-# 	Debianizations !
-#
 
-# NetBSD:
-#CC = gcc -O2 -Wall -pedantic -I/usr/pkg/include -L/usr/pkg/lib  -Wl,-R/usr/pkg/lib
+CC ?= clang
+CFLAGS ?= -O3 -Wall -pedantic
+CPPFLAGS ?= -I/opt/homebrew/include
+CPPFLAGS += -I$(SRC_DIR)
+LDFLAGS ?= -L/opt/homebrew/lib
+STRIP ?= strip
 
-# Linux:
-CC = clang -O3 -Wall -pedantic -I/opt/homebrew/include -L/opt/homebrew/lib
+SRC_DIR := src
+BUILD_DIR := build
+OBJ_DIR := $(BUILD_DIR)/obj
+BIN_DIR := $(BUILD_DIR)/bin
 
-# OpenBSD:
-#CC = gcc -O2 -Wall -pedantic -I/usr/local/include -L/usr/local/lib 
+MP3BERG_OBJS := $(OBJ_DIR)/mp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o \
+                $(OBJ_DIR)/mod_mp3.o $(OBJ_DIR)/mod_ogg.o $(OBJ_DIR)/mod_flac.o \
+                $(OBJ_DIR)/mod_pls.o $(OBJ_DIR)/music.o
+MP3BUILD_OBJS := $(OBJ_DIR)/mp3build.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o \
+                 $(OBJ_DIR)/mod_mp3.o $(OBJ_DIR)/mod_ogg.o $(OBJ_DIR)/mod_flac.o \
+                 $(OBJ_DIR)/mod_pls.o $(OBJ_DIR)/music.o
+SEARCHMP3BERG_OBJS := $(OBJ_DIR)/searchmp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o
 
-all: mp3berg mp3build searchmp3berg.fcgi
+SVN_VERSION_SRC := $(SRC_DIR)/svn_version.c
+
+TARGETS := $(BIN_DIR)/mp3berg $(BIN_DIR)/mp3build $(BIN_DIR)/searchmp3berg.fcgi
+
+.PHONY: all clean dist backup install mp3berg mp3build searchmp3berg.fcgi FORCE
+
+all: $(TARGETS)
+
+mp3berg: $(BIN_DIR)/mp3berg
+mp3build: $(BIN_DIR)/mp3build
+searchmp3berg.fcgi: $(BIN_DIR)/searchmp3berg.fcgi
+
+$(BIN_DIR)/mp3berg: $(MP3BERG_OBJS) | $(BIN_DIR)
+	$(CC) $(LDFLAGS) -o $@ $^ -lncurses -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
+	$(STRIP) $@
+
+$(BIN_DIR)/mp3build: $(MP3BUILD_OBJS) | $(BIN_DIR)
+	$(CC) $(LDFLAGS) -o $@ $^ -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
+	$(STRIP) $@
+
+$(BIN_DIR)/searchmp3berg.fcgi: $(SEARCHMP3BERG_OBJS) | $(BIN_DIR)
+	$(CC) $(LDFLAGS) -o $@ $^ -lfcgi
+	$(STRIP) $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(SVN_VERSION_SRC): FORCE
+	printf 'char* svn_version(void) { static char* SVN_Version = "' > $@
+	svnversion -n . >> $@
+	printf '"; return SVN_Version; }\n' >> $@
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
 clean:
-	rm -f *.o
-	rm -f mp3berg
-	rm -f mp3build
-	rm -f searchmp3berg.fcgi
+	rm -rf $(BUILD_DIR)
 	rm -f callgrind.out.*
 	rm -f *~
 	rm -f core.*
 
-dist: mp3build mp3berg 
-	tar cjf dist/mp3berg-`date +%Y-%m-%d`.dist.i386.tar.bz mp3build mp3berg README rippers mp3bergrc
+dist: $(BIN_DIR)/mp3build $(BIN_DIR)/mp3berg
+	mkdir -p dist
+	tar cjf dist/mp3berg-`date +%Y-%m-%d`.dist.i386.tar.bz $(BIN_DIR)/mp3build $(BIN_DIR)/mp3berg README rippers mp3bergrc
 
 backup: clean
 	tar cjf ../`date +%Y-%m-%d`src.tar.bz2 *
 
-mp3build: mp3build.o common.o common.h svn_version.o mod_mp3.o mod_ogg.o mod_flac.o mod_pls.o music.o
-	$(CC) -o mp3build mp3build.o common.o svn_version.o music.o mod_mp3.o mod_ogg.o mod_flac.o mod_pls.o -Wall -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
-#	strip mp3build
-
-mp3berg: mp3berg.o common.o common.h svn_version.o mod_mp3.o mod_ogg.o mod_flac.o mod_pls.o music.o
-	$(CC) -o mp3berg mp3berg.o common.o svn_version.o mod_mp3.o mod_ogg.o mod_flac.o mod_pls.o music.o -Wall -lncurses -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
-	strip mp3berg
-
-searchmp3berg.fcgi: searchmp3berg.o common.o common.h svn_version.o
-	$(CC) -o searchmp3berg.fcgi searchmp3berg.o common.o -lfcgi 
-	strip searchmp3berg.fcgi
-
-install:
-	install mp3berg $(DESTDIR)/usr/bin
-	install mp3build $(DESTDIR)/usr/bin
-
-##
-## on every build, record the working copy revision string
-##
-svn_version.o:
-	printf 'char* svn_version(void) { static char* SVN_Version = "' \
-	                               > svn_version.c
-	svnversion -n .                   >> svn_version.c
-	printf '"; return SVN_Version; }\n' >> svn_version.c
-	gcc -c svn_version.c
+install: $(BIN_DIR)/mp3berg $(BIN_DIR)/mp3build
+	install $(BIN_DIR)/mp3berg $(DESTDIR)/usr/bin
+	install $(BIN_DIR)/mp3build $(DESTDIR)/usr/bin
 
 debs: clean
 	dpkg-buildpackage -rfakeroot -uc -b
+
+FORCE:
