@@ -86,9 +86,9 @@ int total_files = 0;
 double total_bytes = 0;
 int new_files = 0;
 time_t timeprogress = 0;
-int opt_generate_allmp3db = FALSE;
-int opt_force_build = FALSE;
-int opt_skip_file_info = FALSE;
+int opt_generate_allmp3db = false;
+int opt_force_build = false;
+int opt_skip_file_info = false;
 
 pthread_mutex_t filemutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -593,9 +593,9 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
          */
         for (i = 0; i < 256; i++) {
                 if (samecolumn[i] != musicfiles)
-                        samecolumn[i] = FALSE;
+                        samecolumn[i] = false;
                 if (trackcolumn[i] != musicfiles)
-                        trackcolumn[i] = FALSE;
+                        trackcolumn[i] = false;
 	}
 	
 #ifdef DEBUG	
@@ -628,8 +628,8 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 #ifdef DEBUG				
 				fprintf(stderr, "\n%d:ACC=%d FILES=%d", i,sumcolumn[i], musicfiles);
 #endif			
-				samecolumn[i] = TRUE;
-				trackcolumn[i] = FALSE;
+				samecolumn[i] = true;
+				trackcolumn[i] = false;
 			}
 		}
 	}
@@ -650,8 +650,8 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 			 break;
 	}
         for (i = 0; i < trackstarts; i++) {
-		trackcolumn[i] = FALSE;
-		samecolumn[i] = TRUE;
+		trackcolumn[i] = false;
+		samecolumn[i] = true;
 	}
 
 	/*
@@ -663,7 +663,7 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 	if (1 == trackcount) {
 		for (i = 1; i < 256; i++)
 			if (trackcolumn[i])
-				trackcolumn[i-1] = TRUE;					
+				trackcolumn[i-1] = true;					
 	}
 	
 #ifdef DEBUG	
@@ -680,14 +680,14 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 	fprintf(stderr,"\n");
 #endif	
 
-	justnames = TRUE;
+	justnames = true;
         for (i = 0; i < 256; i++) {
 		if (trackcolumn[i])
-			justnames = FALSE;		
+			justnames = false;		
 	}
 	if (justnames) {
 	        for (i = 0; i < 256; i++) 
-                        samecolumn[i] = FALSE;
+                        samecolumn[i] = false;
 	}
 
 	for (i = 0; i < 256; i++) {
@@ -1002,13 +1002,13 @@ int is_path_in_mounts(char *path)
 {
 	FILE *f;
 	char buf[1024];
-	int hasmount = FALSE;
+	int hasmount = false;
 
 	f = fopen("/proc/mounts", "r");
 	if (f) {
 		while (fgets(buf, sizeof(buf), f)) {
 			if (strstr(buf, path))
-				hasmount = TRUE;
+				hasmount = true;
 		}
 		fclose(f);
 	}
@@ -1019,7 +1019,7 @@ int path_has_files(char *path)
 {
 	DIR *pdir;
 	struct dirent *sd;
-	int result = FALSE;
+	int result = false;
 
 	pdir = opendir(path);
 	if (pdir) {
@@ -1040,7 +1040,7 @@ void start_recurse_disc(const char * argdir)
         char * p;
         unsigned long int stored_free = -1;
 	int err;
-	int use_cache = FALSE;
+	int use_cache = false;
 
 	/*
 	 * If the directory ends with a /, remove it
@@ -1117,7 +1117,7 @@ int can_create_database(char * dir)
 {
 	char buf[100];
 	FILE *f;
-	int writeable = FALSE;
+	int writeable = false;
 
 	/*
 	 * When the /mp3 directory is shared via samba, this is the only
@@ -1129,7 +1129,7 @@ int can_create_database(char * dir)
 	if (f) {
 		fclose(f);
 		unlink(buf);
-		writeable = TRUE;
+		writeable = true;
 	}
 	
 	return writeable;
@@ -1156,13 +1156,13 @@ int main(int argc, char *argv[])
         while ((arg = getopt(argc, argv, "hvwfs")) > -1) {
                 switch (arg) {
 		case 'w':
-			opt_generate_allmp3db = TRUE;
+			opt_generate_allmp3db = true;
 			break;
 		case 'f':
-			opt_force_build = TRUE;
+			opt_force_build = true;
 			break;
 		case 's':
-			opt_skip_file_info = TRUE;
+			opt_skip_file_info = true;
 			break;
                 case 'h':
                 case '?':
@@ -1182,7 +1182,7 @@ int main(int argc, char *argv[])
 
         print_version();
 	read_rc_file();
-	sanitize_rc_parameters(FALSE);
+	sanitize_rc_parameters(false);
 	music_register_all_modules();
         build_fastarrays();
         memset(&g_posblock, 0, sizeof(g_posblock));

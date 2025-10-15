@@ -31,7 +31,7 @@
 /* -------------------------------------------------------------------------- */
 
 /*
- * Return TRUE if the file contains lines with URL's.
+ * Return true if the file contains lines with URL's.
  * Yes, the same as a "grep http filename" but much faster !
  */
 
@@ -39,13 +39,13 @@ int pls_info(char *filename, struct tuneinfo *ti)
 {
 	FILE *f;
 	char buf[1024];
-	int has_httplines = FALSE;
+	int has_httplines = false;
 	
 	f = fopen(filename, "r");
 	if (f) {
 		while (fgets(buf, sizeof(buf), f)) {
 			if (strstr(buf, "http"))
-				has_httplines = TRUE;
+				has_httplines = true;
 		}
 		fclose(f);
 	}
@@ -59,7 +59,7 @@ int pls_isit(char *s, int len)
             (s[len - 3] == 'P' || s[len - 3] == 'p') &&
             (s[len - 2] == 'L' || s[len - 2] == 'l') &&
             (s[len - 1] == 'S' || s[len - 1] == 's')) {
-		return TRUE;
+		return true;
 	}
         
 	if ((len > 4) &&
@@ -67,10 +67,10 @@ int pls_isit(char *s, int len)
             (s[len - 3] == 'M' || s[len - 3] == 'm') &&
             (s[len - 2] == '3' || s[len - 2] == '3') &&
             (s[len - 1] == 'U' || s[len - 1] == 'u')) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 void pls_play(char *filename)

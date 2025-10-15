@@ -48,9 +48,9 @@ char opt_mp3bergrchomepath [100] = ".mp3bergrc";
 char opt_allowprivatercfile[100] = "true";
 char tolowerarray[256];
 
-int inrange(int v, int min, int max)
+bool inrange(int v, int min, int max)
 {
-        return ((v >= min) && (v <= max));
+        return (v >= min) && (v <= max);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -89,7 +89,7 @@ void swap(struct tune **a, struct tune **b)
         *b = t;
 }
 
-int is_typeable_key(int key)
+bool is_typeable_key(int key)
 {
         return ((key >= 'a') && (key <= 'z')) ||
                ((key >= 'A') && (key <= 'Z')) ||
@@ -97,7 +97,7 @@ int is_typeable_key(int key)
 /*return isalnum(key);*/
 }
 
-static char istypeablearray[256];
+static bool istypeablearray[256];
 static char toupperarray[256];
 
 void build_fastarrays(void)
@@ -228,7 +228,7 @@ int fuzzy(char *haystack, char *needle)
 
 inline void bitset (BITS *abits, int i)     {        abits[i / BITSPERWORD] |=  (1<<(i % BITSPERWORD)); }
 inline void bitclr (BITS *abits, int i)     {        abits[i / BITSPERWORD] &= ~(1<<(i % BITSPERWORD)); }
-inline int  bittest(BITS *abits, int i)     { return abits[i / BITSPERWORD] &   (1<<(i % BITSPERWORD)); }
+inline bool bittest(BITS *abits, int i)     { return (abits[i / BITSPERWORD] &   (1<<(i % BITSPERWORD))) != 0; }
 inline void bitnull(BITS *abits, int bits)  {        memset(abits, 0, CALCBYTES(bits));                 }
 inline BITS *bitalloc(int bits)             { return malloc(CALCBYTES(bits));                           }
 
@@ -324,10 +324,9 @@ void read_rc_file(void)
 	}
 }
 
-void sanitize_rc_parameters(int check_binpaths)
+void sanitize_rc_parameters(bool check_binpaths)
 {
-	int error;
-	error = FALSE;
+	bool error = false;
 		
 	if (opt_mp3path[strlen(opt_mp3path) - 1] != '/')
 		strcat(opt_mp3path, "/");
@@ -345,13 +344,13 @@ void sanitize_rc_parameters(int check_binpaths)
 		if (access(opt_mp3playerpath, X_OK) != 0) 
 	 	{
 			printf("CRITICAL ERROR: %s was NOT found!\n", opt_mp3playerpath);
-			error = TRUE;
+			error = true;
 	 	}
 
 		if (access(opt_oggplayerpath, X_OK) != 0)
 		{
 			printf("CRITICAL ERROR: %s was NOT found!\n", opt_oggplayerpath);
-			error = TRUE;
+			error = true;
 		}
 
 		

@@ -1,9 +1,8 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#pragma once
 
-#define FALSE 0
-#define TRUE 1
-
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <time.h>
 
 typedef unsigned long  BIGPTR;
@@ -45,10 +44,11 @@ extern char opt_mp3playerpath[100];
 extern char opt_mp3playerflags[100];
 extern char opt_oggplayerpath[100];
 extern char opt_oggplayerflags[100];
+extern char opt_allowprivatercfile[100];
 extern char tolowerarray[256];
 
-int inrange(int v, int min, int max);
-int is_typeable_key(int key);
+bool inrange(int v, int min, int max);
+bool is_typeable_key(int key);
 void build_fastarrays(void);
 void only_searchables(char *src);
 void sanitize_user_input(char *src);
@@ -61,13 +61,11 @@ char *strrev(char *str);
 typedef unsigned int BITS;
 void bitset (BITS *abits, int i);
 void bitclr (BITS *abits, int i);
-int  bittest(BITS *abits, int i);
+bool bittest(BITS *abits, int i);
 void bitnull(BITS *abits, int bits);
 BITS *bitalloc(int bits);
 
 char *find_actual_file_name(char *buf, char *fullfilename);
 char *gethomedir(void);
 void read_rc_file(void);
-void sanitize_rc_parameters(int checkbin_paths);
-
-#endif
+void sanitize_rc_parameters(bool check_binpaths);

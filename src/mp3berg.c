@@ -118,15 +118,15 @@ char search_string[100] = "";
 char last_search_string[100] = "";
 char latest_playlist_name[100] = "";
 
-int in_input_mode = FALSE;
-int in_action = FALSE;
+int in_input_mode = false;
+int in_action = false;
 int sort_arg = ARG_NORMAL;
 time_t showprogressagain = 0;
 int col_step = 0;
 int key_count = 0;
-int wanna_quit = FALSE;
-int needs_strcasecmp_sort = FALSE;
-int paused = FALSE;
+int wanna_quit = false;
+int needs_strcasecmp_sort = false;
+int paused = false;
 
 pid_t player_pid = 0;
 pthread_attr_t detachedattr;
@@ -218,7 +218,7 @@ void clear_displaytunes_prim(int dosave)
     tunenr = 0;
     toptunenr = 0;
     col_step = 0;
-    needs_strcasecmp_sort = FALSE;
+    needs_strcasecmp_sort = false;
 #ifdef USE_FINISH
     display_relative_end_time = 0;
 #endif
@@ -226,7 +226,7 @@ void clear_displaytunes_prim(int dosave)
 
 void clear_displaytunes(void)
 {
-    clear_displaytunes_prim(TRUE);
+    clear_displaytunes_prim(true);
 }
 
 void addtunetodisplay(struct tune *tune)
@@ -242,7 +242,7 @@ void addtunetodisplay(struct tune *tune)
 #endif
         displaycount++;
         if (EMPTY_SEARCH == tune->search)
-            needs_strcasecmp_sort = TRUE;
+            needs_strcasecmp_sort = true;
     }
 }
 
@@ -271,9 +271,9 @@ int tune_in_playlist(struct tune *tune)
     if (tune) {
         for (i = 0; i < playlistcount; i++)
             if (tune->path == playlist[i]->path)
-                return TRUE;
+                return true;
     }
-    return FALSE;
+    return false;
 }
 
 int tune_in_displaylist(struct tune *tune)
@@ -283,9 +283,9 @@ int tune_in_displaylist(struct tune *tune)
     if (tune) {
         for (i = 0; i < displaycount; i++)
             if (tune->path == displaytunes[i]->path)
-                return TRUE;
+                return true;
     }
-    return FALSE;
+    return false;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -349,7 +349,7 @@ void make_local_copy_of_database(int showprogress)
     int i;
     char srcfilename[255];
     char dstfilename[255];
-    int mustcopy = FALSE;
+    int mustcopy = false;
     int read_fd;
     int write_fd;
     char *buf;
@@ -371,7 +371,7 @@ void make_local_copy_of_database(int showprogress)
         bytes = filesize(srcfilename);
         bytes_total += bytes;
         if (bytes != filesize(dstfilename))
-            mustcopy = TRUE;
+            mustcopy = true;
     }
     if (!mustcopy)
         return;
@@ -567,7 +567,7 @@ char *genrename(int genre)
 inline int is_all_digits(const char *s)
 {
     if (!*s)
-        return FALSE;
+        return false;
     for ( ; *s; s++) {
         /*
          * Ignore newlines. Simplifies fgets() calls
@@ -575,9 +575,9 @@ inline int is_all_digits(const char *s)
         if ('\n' == *s)
             continue;
         if (!isdigit(*s))
-            return FALSE;
+            return false;
     }
-    return TRUE;
+    return true;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -737,7 +737,7 @@ void make_ui(void)
     win_middle = newwin(middlesize, 0, 2, 0);
     win_bottom = newwin(1, 0, LINES - 1, 0);
 
-    keypad(win_top, TRUE);
+    keypad(win_top, true);
 }
 
 void draw_scrollbar(void)
@@ -903,7 +903,7 @@ void draw_centered(WINDOW *w, int row, char *format, ...)
 
 void refresh_screen(void)
 {
-    static int show_splash = TRUE;
+    static int show_splash = true;
     int row;
 
     /*
@@ -936,7 +936,7 @@ void refresh_screen(void)
         draw_centered(win_middle, 12, "Copyright (c) Krister Brus 2000-2010");
         draw_centered(win_middle, 13, "<kristerbrus@fastmail.fm>");
         draw_centered(win_middle, 15, _("%d songs in database"), allcount);
-        show_splash = FALSE;
+        show_splash = false;
     } else {
         for (row = 0; row < middlesize; row++) {
             if (row + toptunenr >= displaycount)
@@ -981,7 +981,7 @@ void user_move_cursor(int delta, int redraw)
 
     while (count--) {
         if (redraw)
-            draw_one_song(tunenr - toptunenr, tunenr, FALSE);
+            draw_one_song(tunenr - toptunenr, tunenr, false);
 
         tunenr += delta;
         if (tunenr >= displaycount - 1)
@@ -992,14 +992,14 @@ void user_move_cursor(int delta, int redraw)
         if ((tunenr - toptunenr >= middlesize) || (tunenr - toptunenr < 0)) {
             toptunenr += delta;
             if (redraw) {
-                scrollok(win_middle, TRUE);
+                scrollok(win_middle, true);
                 wscrl(win_middle, delta);
-                scrollok(win_middle, FALSE);
+                scrollok(win_middle, false);
             }
         }
 
         if (redraw) {
-            draw_one_song(tunenr - toptunenr, tunenr, TRUE);
+            draw_one_song(tunenr - toptunenr, tunenr, true);
             draw_scrollbar();
         }
     }
@@ -1606,7 +1606,7 @@ void find_and_play_next_handler(int dummyparam)
      * !!20080427 - Fix ugly segfault
      */
     if (now_playing_tune)
-        start_play(FALSE, find_next_song(now_playing_tune));
+        start_play(false, find_next_song(now_playing_tune));
     refresh_screen();
     after_move();
     doupdate();
@@ -2149,12 +2149,12 @@ int is_infofile(const char *filename)
 
     ext = strrchr(filename, '.');
     if (ext) {
-        if (0 == strcasecmp(ext, ".nfo")) return TRUE;
-        if (0 == strcasecmp(ext, ".txt")) return TRUE;
-        if (0 == strcasecmp(ext, ".doc")) return TRUE;
+        if (0 == strcasecmp(ext, ".nfo")) return true;
+        if (0 == strcasecmp(ext, ".txt")) return true;
+        if (0 == strcasecmp(ext, ".doc")) return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 void trim_trail(char *s)
@@ -2174,10 +2174,10 @@ void do_show_infofiles(void)
     char workdir[1024];
     char text[255];
     char *p;
-    int hasinfo = FALSE;
+    int hasinfo = false;
     int c;
     int colpos;
-    int lastempty = TRUE;
+    int lastempty = true;
 
     /*
      * TODO: if no files found in the current directory.
@@ -2228,7 +2228,7 @@ void do_show_infofiles(void)
                 if (!(lastempty && !strlen(text))) {
                     if (!hasinfo) {
                         clear_displaytunes();
-                        hasinfo = TRUE;
+                        hasinfo = true;
                     }
                     addtexttodisplay(text, 0, 0, 0);
                 }
@@ -2312,7 +2312,7 @@ void do_context(void)
             for (i = start; i < stop; i++) {
                 if (&alltunes[i] == now_playing_tune)
                     break;
-                user_move_cursor(+1, FALSE);
+                user_move_cursor(+1, false);
             }
             refresh_screen();
 
@@ -2529,7 +2529,7 @@ void do_show_playlist(void)
         for (i = 0; i < playlistcount; i++) {
             if (now_playing_tune == playlist[i])
                 break;
-            user_move_cursor(+1, FALSE);
+            user_move_cursor(+1, false);
         }
     }
 
@@ -2572,7 +2572,7 @@ void do_search(void)
         do_load_playlist(search_string);
         if (playlistcount) {
             do_show_playlist();
-            start_play(TRUE, displaytunes[0]);
+            start_play(true, displaytunes[0]);
             search_string[0] = last_search_string[0] = 0;
             return;
         }
@@ -2666,7 +2666,7 @@ void do_enter(void)
 {
     if (0 == strcmp(search_string, "zxcv") || 0 == strcmp(search_string, ":wq"))
     {
-        wanna_quit = TRUE;
+        wanna_quit = true;
         return;
     }
 
@@ -2677,7 +2677,7 @@ void do_enter(void)
         do_search();
     } else if (displaycount) {
         if (displaytunes[tunenr]->search) {
-            start_play(TRUE, displaytunes[tunenr]);
+            start_play(true, displaytunes[tunenr]);
         } else if (displaytunes[tunenr]->ti->filedate < 0) {
             do_show_one_genre(displaytunes[tunenr]->ti->filedate);
         } else if (strstr(displaytunes[tunenr]->display, ".list")) {
@@ -2726,14 +2726,14 @@ void do_move_song(int delta)
 void do_query_info(void)
 {
     static int last_key_count = 0;
-    static int show_path = FALSE;
+    static int show_path = false;
     struct tune *tune;
     struct tm tm;
 
     if (same_key_twice_in_a_row(&last_key_count))
         show_path = !show_path;
     else
-        show_path = FALSE;
+        show_path = false;
 
     tune = displaytunes[tunenr];
 
@@ -2829,7 +2829,7 @@ void do_restore_displaystate(int state_num)
     if (!f)
         return;
 
-    clear_displaytunes_prim(FALSE);
+    clear_displaytunes_prim(false);
     while (fgets(buf, sizeof(buf), f)) {
         chop(buf);
         switch (cnt++) {
@@ -2980,13 +2980,13 @@ void action(int key)
             case 13:
                 save_playlist(search_string);
                 show_info(_("Playlist '%s' saved."), search_string);
-                in_input_mode = FALSE;
+                in_input_mode = false;
                 search_string[0] = last_search_string[0] = 0;
                 update_searchstring();
                 break;
             case 27:
                 show_info(_("Save cancelled."));
-                in_input_mode = FALSE;
+                in_input_mode = false;
                 search_string[0] = last_search_string[0] = 0;
                 update_searchstring();
                 break;
@@ -3094,14 +3094,14 @@ void action(int key)
             break;
 
         case KEY_F(6):
-            do_show_available_playlists(FALSE);
+            do_show_available_playlists(false);
             search_string[0] = last_search_string[0] = 0;
             update_searchstring();
             break;
 
         case KEY_F(7):
             show_info(_("Enter a playlist name."));
-            in_input_mode = TRUE;
+            in_input_mode = true;
             strcpy(search_string, latest_playlist_name);
             update_searchstring();
             break;
@@ -3118,13 +3118,13 @@ void action(int key)
             break;
 
         case KEY_F(11):
-            make_local_copy_of_database(FALSE);
+            make_local_copy_of_database(false);
             load_all_songs();
             refresh_screen();
             break;
 
         case KEY_F(12):
-            do_show_available_playlists(TRUE);
+            do_show_available_playlists(true);
             search_string[0] = last_search_string[0] = 0;
             update_searchstring();
             break;
@@ -3159,21 +3159,21 @@ void action(int key)
         case KEY_DOWN:
             if (!displaycount)
                 break;
-            user_move_cursor(+1, TRUE);
+            user_move_cursor(+1, true);
             wnoutrefresh(win_middle);
             break;
 
         case KEY_UP:
             if (!displaycount)
                 break;
-            user_move_cursor(-1, TRUE);
+            user_move_cursor(-1, true);
             wnoutrefresh(win_middle);
             break;
 
         case KEY_NPAGE:
             if (!displaycount)
                 break;
-            user_move_cursor(+1*(middlesize - 1), FALSE);
+            user_move_cursor(+1*(middlesize - 1), false);
             wnoutrefresh(win_middle);
             refresh_screen();
             break;
@@ -3181,7 +3181,7 @@ void action(int key)
         case KEY_PPAGE:
             if (!displaycount)
                 break;
-            user_move_cursor(-1*(middlesize - 1), FALSE);
+            user_move_cursor(-1*(middlesize - 1), false);
             wnoutrefresh(win_middle);
             refresh_screen();
             break;
@@ -3266,7 +3266,7 @@ int main(int argc, char **argv)
     print_version();
 
     read_rc_file();
-    sanitize_rc_parameters(TRUE);
+    sanitize_rc_parameters(true);
 
     music_register_all_modules();
 
@@ -3286,7 +3286,7 @@ int main(int argc, char **argv)
      * !!2004-08-08 KB
      * Make a local copies of the *.db database files
      */
-    make_local_copy_of_database(TRUE);
+    make_local_copy_of_database(true);
 
     build_fastarrays();
     load_all_songs();
@@ -3303,7 +3303,7 @@ int main(int argc, char **argv)
     /*
      * Build initial display list which contains *no* songs...
      */
-    clear_displaytunes_prim(FALSE);
+    clear_displaytunes_prim(false);
 
     make_ui();
     refresh_screen();
@@ -3311,15 +3311,15 @@ int main(int argc, char **argv)
     signal(SIGALRM, update_song_progress_handler);
     update_song_progress_handler(0);
     do {
-        in_action = TRUE;
+        in_action = true;
         after_move();
         doupdate();
-        in_action = FALSE;
+        in_action = false;
         arg = wgetch(win_top);
         key_count++;
-        in_action = TRUE;
+        in_action = true;
         action(arg);
-        in_action = FALSE;
+        in_action = false;
     } while (!wanna_quit);
 
     if (player_pid)

@@ -75,10 +75,10 @@ int flac_isit(char *s, int len)
             (s[len - 3] == 'L' || s[len - 3] == 'l') &&
             (s[len - 2] == 'A' || s[len - 2] == 'a') &&
             (s[len - 1] == 'C' || s[len - 1] == 'c')) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 void flac_play(char *filename)

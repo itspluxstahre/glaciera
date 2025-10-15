@@ -86,10 +86,10 @@ int ogg_isit(char *s, int len)
             (s[len - 3] == 'O' || s[len - 3] == 'o') &&
             (s[len - 2] == 'G' || s[len - 2] == 'g') &&
             (s[len - 1] == 'G' || s[len - 1] == 'g')) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 void ogg_play(char *filename)

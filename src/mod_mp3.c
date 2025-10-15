@@ -170,7 +170,7 @@ int mp3_info(char *filename, struct tuneinfo *ti)
         int variable_frames;
         unsigned char *pmm_start;
 	unsigned char *pmm_end;
-        int is_valid_mp3 = FALSE;
+        int is_valid_mp3 = false;
         unsigned char *header;
         int error;
         struct stat ss;
@@ -183,13 +183,13 @@ int mp3_info(char *filename, struct tuneinfo *ti)
         f = open(filename, O_RDONLY);
         if (-1 == f) {
                 fprintf(stderr, "\nmp3_read_info: fail in open '%s'\n", filename);
-                return FALSE;
+                return false;
         }
         error = fstat(f, &ss);
         if (error) {
                 close(f);
                 fprintf(stderr, "\nmp3_read_info: fail in stat '%s'\n", filename);
-                return FALSE;
+                return false;
         }
 	
 	/*
@@ -278,7 +278,7 @@ int mp3_info(char *filename, struct tuneinfo *ti)
 printf("%8d %4d %4d %4d %s\n", variable_frames, ti->duration, ti->bitrate, ti->genre, filename);
 #endif
 
-                is_valid_mp3 = TRUE;
+                is_valid_mp3 = true;
                 break;
         }
 
@@ -297,10 +297,10 @@ int mp3_isit(char *s, int len)
             (s[len - 3] == 'M' || s[len - 3] == 'm') &&
             (s[len - 2] == 'P' || s[len - 2] == 'p') &&
             (s[len - 1] == '3')) {
-		return TRUE;
+		return true;
 	}	
 
-	return FALSE;
+	return false;
 }	
 
 void mp3_play(char *filename) {

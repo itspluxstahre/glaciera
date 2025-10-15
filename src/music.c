@@ -6,10 +6,10 @@
  * Three functions must be written for each supported music format:
  * 
  * 1. int XXX_isit(char *filename)
- *    returns TRUE if the file has the extension .XXX
+ *    returns true if the file has the extension .XXX
  *    
  * 2. int XXX_info(char *filename, struct tuneinfo *si)
- *    returns TRUE if information about the file is calculated
+ *    returns true if information about the file is calculated
  *    and put into the tuneinfo structure.
  *    
  * 3. void XXX_play(char *filename)
