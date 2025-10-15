@@ -12,7 +12,6 @@ Debian:
 	apt-get install libncurses5-dev
 	apt-get install libvorbis-dev
 	apt-get install libflac-dev
-	apt-get install libfcgi-dev
 
 NetBSD:	
 	-I/usr/pkg/include -L/usr/pkg/lib  -Wl,-R/usr/pkg/lib
@@ -34,7 +33,6 @@ MacOSX: (10.4 or later required)
     
     In sources directory run:
     $ xcodebuild
-
 
 
 

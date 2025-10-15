@@ -1,6 +1,5 @@
 build/
 *.o
-*.fcgi
 src/git_version.c
 mp3berg
 mp3build

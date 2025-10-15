@@ -20,19 +20,17 @@ MP3BERG_OBJS := $(OBJ_DIR)/mp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.
 MP3BUILD_OBJS := $(OBJ_DIR)/mp3build.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.o \
                  $(OBJ_DIR)/mod_mp3.o $(OBJ_DIR)/mod_ogg.o $(OBJ_DIR)/mod_flac.o \
                  $(OBJ_DIR)/mod_pls.o $(OBJ_DIR)/music.o
-SEARCHMP3BERG_OBJS := $(OBJ_DIR)/searchmp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.o
 
 GIT_VERSION_SRC := $(SRC_DIR)/git_version.c
 
-TARGETS := $(BIN_DIR)/mp3berg $(BIN_DIR)/mp3build $(BIN_DIR)/searchmp3berg.fcgi
+TARGETS := $(BIN_DIR)/mp3berg $(BIN_DIR)/mp3build
 
-.PHONY: all clean dist backup install mp3berg mp3build searchmp3berg.fcgi FORCE
+.PHONY: all clean dist backup install mp3berg mp3build FORCE
 
 all: $(TARGETS)
 
 mp3berg: $(BIN_DIR)/mp3berg
 mp3build: $(BIN_DIR)/mp3build
-searchmp3berg.fcgi: $(BIN_DIR)/searchmp3berg.fcgi
 
 $(BIN_DIR)/mp3berg: $(MP3BERG_OBJS) | $(BIN_DIR)
 	$(CC) $(LDFLAGS) -o $@ $^ -lncurses -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
@@ -40,10 +38,6 @@ $(BIN_DIR)/mp3berg: $(MP3BERG_OBJS) | $(BIN_DIR)
 
 $(BIN_DIR)/mp3build: $(MP3BUILD_OBJS) | $(BIN_DIR)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpthread -lvorbisfile -lvorbis -lFLAC -logg -lm
-	$(STRIP) $@
-
-$(BIN_DIR)/searchmp3berg.fcgi: $(SEARCHMP3BERG_OBJS) | $(BIN_DIR)
-	$(CC) $(LDFLAGS) -o $@ $^ -lfcgi
 	$(STRIP) $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
