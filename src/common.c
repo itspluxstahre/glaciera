@@ -3,7 +3,7 @@
 // Portions borrowed from the world wild web :)
 // fuzzy() Copyright (c) 1997 Reinhard Rapp - http://www.heise.de/ct/english/97/04/386/
 
-#include "common.h"
+// System headers
 #include <ctype.h>
 #include <glob.h>
 #include <pwd.h>
@@ -12,6 +12,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+// Local headers
+#include "common.h"
 
 /* Legacy config variables - will be populated from new config system */
 char opt_datapath[100];

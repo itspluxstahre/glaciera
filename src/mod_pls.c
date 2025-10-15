@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
 
+// System headers
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+// Local headers
 #include "common.h"
 
 /* -------------------------------------------------------------------------- */

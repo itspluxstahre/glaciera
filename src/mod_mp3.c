@@ -3,6 +3,7 @@
 // Scanning code based on C# code from:
 // http://www.developeru.info/PermaLink,guid,6ac0aff9-0223-4a05-94ac-995feaac683a.aspx
 
+// System headers
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -17,6 +18,7 @@
 #include <time.h>
 #include <unistd.h>
 
+// Local headers
 #include "common.h"
 
 /* --------------------------------------------------------------------------- */

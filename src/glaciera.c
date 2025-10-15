@@ -6,22 +6,14 @@
 // Kristian Wiklund, Dept. of Computer Engineering,
 // Chalmers University of Technology, S-412 96 GOTHENBURG, SWEDEN
 
+// System headers
+#include <ctype.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <locale.h>
 #include <ncurses.h>
-#include <signal.h>
-#include <unistd.h>
-#if defined(HAVE_LIBINTL_H)
-#include <libintl.h>
-#endif
-#include "common.h"
-#include "config.h"
-#include "db.h"
-#include "git_version.h"
-#include "music.h"
-#include <ctype.h>
-#include <dirent.h>
 #include <pthread.h>
+#include <signal.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +25,17 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
+#if defined(HAVE_LIBINTL_H)
+#include <libintl.h>
+#endif
+
+// Local headers
+#include "common.h"
+#include "config.h"
+#include "db.h"
+#include "git_version.h"
+#include "music.h"
 
 #ifdef USE_GETTEXT
 #define _(String) gettext(String)

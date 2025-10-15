@@ -4,8 +4,7 @@
  * Copyright (c) 2025 Glaciera Contributors
  */
 
-#include "config.h"
-#include "toml.h"
+// System headers
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +12,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+// Local headers
+#include "config.h"
+#include "toml.h"
 
 char xdg_config_dir[512];
 char xdg_data_dir[512];

@@ -24,11 +24,14 @@
  * Also, you don't have to change _anything_ in the glaciera-indexer/glaciera programs.
  */
 
-#include "music.h"
-#include "common.h"
+// System headers
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// Local headers
+#include "common.h"
+#include "music.h"
 
 /*
  * The header file exports just the "struct filetype",

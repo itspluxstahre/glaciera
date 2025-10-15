@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2007-2010 Krister Brus <kristerbrus@fastmail.fm>
 
+// System headers
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <ogg/ogg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-
-#include <limits.h>
-#include <ogg/ogg.h>
-#include <strings.h>
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 
+// Local headers
 #include "common.h"
 
 /* -------------------------------------------------------------------------- */

@@ -37,11 +37,7 @@
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
 
-#include "common.h"
-#include "config.h"
-#include "db.h"
-#include "git_version.h"
-#include "music.h"
+// System headers
 #include <ctype.h>
 #include <dirent.h>
 #include <limits.h>
@@ -59,6 +55,13 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+
+// Local headers
+#include "common.h"
+#include "config.h"
+#include "db.h"
+#include "git_version.h"
+#include "music.h"
 
 static char *massage_full_path(char *buf, char *fullpath);
 

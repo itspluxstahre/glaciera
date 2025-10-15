@@ -1,5 +1,4 @@
-#include "db.h"
-#include "common.h"
+// System headers
 #include <fcntl.h>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -9,6 +8,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+// Local headers
+#include "common.h"
+#include "db.h"
 
 static sqlite3 *db = NULL;
 
