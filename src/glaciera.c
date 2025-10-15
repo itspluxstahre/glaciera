@@ -795,21 +795,107 @@ void draw_scrollbar(void)
 }
 
 /*
+ * Get the length of a UTF-8 character sequence starting at the given byte
+ * Returns 1-4 for valid sequences, 1 for invalid bytes
+ */
+static inline int utf8_char_len_ui(unsigned char c)
+{
+    if ((c & 0x80) == 0x00) return 1;      /* 0xxxxxxx - ASCII */
+    if ((c & 0xE0) == 0xC0) return 2;      /* 110xxxxx - 2-byte */
+    if ((c & 0xF0) == 0xE0) return 3;      /* 1110xxxx - 3-byte */
+    if ((c & 0xF8) == 0xF0) return 4;      /* 11110xxx - 4-byte */
+    return 1;  /* Invalid UTF-8, treat as single byte */
+}
+
+/*
+ * Find a safe UTF-8 boundary at or before the given byte offset
+ * Returns adjusted offset that doesn't split a multi-byte character
+ */
+static size_t utf8_safe_offset(const char *str, size_t offset)
+{
+    if (offset == 0 || str[offset] == '\0')
+        return offset;
+    
+    /* Walk backwards to find start of UTF-8 character */
+    while (offset > 0 && ((unsigned char)str[offset] & 0xC0) == 0x80) {
+        offset--;  /* Continuation byte (10xxxxxx) */
+    }
+    
+    return offset;
+}
+
+/*
+ * Truncate string at safe UTF-8 boundary without splitting characters
+ * Returns actual length after truncation
+ */
+static size_t utf8_safe_truncate(char *str, size_t max_bytes)
+{
+    if (!str || max_bytes == 0)
+        return 0;
+    
+    size_t len = strlen(str);
+    if (len <= max_bytes) {
+        return len;
+    }
+    
+    /* Find safe truncation point */
+    size_t safe_len = utf8_safe_offset(str, max_bytes);
+    str[safe_len] = '\0';
+    return safe_len;
+}
+
+/*
  * Translate "aaa/bbb/ccc/ddd"
  * to        "aaa - bbb - ccc - ddd"
+ * UTF-8 safe version that handles substrings correctly
  */
 void depath(char *dst, char *src)
 {
-    while (*src) {
-        if ('/' != *src)
-            *dst++ = *src;
-        else {
+    /* If src is null or empty, nothing to do */
+    if (!src || !*src) {
+        *dst = 0;
+        return;
+    }
+
+    /* Find start of first complete UTF-8 character in substring */
+    char *start = src;
+    while (*start) {
+        /* Check if this byte starts a valid UTF-8 sequence */
+        unsigned char c = (unsigned char)*start;
+        if ((c & 0x80) == 0x00) break;      /* ASCII character */
+        if ((c & 0xE0) == 0xC0) break;      /* 2-byte start */
+        if ((c & 0xF0) == 0xE0) break;      /* 3-byte start */
+        if ((c & 0xF8) == 0xF0) break;      /* 4-byte start */
+
+        /* This is a continuation byte, skip it */
+        start++;
+        if (!*start) {
+            *dst = 0;
+            return;
+        }
+    }
+
+    /* If we reached end without finding a valid start, nothing to do */
+    if (!*start) {
+        *dst = 0;
+        return;
+    }
+
+    /* Now process from the safe starting point */
+    while (*start) {
+        if ('/' != *start) {
+            /* Copy complete UTF-8 character */
+            int char_len = utf8_char_len_ui((unsigned char)*start);
+            for (int i = 0; i < char_len && start[i]; i++) {
+                *dst++ = start[i];
+            }
+            start += char_len;
+        } else {
             *dst++ = ' ';
             *dst++ = '-';
             *dst++ = ' ';
+            start++;
         }
-
-        src++;
     }
     *dst = 0;
 }
@@ -876,15 +962,36 @@ void draw_one_song(int row, int item, int highlight)
     const int step = col_step;
     if (ARG_PATH == sort_arg) {
         const size_t path_len = strlen(tune->path);
-        p = (step < 0 || (size_t)step > path_len) ? "" : tune->path + step;
-        strncat(buf, p, COLS);
+        /* Use UTF-8 safe offset for horizontal scrolling */
+        size_t safe_step = (step < 0 || (size_t)step > path_len) ? 0 : utf8_safe_offset(tune->path, step);
+        p = tune->path + safe_step;
+        
+        /* UTF-8 safe copy - copy up to COLS characters, not bytes */
+        size_t copied = 0;
+        size_t remaining = COLS;
+        while (*p && copied < remaining) {
+            int char_len = utf8_char_len_ui((unsigned char)*p);
+            if ((size_t)char_len > remaining) break;  /* Don't split character */
+            
+            for (int i = 0; i < char_len && *p; i++) {
+                buf[strlen(buf)] = *p++;
+            }
+            copied += char_len;
+        }
     } else {
         const size_t display_len = strlen(tune->display);
-        p = (step < 0 || (size_t)step > display_len) ? "" : tune->display + step;
+        /* Use UTF-8 safe offset for horizontal scrolling */
+        size_t safe_step = (step < 0 || (size_t)step > display_len) ? 0 : utf8_safe_offset(tune->display, step);
+        p = tune->display + safe_step;
         depath(buf + strlen(buf), p);
     }
 
-    buf[strlen(buf)] = FILLER;
+    /* UTF-8 safe truncation at screen width */
+    size_t buf_len = utf8_safe_truncate(buf, COLS);
+    /* Fill remaining space with FILLER */
+    while (buf_len < (size_t)COLS) {
+        buf[buf_len++] = FILLER;
+    }
     buf[COLS] = 0;
 
     /*
@@ -892,7 +999,8 @@ void draw_one_song(int row, int item, int highlight)
      */
     if (col_step) {
         buf[0] = '<';
-        buf[COLS-2] = '>';
+        if (COLS >= 2)
+            buf[COLS-2] = '>';
     }
 
     /*
@@ -1040,7 +1148,14 @@ void user_move_cursor(int delta, int redraw)
 
 void after_move(void)
 {
-    wmove(win_top, 0, strlen(search_string));
+    /* UTF-8 aware cursor positioning */
+    size_t char_pos = 0;
+    for (int i = 0; search_string[i]; ) {
+        int char_len = utf8_char_len_ui((unsigned char)search_string[i]);
+        i += char_len;
+        char_pos++;
+    }
+    wmove(win_top, 0, char_pos);
     wnoutrefresh(win_top);
 }
 
@@ -3357,9 +3472,14 @@ int main(int argc, char **argv)
 {
     int arg;
 
+    /* 
+     * CRITICAL: Set locale before any curses initialization
+     * This enables UTF-8 support in ncurses
+     */
+    setlocale(LC_ALL, "");
+
 #ifdef USE_GETTEXT
     /* setup internationalization of message-strings via gettext(): */
-    setlocale(LC_ALL, "");
     bindtextdomain("glaciera", "./locale");
     textdomain("glaciera");
 #endif
