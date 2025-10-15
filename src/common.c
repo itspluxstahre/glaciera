@@ -345,31 +345,7 @@ inline void bitnull(BITS *abits, int bits)  {        memset(abits, 0, CALCBYTES(
 inline BITS *bitalloc(int bits)             { return malloc(CALCBYTES(bits));                           }
 
 /* Old config file parsing removed - now using TOML config in config.c */
-
-/* -------------------------------------------------------------------------- */
-
-void urlencode(char *dst, const char *src)
-{
-	char threechars[4];
-	
-	while (*src) {
-		if (isalnum(*src) || 
-		    '.' == *src || 
-		    '/' == *src || 
-		    ':' == *src) {
-			*dst++ = *src;
-		} else if (' ' == *src) {
-			*dst++ = '+';
-		} else {
-			snprintf(threechars, sizeof(threechars), "%%%2x", *src);
-			*dst++ = threechars[0];
-			*dst++ = threechars[1];
-			*dst++ = threechars[2];
-		}
-		src++;
-	}
-	*dst = '\0';
-}
+/* Old FCGI web interface removed - no longer needed */
 
 /* -------------------------------------------------------------------------- */
 
