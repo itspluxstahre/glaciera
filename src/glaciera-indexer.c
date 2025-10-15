@@ -323,24 +323,6 @@ static void build_display_from_filename(const char *dir,
         snprintf(out, out_size, "%s", p);
 }
 
-static void append_album_suffix(char *buffer, size_t buffer_size, const char *album)
-{
-        if (!album || !*album)
-                return;
-        size_t len = strlen(buffer);
-        if (len == 0) {
-                snprintf(buffer, buffer_size, "%s", album);
-                return;
-        }
-        if (strcmp(buffer, album) == 0)
-                return;
-        if (len + 3 >= buffer_size)
-                return;
-        strncat(buffer, " (", buffer_size - len - 1);
-        strncat(buffer, album, buffer_size - strlen(buffer) - 1);
-        strncat(buffer, ")", buffer_size - strlen(buffer) - 1);
-}
-
 static void build_display_from_metadata(const struct track_metadata *meta,
                                         char *out,
                                         size_t out_size)
@@ -349,30 +331,48 @@ static void build_display_from_metadata(const struct track_metadata *meta,
         if (!meta)
                 return;
 
-        if (meta->artist && meta->title) {
+        /* Format: <artist> - <album> - <tracknum> <title> */
+        if (meta->artist && meta->album && meta->title) {
                 if (meta->track_number > 0)
-                        snprintf(out, out_size, "%s - %02d. %s", meta->artist, meta->track_number, meta->title);
+                        snprintf(out, out_size, "%s - %s - %02d %s", 
+                                meta->artist, meta->album, meta->track_number, meta->title);
+                else
+                        snprintf(out, out_size, "%s - %s - %s", 
+                                meta->artist, meta->album, meta->title);
+        }
+        /* Fallback formats when some metadata is missing */
+        else if (meta->artist && meta->title) {
+                if (meta->track_number > 0)
+                        snprintf(out, out_size, "%s - %02d %s", 
+                                meta->artist, meta->track_number, meta->title);
                 else
                         snprintf(out, out_size, "%s - %s", meta->artist, meta->title);
-        } else if (meta->title) {
+        }
+        else if (meta->album && meta->title) {
                 if (meta->track_number > 0)
-                        snprintf(out, out_size, "%02d. %s", meta->track_number, meta->title);
+                        snprintf(out, out_size, "%s - %02d %s", 
+                                meta->album, meta->track_number, meta->title);
+                else
+                        snprintf(out, out_size, "%s - %s", meta->album, meta->title);
+        }
+        else if (meta->title) {
+                if (meta->track_number > 0)
+                        snprintf(out, out_size, "%02d %s", meta->track_number, meta->title);
                 else
                         snprintf(out, out_size, "%s", meta->title);
-        } else if (meta->artist) {
+        }
+        else if (meta->artist && meta->album) {
+                snprintf(out, out_size, "%s - %s", meta->artist, meta->album);
+        }
+        else if (meta->artist) {
                 snprintf(out, out_size, "%s", meta->artist);
         }
-
-        if (out[0] == '\0' && meta->album)
+        else if (meta->album) {
                 snprintf(out, out_size, "%s", meta->album);
-
-        if (out[0] != '\0')
-                append_album_suffix(out, out_size, meta->album);
-        else if (meta->album)
-                snprintf(out, out_size, "%s", meta->album);
-
-        if (out[0] == '\0' && meta->track)
+        }
+        else if (meta->track) {
                 snprintf(out, out_size, "%s", meta->track);
+        }
 
         trim_double_spaces(out);
         trim_double_minuses(out);
