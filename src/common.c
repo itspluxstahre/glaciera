@@ -82,18 +82,24 @@ char *gethomedir(void)
 /* -------------------------------------------------------------------------- */
 
 /**
- * Swap two tune pointers.
+ * Swap two tune pointers in an array.
+ * 
+ * This function exchanges the values of two pointers to tune structures.
+ * Used for shuffling songs or reordering the display/playlist.
+ * 
+ * Example: If a points to song X and b points to song Y,
+ *          after swap(a, b), a points to Y and b points to X.
  *
- * @param a First tune pointer to swap
- * @param b Second tune pointer to swap
+ * @param a Pointer to first tune pointer (will receive value from b)
+ * @param b Pointer to second tune pointer (will receive value from a)
  */
 void swap(struct tune **a, struct tune **b)
 {
-        struct tune *t;
+        struct tune *temp;
 
-        t = *a;
-        *a = *b;
-        *b = t;
+        temp = *a;    /* Save pointer from a */
+        *a = *b;      /* Copy pointer from b to a */
+        *b = temp;    /* Copy saved pointer to b */
 }
 
 /**
