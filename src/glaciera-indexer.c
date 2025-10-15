@@ -150,18 +150,6 @@ void load_rippers(char *filename)
                         qsearch[ch].lo = i;
                 qsearch[ch].hi = i;
         }
-
-#if 0
-        for(i=32;i<100;i++) {
-                printf("%3d %c   %3d --  %3d\n", i, i,qsearch[i].lo, qsearch[i].hi);
-                for (ch = qsearch[i].lo; ch <= qsearch[i].hi; ch++)
-                        if (ch)
-                        printf("                 %3d *%s*\n", ch, rippers[ch].str);
-        }
-exit(0);
-        for(i=0;i<ripperscount;i++)
-                printf("%5d %3d %s\n", i, rippers[i].len, rippers[i].str);
-#endif
 }
 
 /*
@@ -186,27 +174,6 @@ void strip_ripper(char *s)
                         if (p > s && 0 == strncasecmp(p, rippers[i].str, rippers[i].len)) {
                                 *p = 0;
                                 break;
-                        }
-                }
-        }
-}
-
-void strip_path_ripper(char *s)
-{
-        int i, j;
-        char *p;
-        int slen = strlen(s);
-
-        return;
-
-        for (i = 0; i < ripperscount; i++) {
-                for (j = slen - 1; j; j--) {
-                        if ('/' == s[j]) {
-                                p = &s[j] - rippers[i].len;
-                                if (0 == strncasecmp(p, rippers[i].str, rippers[i].len)) {
-                                        memmove(p, p + rippers[i].len, rippers[i].len+2);
-                                        break;
-                                }
                         }
                 }
         }
@@ -625,19 +592,6 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
                 if (trackcolumn[i] != musicfiles)
                         trackcolumn[i] = false;
 	}
-	
-#ifdef DEBUG	
-	fprintf(stderr,"\n0123456789012345678901234567890\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%c", basefilename[i] ? basefilename[i] : ' ');
-	fprintf(stderr,"\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%s", samecolumn[i] ? "=" : " ");
-	fprintf(stderr,"\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%s", trackcolumn[i] ? "#" : " ");
-	fprintf(stderr,"\n");
-#endif
 
 	/*
 	 * Remove repeated "cd1" from "cd1-01-song"
@@ -653,9 +607,6 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 		if (trackcolumn[i]) {
 			sumcolumn[i] /= musicfiles;
 			if (sumcolumn[i] == basefilename[i] && samecolumn[i]) {
-#ifdef DEBUG				
-				fprintf(stderr, "\n%d:ACC=%d FILES=%d", i,sumcolumn[i], musicfiles);
-#endif			
 				samecolumn[i] = true;
 				trackcolumn[i] = false;
 			}
@@ -693,20 +644,6 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 			if (trackcolumn[i])
 				trackcolumn[i-1] = true;					
 	}
-	
-#ifdef DEBUG	
-	fprintf(stderr,"\nTRACKSTARTS=%d\n", trackstarts);
-	fprintf(stderr,"\n0123456789012345678901234567890\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%c", basefilename[i] ? basefilename[i] : ' ');
-	fprintf(stderr,"\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%s", samecolumn[i] ? "=" : " ");
-	fprintf(stderr,"\n");
-        for (i = 0; i < 40; i++) 
-		fprintf(stderr,"%s", trackcolumn[i] ? "#" : " ");
-	fprintf(stderr,"\n");
-#endif	
 
 	justnames = true;
         for (i = 0; i < 256; i++) {

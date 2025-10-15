@@ -549,10 +549,6 @@ bool mp3_info(char *filename, struct tuneinfo *ti)
 		else
 			ti->genre = 0xff;
 
-#if 0
-printf("%8d %4d %4d %4d %s\n", variable_frames, ti->duration, ti->bitrate, ti->genre, filename);
-#endif
-
                 is_valid_mp3 = true;
                 break;
         }

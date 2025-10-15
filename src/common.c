@@ -302,22 +302,6 @@ inline BITS *bitalloc(int bits)             { return malloc(CALCBYTES(bits));   
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef USE_STACK
-int int_stack[10];
-int stack_pos = 0;
-void int_push(int v)
-{
-        int_stack[stack_pos++] = v;
-}
-
-void int_pop(int *v)
-{
-        *v = int_stack[--stack_pos];
-}
-#endif
-
-/* -------------------------------------------------------------------------- */
-
 char * find_actual_file_name(char *buf, char *fullfilename)
 {
 	glob_t g;
@@ -335,9 +319,6 @@ char * find_actual_file_name(char *buf, char *fullfilename)
 	*dst = '\0';
 
 	glob(tmp, GLOB_NOSORT, NULL, &g);
-#ifdef DEBUG
-	printf("XX%dXX%sXX", g.gl_pathc, g.gl_pathv[0]);
-#endif
 	if (1 == g.gl_pathc)
 		strcpy(buf, g.gl_pathv[0]);
 	else

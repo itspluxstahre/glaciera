@@ -831,13 +831,6 @@ void draw_one_song(int row, int item, int highlight)
 
     switch (sort_arg) {
         case ARG_NORMAL:
-#if 0
-            {
-                struct tune *t;
-                t =  find_in_alltunes_by_display_pointer(tune->display);
-                snprintf(buf, sizeof(buf), "%8lx %5d ", (unsigned int)t, find_tune_number_by_alltunes_address(t));
-            }
-#endif
             break;		
         case ARG_LENGTH:
             hours = tune->ti->duration / 60;
@@ -1197,11 +1190,6 @@ struct tune *find_tune_by_displayname(char *displayname, int hardness)
     int bestresult;
     int res;
     int ch;
-
-#if 0
-    while ('?' == *displayname || ' ' == *displayname)
-        displayname++;
-#endif
 
     key.display = displayname;
     tune = bsearch(&key, (void *) alltunes, allcount, sizeof(struct tune), alltunes_sort);
@@ -3013,14 +3001,6 @@ void action(int key)
     static int last_space_count = 0;
     int i;
 
-#if 0
-    static char  buf[1000];
-    if (strlen(buf)>100)
-        buf[0] = 0;
-    snprintf(buf, sizeof(buf), "%s %04x", buf, key);
-    show_info(buf);
-    show_info("%04x", key);
-#endif
     if (KEY_BACKSPACE == key || 0x07f == key) {
         i = strlen(search_string);
         if (i)
@@ -3346,17 +3326,6 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "");
     bindtextdomain("glaciera", "./locale");
     textdomain("glaciera");
-#endif
-
-#if 0
-    char *p;
-
-    setlocale(LC_ALL, "");
-    p = setlocale(LC_ALL, NULL);
-    printf("loca=%s\n", p);
-    printf(gettext("yada"));
-
-    exit(0);
 #endif
 
     while ((arg = getopt(argc, argv, "hvrs:")) > -1) {
