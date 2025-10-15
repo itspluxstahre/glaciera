@@ -44,6 +44,8 @@ char opt_mp3playerpath [100];
 char opt_mp3playerflags[100];
 char opt_oggplayerpath [100];
 char opt_oggplayerflags[100];
+char opt_flacplayerpath[100];
+char opt_flacplayerflags[100];
 char tolowerarray[256];
 
 /**

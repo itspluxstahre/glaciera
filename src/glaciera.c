@@ -3402,6 +3402,8 @@ int main(int argc, char **argv)
     strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
     strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
     strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
+    strncpy(opt_flacplayerpath, global_config.flac_player_path, sizeof(opt_flacplayerpath) - 1);
+    strncpy(opt_flacplayerflags, global_config.flac_player_flags, sizeof(opt_flacplayerflags) - 1);
 
     music_register_all_modules();
 

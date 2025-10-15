@@ -174,7 +174,30 @@ void flac_play(char *filename)
  	 * flac123 has some strange bugs...
  	 * http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=339450 
  	 * http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=339454
+	 *
+	 * But now we have a dedicated FLAC player config option!
  	 */
-	execlp(opt_oggplayerpath, opt_oggplayerpath, filename, NULL);	
+	char *player_args[3];
+	player_args[0] = opt_flacplayerpath;
+	player_args[1] = filename;
+	player_args[2] = NULL;
+	
+	if (strlen(opt_flacplayerflags) > 0) {
+		/* If flags are configured, we need to split them */
+		char flags_copy[256];
+		strncpy(flags_copy, opt_flacplayerflags, sizeof(flags_copy) - 1);
+		flags_copy[sizeof(flags_copy) - 1] = '\0';
+		
+		/* Simple approach: if flags exist, add them before filename */
+		char *flag_args[4];
+		flag_args[0] = opt_flacplayerpath;
+		flag_args[1] = flags_copy;
+		flag_args[2] = filename;
+		flag_args[3] = NULL;
+		
+		execvp(opt_flacplayerpath, flag_args);
+	} else {
+		execvp(opt_flacplayerpath, player_args);
+	}
 }
 

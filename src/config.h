@@ -39,6 +39,8 @@ typedef struct {
     char mp3_player_flags[256];
     char ogg_player_path[128];
     char ogg_player_flags[256];
+    char flac_player_path[128];
+    char flac_player_flags[256];
     
     /* Active theme */
     theme_t theme;

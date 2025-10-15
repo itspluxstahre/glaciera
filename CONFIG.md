@@ -37,6 +37,8 @@ mp3_player = "mpg123"
 mp3_flags = ""
 ogg_player = "ogg123"
 ogg_flags = ""
+flac_player = "ogg123"
+flac_flags = ""
 
 [appearance]
 # Theme name (default, or filename from themes/ directory without .toml)
@@ -57,6 +59,22 @@ index = [
 ```
 
 All paths will be scanned and indexed when you run `glaciera-indexer`.
+
+### Player Configuration
+
+Glaciera supports different players for different audio formats:
+
+```toml
+[players]
+mp3_player = "mpg123"      # MP3 file player
+mp3_flags = ""             # Additional flags for MP3 player
+ogg_player = "ogg123"      # OGG file player  
+ogg_flags = ""             # Additional flags for OGG player
+flac_player = "ogg123"     # FLAC file player
+flac_flags = ""            # Additional flags for FLAC player
+```
+
+**Note**: FLAC files can be played by ogg123 (which handles FLAC format), or you can specify a dedicated FLAC player like `flac123` if preferred.
 
 ## Creating Custom Themes
 

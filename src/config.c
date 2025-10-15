@@ -101,6 +101,8 @@ void config_set_defaults(config_t *config) {
     config->mp3_player_flags[0] = '\0';
     strcpy(config->ogg_player_path, "ogg123");
     config->ogg_player_flags[0] = '\0';
+    strcpy(config->flac_player_path, "ogg123");
+    config->flac_player_flags[0] = '\0';
     
     /* Default Nord dark theme */
     strcpy(config->theme_name, "default");
@@ -247,7 +249,9 @@ bool config_create_default_file(void) {
     fprintf(fp, "mp3_player = \"mpg123\"\n");
     fprintf(fp, "mp3_flags = \"\"\n");
     fprintf(fp, "ogg_player = \"ogg123\"\n");
-    fprintf(fp, "ogg_flags = \"\"\n\n");
+    fprintf(fp, "ogg_flags = \"\"\n");
+    fprintf(fp, "flac_player = \"ogg123\"\n");
+    fprintf(fp, "flac_flags = \"\"\n\n");
     
     fprintf(fp, "[appearance]\n");
     fprintf(fp, "# Theme name (default, or filename from themes/ directory without .toml)\n");
@@ -359,6 +363,20 @@ static bool load_config_file(void) {
             strncpy(global_config.ogg_player_flags, oggflags.u.s,
                    sizeof(global_config.ogg_player_flags) - 1);
             free(oggflags.u.s);
+        }
+        
+        toml_datum_t flac = toml_string_in(players, "flac_player");
+        if (flac.ok) {
+            strncpy(global_config.flac_player_path, flac.u.s,
+                   sizeof(global_config.flac_player_path) - 1);
+            free(flac.u.s);
+        }
+        
+        toml_datum_t flacflags = toml_string_in(players, "flac_flags");
+        if (flacflags.ok) {
+            strncpy(global_config.flac_player_flags, flacflags.u.s,
+                   sizeof(global_config.flac_player_flags) - 1);
+            free(flacflags.u.s);
         }
     }
     
