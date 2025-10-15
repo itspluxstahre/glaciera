@@ -289,6 +289,10 @@ static char *mp3_decode_utf16(const unsigned char *data, size_t len, bool big_en
         return out;
 }
 
+/*
+ * Decode ID3 text based on encoding type
+ * Returns allocated string (caller must free) or NULL on error
+ */
 static char *mp3_decode_id3_text(uint8_t encoding, const unsigned char *data, size_t len)
 {
         if (!data || len == 0)
@@ -312,6 +316,8 @@ static char *mp3_decode_id3_text(uint8_t encoding, const unsigned char *data, si
                                 offset = 2;
                         }
                 }
+                if (offset >= len)
+                        return NULL;
                 return mp3_decode_utf16(data + offset, len - offset, big_endian);
         }
         case 2: /* UTF-16BE without BOM */
@@ -321,78 +327,174 @@ static char *mp3_decode_id3_text(uint8_t encoding, const unsigned char *data, si
         }
 }
 
-static bool mp3_parse_id3v2(const unsigned char *data, size_t size, struct track_metadata *meta)
+/*
+ * Parse a single ID3v2 text frame and store in metadata
+ * Returns true if metadata was successfully extracted
+ */
+static bool parse_id3v2_text_frame(const char *frame_id, const unsigned char *frame_data,
+                                   uint32_t frame_size, struct track_metadata *meta)
 {
-        if (size < 10 || memcmp(data, "ID3", 3) != 0)
+        if (!frame_id || !frame_data || !meta || frame_size < 2)
                 return false;
 
+        /* Only handle text frames (T***) */
+        if (frame_id[0] != 'T')
+                return false;
+
+        uint8_t encoding = frame_data[0];
+        char *value = mp3_decode_id3_text(encoding, frame_data + 1, frame_size - 1);
+        if (!value)
+                return false;
+
+        bool handled = false;
+        if (strcmp(frame_id, "TIT2") == 0) {
+                /* Title */
+                metadata_set_if_empty(&meta->title, value);
+                handled = (meta->title == value);
+        } else if (strcmp(frame_id, "TPE1") == 0) {
+                /* Artist */
+                metadata_set_if_empty(&meta->artist, value);
+                handled = (meta->artist == value);
+        } else if (strcmp(frame_id, "TALB") == 0) {
+                /* Album */
+                metadata_set_if_empty(&meta->album, value);
+                handled = (meta->album == value);
+        } else if (strcmp(frame_id, "TRCK") == 0) {
+                /* Track number */
+                metadata_try_set_track_number(meta, value);
+                metadata_set_if_empty(&meta->track, value);
+                handled = (meta->track == value || meta->track_number >= 0);
+        } else {
+                /* Unknown frame, discard */
+                free(value);
+        }
+
+        return handled;
+}
+
+/*
+ * Decode and parse a single ID3v2 frame
+ * Returns frame size (including header) or 0 on error
+ */
+static uint32_t decode_id3v2_frame(const unsigned char *frame, size_t available_size,
+                                   uint8_t version, struct track_metadata *meta,
+                                   bool *found_metadata)
+{
+        /* Need at least 10 bytes for frame header */
+        if (!frame || !meta || available_size < 10)
+                return 0;
+
+        /* Check for padding (null bytes indicate end of frames) */
+        if (frame[0] == 0)
+                return 0;
+
+        /* Extract frame ID */
+        char frame_id[5];
+        memcpy(frame_id, frame, 4);
+        frame_id[4] = '\0';
+
+        /* Validate frame ID (should be alphanumeric) */
+        for (int i = 0; i < 4; i++) {
+                if (!isalnum((unsigned char)frame_id[i]))
+                        return 0;
+        }
+
+        /* Read frame size */
+        uint32_t frame_size = (version == 4) ?
+                              mp3_read_synchsafe32(frame + 4) :
+                              mp3_read_be32(frame + 4);
+
+        /* Validate frame size */
+        if (frame_size == 0 || frame_size > available_size - 10)
+                return 0;
+
+        /* Parse text frames */
+        const unsigned char *frame_data = frame + 10;
+        if (parse_id3v2_text_frame(frame_id, frame_data, frame_size, meta))
+                *found_metadata = true;
+
+        return 10 + frame_size;
+}
+
+/*
+ * Skip ID3v2 extended header if present
+ * Returns new offset after extended header
+ */
+static size_t skip_id3v2_extended_header(const unsigned char *data, size_t offset,
+                                         size_t limit, uint8_t version, uint8_t flags)
+{
+        /* Check if extended header flag is set */
+        if (!(flags & 0x40) || offset >= limit)
+                return offset;
+
+        if (version == 4) {
+                /* ID3v2.4 extended header */
+                if (offset + 4 > limit)
+                        return offset;
+                uint32_t ext_size = mp3_read_synchsafe32(data + offset);
+                if (ext_size > 0 && offset + ext_size <= limit)
+                        return offset + ext_size;
+        } else if (version == 3) {
+                /* ID3v2.3 extended header */
+                if (offset + 4 > limit)
+                        return offset;
+                uint32_t ext_size = mp3_read_be32(data + offset);
+                if (ext_size > 0 && offset + 4 + ext_size <= limit)
+                        return offset + 4 + ext_size;
+        }
+
+        return offset;
+}
+
+/*
+ * Parse ID3v2 tag and extract metadata
+ * Returns true if any metadata was found
+ */
+static bool mp3_parse_id3v2(const unsigned char *data, size_t size, struct track_metadata *meta)
+{
+        /* Validate input */
+        if (!data || !meta || size < 10)
+                return false;
+
+        /* Check ID3v2 signature */
+        if (memcmp(data, "ID3", 3) != 0)
+                return false;
+
+        /* Parse header */
         uint8_t version = data[3];
         uint8_t flags = data[5];
         uint32_t tag_size = mp3_read_synchsafe32(data + 6);
+
+        /* Validate version (support v2.3 and v2.4) */
+        if (version < 3 || version > 4) {
+                return false;
+        }
+
+        /* Calculate tag boundaries */
         size_t offset = 10;
         size_t limit = offset + tag_size;
         if (limit > size)
                 limit = size;
 
-        if ((flags & 0x40) && offset < limit) {
-                if (version == 4) {
-                        if (offset + 4 <= limit) {
-                                uint32_t ext_size = mp3_read_synchsafe32(data + offset);
-                                if (offset + ext_size <= limit)
-                                        offset += ext_size;
-                        }
-                } else if (version == 3) {
-                        if (offset + 4 <= limit) {
-                                uint32_t ext_size = mp3_read_be32(data + offset);
-                                if (offset + 4 + ext_size <= limit)
-                                        offset += 4 + ext_size;
-                        }
-                }
-        }
+        /* Skip extended header if present */
+        offset = skip_id3v2_extended_header(data, offset, limit, version, flags);
 
+        /* Parse frames */
         bool found = false;
         while (offset + 10 <= limit) {
-                const unsigned char *frame = data + offset;
-                if (frame[0] == 0)
+                uint32_t frame_total_size = decode_id3v2_frame(data + offset,
+                                                               limit - offset,
+                                                               version,
+                                                               meta,
+                                                               &found);
+                if (frame_total_size == 0)
                         break;
 
-                char frame_id[5];
-                memcpy(frame_id, frame, 4);
-                frame_id[4] = '\0';
+                offset += frame_total_size;
 
-                uint32_t frame_size = (version == 4) ?
-                                      mp3_read_synchsafe32(frame + 4) :
-                                      mp3_read_be32(frame + 4);
-                if (frame_size == 0)
+                /* Prevent infinite loop on corrupted data */
+                if (offset <= 10)
                         break;
-                if (offset + 10 + frame_size > limit)
-                        break;
-
-                const unsigned char *frame_data = frame + 10;
-                if (frame_id[0] == 'T' && frame_size > 1) {
-                        uint8_t encoding = frame_data[0];
-                        char *value = mp3_decode_id3_text(encoding, frame_data + 1, frame_size - 1);
-                        if (value) {
-                                if (strcmp(frame_id, "TIT2") == 0) {
-                                        metadata_set_if_empty(&meta->title, value);
-                                        found = true;
-                                } else if (strcmp(frame_id, "TPE1") == 0) {
-                                        metadata_set_if_empty(&meta->artist, value);
-                                        found = true;
-                                } else if (strcmp(frame_id, "TALB") == 0) {
-                                        metadata_set_if_empty(&meta->album, value);
-                                        found = true;
-                                } else if (strcmp(frame_id, "TRCK") == 0) {
-                                        metadata_try_set_track_number(meta, value);
-                                        metadata_set_if_empty(&meta->track, value);
-                                        found = true;
-                                } else {
-                                        free(value);
-                                }
-                        }
-                }
-
-                offset += 10 + frame_size;
         }
 
         return found;
