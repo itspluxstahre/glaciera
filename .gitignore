@@ -2,6 +2,5 @@ build/
 builddir/
 *.o
 src/git_version.c
-glaciera
-glaciera-indexer
 .DS_Store
+AGENTS.md

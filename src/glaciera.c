@@ -974,9 +974,8 @@ void refresh_screen(void)
         draw_centered(win_middle,  8, "        \\/          \\/     \\/        \\/           \\/  ");
         draw_centered(win_middle,  10, "- Heavy Duty Jukebox -");
         draw_centered(win_middle, 11, complete_version());
-        draw_centered(win_middle, 12, "Copyright (c) Krister Brus 2000-2010");
-        draw_centered(win_middle, 13, "<kristerbrus@fastmail.fm>");
-        draw_centered(win_middle, 15, _("%d songs in database"), allcount);
+        draw_centered(win_middle, 12, "Copyright (c) Plux Stahre 2025");
+        draw_centered(win_middle, 14, _("%d songs in database"), allcount);
         show_splash = false;
     } else {
         for (row = 0; row < middlesize; row++) {

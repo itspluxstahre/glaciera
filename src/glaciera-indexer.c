@@ -962,7 +962,7 @@ void print_version(void)
         fprintf(stderr, "Database builder for GLACIERA - %s - %s\n",
 			complete_version(),
 			__DATE__ " " __TIME__);
-        fprintf(stderr, "Copyright (c) Krister Brus 2003-2010 <kristerbrus@fastmail.fm>\n");
+        fprintf(stderr, "Copyright (c) Plux Stahre 2025\n");
 }
 
 /* --------------------------------------------------------------------------- */
