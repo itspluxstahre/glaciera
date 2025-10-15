@@ -48,6 +48,14 @@ char opt_mp3bergrchomepath [100] = ".mp3bergrc";
 char opt_allowprivatercfile[100] = "true";
 char tolowerarray[256];
 
+/**
+ * Check if a value is within a specified range (inclusive).
+ *
+ * @param v The value to check
+ * @param min The minimum value of the range
+ * @param max The maximum value of the range
+ * @return true if v is between min and max (inclusive), false otherwise
+ */
 bool inrange(int v, int min, int max)
 {
         return (v >= min) && (v <= max);
@@ -73,13 +81,12 @@ char *gethomedir(void)
 
 /* -------------------------------------------------------------------------- */
 
-/*
- * Very clever and generic swap() routine. C++ complains, though...
+/**
+ * Swap two tune pointers.
+ *
+ * @param a First tune pointer to swap
+ * @param b Second tune pointer to swap
  */
-/*
-#define Swap(a,b) ((int)a^=(int)b^=(int)a^=(int)b)
-*/
-
 void swap(struct tune **a, struct tune **b)
 {
         struct tune *t;
@@ -89,6 +96,12 @@ void swap(struct tune **a, struct tune **b)
         *b = t;
 }
 
+/**
+ * Check if a key is a typeable character (letter or digit).
+ *
+ * @param key The key code to check
+ * @return true if the key is alphanumeric, false otherwise
+ */
 bool is_typeable_key(int key)
 {
         return ((key >= 'a') && (key <= 'z')) ||
@@ -100,6 +113,10 @@ bool is_typeable_key(int key)
 static bool istypeablearray[256];
 static char toupperarray[256];
 
+/**
+ * Initialize fast lookup arrays for character type checking and case conversion.
+ * Populates istypeablearray and toupperarray/tolowerarray for efficient character processing.
+ */
 void build_fastarrays(void)
 {
         int i;
@@ -111,6 +128,12 @@ void build_fastarrays(void)
         }
 }
 
+/**
+ * Filter a string to only include searchable characters (alphanumeric).
+ * Converts the string to uppercase for case-insensitive searching.
+ *
+ * @param src The source string to filter
+ */
 void only_searchables(char *src)
 {
         char *dst;
@@ -122,19 +145,29 @@ void only_searchables(char *src)
         *dst = '\0';
 }
 
+/**
+ * Sanitize user input by converting '+' characters to spaces and filtering to typeable characters.
+ *
+ * @param src The source string to sanitize
+ */
 void sanitize_user_input(char *src)
 {
         char *dst;
 
         for (dst = src; *src; src++) {
-		if ('+' == *src)
-			*dst++ = ' ';
-		else if (istypeablearray[*src & 0xff])
+                if ('+' == *src)
+                        *dst++ = ' ';
+                else if (istypeablearray[*src & 0xff])
                         *dst++ = *src;
         }
         *dst = '\0';
 }
 
+/**
+ * Remove trailing newline character from a string buffer.
+ *
+ * @param buf The string buffer to chop
+ */
 void chop(char *buf)
 {
         char *p;
@@ -146,13 +179,13 @@ void chop(char *buf)
 /* trim: remove trailing blanks, tabs, newlines */
 int trim(char s[])
 {
-	int n;
-	
-	for (n = strlen(s)-1; n >= 0; n--)
-		if (s[n] != ' ' && s[n] != '\t' && s[n] != '\n')
-			break;
-	s[n+1] = '\0';
-	return n;
+        int n;
+
+        for (n = strlen(s)-1; n >= 0; n--)
+                if (s[n] != ' ' && s[n] != '\t' && s[n] != '\n')
+                        break;
+        s[n+1] = '\0';
+        return n;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -226,10 +259,45 @@ int fuzzy(char *haystack, char *needle)
 #define BITSPERWORD     32
 #define CALCBYTES(bits) (4 * ((31 + bits) / BITSPERWORD))
 
+/**
+ * Set a bit in a bit array.
+ *
+ * @param abits The bit array to modify
+ * @param i The bit index to set (0-based)
+ */
 inline void bitset (BITS *abits, int i)     {        abits[i / BITSPERWORD] |=  (1<<(i % BITSPERWORD)); }
+
+/**
+ * Clear a bit in a bit array.
+ *
+ * @param abits The bit array to modify
+ * @param i The bit index to clear (0-based)
+ */
 inline void bitclr (BITS *abits, int i)     {        abits[i / BITSPERWORD] &= ~(1<<(i % BITSPERWORD)); }
+
+/**
+ * Test if a bit is set in a bit array.
+ *
+ * @param abits The bit array to test
+ * @param i The bit index to test (0-based)
+ * @return true if the bit is set, false otherwise
+ */
 inline bool bittest(BITS *abits, int i)     { return (abits[i / BITSPERWORD] &   (1<<(i % BITSPERWORD))) != 0; }
+
+/**
+ * Clear all bits in a bit array.
+ *
+ * @param abits The bit array to clear
+ * @param bits The number of bits in the array
+ */
 inline void bitnull(BITS *abits, int bits)  {        memset(abits, 0, CALCBYTES(bits));                 }
+
+/**
+ * Allocate a new bit array.
+ *
+ * @param bits The number of bits needed in the array
+ * @return Pointer to the allocated bit array, or NULL on failure
+ */
 inline BITS *bitalloc(int bits)             { return malloc(CALCBYTES(bits));                           }
 
 /* -------------------------------------------------------------------------- */
@@ -295,19 +363,19 @@ void parse_rc_file(char *rcfile)
 
 	printf("\nReading rcfile: %s\n", rcfile);
         while (fgets(buf, sizeof(buf), f)) {
-		trim(buf);			
-		if      (0 == strcmp(buf, ":mp3path:"       	)) p = opt_mp3path;
-		else if (0 == strcmp(buf, ":ripperspath:"   	)) p = opt_ripperspath;	
-		else if (0 == strcmp(buf, ":mp3playerpath:" 	)) p = opt_mp3playerpath;
-		else if (0 == strcmp(buf, ":mp3playerflags:"	)) p = opt_mp3playerflags;
-		else if (0 == strcmp(buf, ":oggplayerpath:"	)) p = opt_oggplayerpath;
-		else if (0 == strcmp(buf, ":oggplayerflags:"	)) p = opt_oggplayerflags;
-		else if (0 == strcmp(buf, ":allowprivatercfile:")) p = opt_allowprivatercfile;
-		else if (p) {
-			strcpy(p, buf);
-			p = NULL;
-		}
-	}
+                trim(buf);
+                if      (0 == strcmp(buf, ":mp3path:"        )) p = opt_mp3path;
+                else if (0 == strcmp(buf, ":ripperspath:"    )) p = opt_ripperspath;
+                else if (0 == strcmp(buf, ":mp3playerpath:" )) p = opt_mp3playerpath;
+                else if (0 == strcmp(buf, ":mp3playerflags:")) p = opt_mp3playerflags;
+                else if (0 == strcmp(buf, ":oggplayerpath:" )) p = opt_oggplayerpath;
+                else if (0 == strcmp(buf, ":oggplayerflags:")) p = opt_oggplayerflags;
+                else if (0 == strcmp(buf, ":allowprivatercfile:")) p = opt_allowprivatercfile;
+                else if (p) {
+                        strcpy(p, buf);
+                        p = NULL;
+                }
+        }
 	fclose(f);
 }
 
