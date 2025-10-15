@@ -933,12 +933,13 @@ void refresh_screen(void)
     wbkgd(win_middle, COLOR_PAIR(1));
     werase(win_middle);  
     if (show_splash) {
-        draw_centered(win_middle,  3, "        _   _   _   __  _    _ ");
-        draw_centered(win_middle,  4, "|\\  /| | \\ / \\ | \\ |   | \\  / \\");
-        draw_centered(win_middle,  5, "| \\/ | |_/   / |_/ |_  |_/  | _");
-        draw_centered(win_middle,  6, "|    | |     \\ | \\ |   | \\  | |");
-        draw_centered(win_middle,  7, "|    | |   \\_/ |_/ |__ |  \\ \\_/");
-        draw_centered(win_middle,  9, "- Heavy Duty Jukebox -");
+        draw_centered(win_middle,  3, "  ________.__                .__                     ");
+        draw_centered(win_middle,  4, " /  _____/|  | _____    ____ |__| ________________   ");
+        draw_centered(win_middle,  5, "/   \\  ___|  | \\__  \\ _/ ___\\|  |/ __ \\_  __ \\__  \\  ");
+        draw_centered(win_middle,  6, "\\    \\_\\  \\  |__/ __ \\\\  \\___|  \\  ___/|  | \\/\\/ __ \\_");
+        draw_centered(win_middle,  7, " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
+        draw_centered(win_middle,  9, "        \\/          \\/     \\/        \\/           \\/  ");
+        draw_centered(win_middle,  10, "- Heavy Duty Jukebox -");
         draw_centered(win_middle, 11, "Version 4.0.%s", git_version());
         draw_centered(win_middle, 12, "Copyright (c) Krister Brus 2000-2010");
         draw_centered(win_middle, 13, "<kristerbrus@fastmail.fm>");
