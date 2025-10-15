@@ -7,7 +7,7 @@ project(
     'warning_level=2',
     'b_pie=true',
   ],
-  meson_version: '>= 0.63.0'
+  meson_version: '>= 1.1.0'
 )
 
 cc = meson.get_compiler('c')
@@ -37,6 +37,19 @@ endif
 
 if have_libintl_header
   glaciera_c_args += ['-DHAVE_LIBINTL_H']
+endif
+
+# Feature flags from meson.options
+if get_option('gettext')
+  glaciera_c_args += ['-DUSE_GETTEXT']
+endif
+
+if get_option('back_button')
+  glaciera_c_args += ['-DUSE_BACK']
+endif
+
+if get_option('finish_time')
+  glaciera_c_args += ['-DUSE_FINISH']
 endif
 
 git_exe = find_program('git', required: false)

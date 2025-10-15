@@ -6,10 +6,6 @@
 // Kristian Wiklund, Dept. of Computer Engineering,
 // Chalmers University of Technology, S-412 96 GOTHENBURG, SWEDEN
 
-#define dontUSE_GETTEXT
-#define dontUSE_BACK
-#define dontUSE_FINISH
-
 #include <ncurses.h>
 #include <signal.h>
 #include <unistd.h>

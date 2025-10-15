@@ -1,0 +1,17 @@
+option('gettext',
+  type: 'boolean',
+  value: false,
+  description: 'Enable internationalization (i18n) support via gettext'
+)
+
+option('back_button',
+  type: 'boolean',
+  value: false,
+  description: 'Enable F11 back button to restore previous display state'
+)
+
+option('finish_time',
+  type: 'boolean',
+  value: false,
+  description: 'Enable finish-time sorting and display mode'
+)
