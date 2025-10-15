@@ -1,0 +1,4 @@
+To make this work:
+* Install macports 
+* Run port install libogg libvorbis
+* Run port install vorbis-tools +player +flac +speex

@@ -1,0 +1,1089 @@
+Flawfinder version 1.26, (C) 2001-2004 David A. Wheeler.
+Number of dangerous functions in C/C++ ruleset: 158
+Examining common.c
+Examining mod_mp3.c
+Examining mod_ogg.c
+Examining mod_template.c
+Examining mp3berg.c
+Examining mp3build.c
+Examining music.c
+Examining searchmp3berg.c
+Examining common.h
+Examining mod_mp3.h
+Examining mod_ogg.h
+Examining music.h
+Examining svn_version.h
+mp3berg.c:805:  [5] (buffer) strncat:
+  Easily used incorrectly (e.g., incorrectly computing the correct
+  maximum size to add). Consider strlcat or automatically resizing strings.
+  Risk is high; the length parameter appears to be a constant, instead of
+  computing the number of characters left.
+common.c:237:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+common.c:239:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+common.c:270:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+common.c:283:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+common.c:285:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+common.c:308:  [4] (race) access:
+  This usually indicates a security flaw.  If an attacker can change
+  anything along the path between the call to access() and the file's actual
+  use (e.g., by moving files), the attacker can exploit the race
+  condition. Set up the correct permissions (e.g., using setuid()) and try to
+  open the file directly. 
+common.c:314:  [4] (race) access:
+  This usually indicates a security flaw.  If an attacker can change
+  anything along the path between the call to access() and the file's actual
+  use (e.g., by moving files), the attacker can exploit the race
+  condition. Set up the correct permissions (e.g., using setuid()) and try to
+  open the file directly. 
+common.c:354:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+common.c:355:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mod_mp3.c:284:  [4] (shell) execl:
+  This causes a new program to execute and is difficult to use safely.
+  try using a library call that implements the same functionality if
+  available. 
+mod_ogg.c:85:  [4] (shell) execl:
+  This causes a new program to execute and is difficult to use safely.
+  try using a library call that implements the same functionality if
+  available. 
+mp3berg.c:356:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:357:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:367:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:368:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:397:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:398:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:418:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:652:  [4] (race) access:
+  This usually indicates a security flaw.  If an attacker can change
+  anything along the path between the call to access() and the file's actual
+  use (e.g., by moving files), the attacker can exploit the race
+  condition. Set up the correct permissions (e.g., using setuid()) and try to
+  open the file directly. 
+mp3berg.c:782:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:855:  [4] (format) vsprintf:
+  Potential format string problem. Make format string constant. 
+mp3berg.c:1004:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:1025:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1027:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1028:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:1052:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:1069:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:1129:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1183:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1184:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:1192:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1211:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:1385:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:1644:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1645:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:1696:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1760:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1761:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:1908:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2083:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2096:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2097:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3berg.c:2229:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2300:  [4] (race) access:
+  This usually indicates a security flaw.  If an attacker can change
+  anything along the path between the call to access() and the file's actual
+  use (e.g., by moving files), the attacker can exploit the race
+  condition. Set up the correct permissions (e.g., using setuid()) and try to
+  open the file directly. 
+mp3berg.c:2308:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:2479:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2489:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2502:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2529:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2581:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2586:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2703:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:2729:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:2739:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2740:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:2797:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3berg.c:2982:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:3090:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:3126:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:94:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:524:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:603:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:613:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:622:  [4] (format) printf:
+  If format strings can be influenced by an attacker, they can be
+  exploited. Use a constant for the format specification. 
+mp3build.c:689:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:861:  [4] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused). 
+mp3build.c:955:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:963:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:995:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:1018:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:1019:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:1026:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:1027:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:1104:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3build.c:1108:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+mp3build.c:1156:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+searchmp3berg.c:37:  [4] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. 
+searchmp3berg.c:71:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+searchmp3berg.c:80:  [4] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). 
+mp3berg.c:1981:  [3] (random) random:
+  This function is not sufficiently random for security-related
+  functions such as key and nonce creation. use a more secure technique for
+  acquiring random values. 
+mp3berg.c:2266:  [3] (random) random:
+  This function is not sufficiently random for security-related
+  functions such as key and nonce creation. use a more secure technique for
+  acquiring random values. 
+mp3berg.c:2267:  [3] (random) random:
+  This function is not sufficiently random for security-related
+  functions such as key and nonce creation. use a more secure technique for
+  acquiring random values. 
+mp3berg.c:3087:  [3] (buffer) getopt:
+  Some older implementations do not protect against internal buffer
+  overflows . Check implementation on installation, or limit the size of all
+  string inputs. 
+mp3berg.c:3148:  [3] (random) srandom:
+  This function is not sufficiently random for security-related
+  functions such as key and nonce creation. use a more secure technique for
+  acquiring random values. 
+mp3build.c:1183:  [3] (buffer) getopt:
+  Some older implementations do not protect against internal buffer
+  overflows . Check implementation on installation, or limit the size of all
+  string inputs. 
+searchmp3berg.c:159:  [3] (buffer) getenv:
+  Environment variables are untrustable input if they can beit returns
+  untrustable input if the environment can beset by an attacker.  It can
+  have any content and length, and the same variable can be set more than
+  once. Check environment variables carefully before using them. 
+common.c:11:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:12:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:13:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:14:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:15:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:16:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:17:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:18:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:19:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:20:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:62:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:63:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:145:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:156:  [2] (buffer) memcpy:
+  Does not check for buffer overflows when copying to destination. Make
+  sure destination can always hold the source data. 
+common.c:219:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:253:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:255:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+common.c:282:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:330:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:341:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+common.c:353:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:363:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:364:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+common.h:40:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:41:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:42:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:43:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:44:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:45:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.h:46:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:131:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:132:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:133:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:134:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:135:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:136:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mod_mp3.c:159:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mod_ogg.c:30:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:105:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:106:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:107:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:108:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:109:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:343:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:344:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:370:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:374:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:414:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:419:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:479:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:636:  [2] (buffer) memcpy:
+  Does not check for buffer overflows when copying to destination. Make
+  sure destination can always hold the source data. 
+mp3berg.c:702:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:741:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:758:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:765:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:767:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:770:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:774:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:779:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:786:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:787:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:788:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:789:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:790:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:791:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:798:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:852:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:997:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1009:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1023:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1030:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:1031:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1049:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1053:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1063:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1065:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1070:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1113:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1179:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1180:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1186:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:1187:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1209:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1210:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:1239:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1248:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1302:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1311:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1330:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1334:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1381:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3berg.c:1452:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1591:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1598:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1624:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1669:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1739:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1745:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:1763:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:1882:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2063:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2064:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2065:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2099:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:2159:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2295:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2343:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2361:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2362:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2363:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2364:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2365:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2366:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2367:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2368:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2369:  [2] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant string.
+mp3berg.c:2442:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2449:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2699:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2704:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:2711:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:2712:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:2723:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2724:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:2730:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:2752:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3berg.c:2753:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3berg.c:2794:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3berg.c:3127:  [2] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant string.
+mp3build.c:90:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:95:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:300:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:304:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:414:  [2] (buffer) memcpy:
+  Does not check for buffer overflows when copying to destination. Make
+  sure destination can always hold the source data. 
+mp3build.c:569:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:658:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:899:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:904:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:925:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:933:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:934:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:941:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3build.c:942:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:956:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:964:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:1091:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:1092:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:1110:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:1135:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:1147:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:1157:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+mp3build.c:1230:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+mp3build.c:1231:  [2] (buffer) sprintf:
+  Does not check for buffer overflows. Use snprintf or vsnprintf. Risk
+  is low because the source has a constant maximum length.
+mp3build.c:1232:  [2] (misc) fopen:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+searchmp3berg.c:30:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+searchmp3berg.c:38:  [2] (misc) open:
+  Check when opening files - can an attacker redirect it (via symlinks),
+  force the opening of special file type (e.g., device files), move
+  things around to create a race condition, control its ancestors, or change
+  its contents?. 
+searchmp3berg.c:55:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+searchmp3berg.c:138:  [2] (buffer) char:
+  Statically-sized arrays can be overflowed. Perform bounds checking,
+  use functions that limit length, or ensure that the size is larger than
+  the maximum possible length. 
+common.c:113:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+common.c:128:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+common.c:173:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+common.c:284:  [1] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant character.
+common.c:295:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+common.c:296:  [1] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant character.
+mod_mp3.c:260:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mod_ogg.c:63:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:377:  [1] (buffer) read:
+  Check buffer boundaries if used in a loop. 
+mp3berg.c:424:  [1] (buffer) read:
+  Check buffer boundaries if used in a loop. 
+mp3berg.c:617:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:804:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:807:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:808:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:811:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:858:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:967:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:1251:  [1] (buffer) read:
+  Check buffer boundaries if used in a loop. 
+mp3berg.c:1316:  [1] (buffer) read:
+  Check buffer boundaries if used in a loop. 
+mp3berg.c:1641:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2054:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2104:  [1] (buffer) fgetc:
+  Check buffer boundaries if used in a loop. 
+mp3berg.c:2121:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2128:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2135:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2360:  [1] (buffer) strcpy:
+  Does not check for buffer overflows when copying to destination.
+  Consider using strncpy or strlcpy (warning, strncpy is easily misused). Risk
+  is low because the source is a constant character.
+mp3berg.c:2795:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2802:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3berg.c:2813:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:318:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:358:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:381:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:508:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:597:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:606:  [1] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant character.
+mp3build.c:607:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:634:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:856:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:857:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:859:  [1] (buffer) strncpy:
+  Easily used incorrectly; doesn't always \0-terminate or check for
+  invalid pointers. 
+mp3build.c:860:  [1] (buffer) strcat:
+  Does not check for buffer overflows when concatenating to destination.
+  Consider using strncat or strlcat (warning, strncat is easily misused).
+  Risk is low because the source is a constant character.
+mp3build.c:986:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:991:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:997:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1059:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1069:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1070:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1078:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1079:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1101:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+mp3build.c:1102:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated (it could cause a
+  crash if unprotected). 
+searchmp3berg.c:164:  [1] (buffer) strncpy:
+  Easily used incorrectly; doesn't always \0-terminate or check for
+  invalid pointers. 
+
+Hits = 297
+Lines analyzed = 5614 in 1.38 seconds (6412 lines/second)
+Physical Source Lines of Code (SLOC) = 3983
+Hits@level = [0]   0 [1]  52 [2] 158 [3]   7 [4]  79 [5]   1
+Hits@level+ = [0+] 297 [1+] 297 [2+] 245 [3+]  87 [4+]  80 [5+]   1
+Hits/KSLOC@level+ = [0+] 74.5669 [1+] 74.5669 [2+] 61.5114 [3+] 21.8428 [4+] 20.0854 [5+] 0.251067
+Minimum risk level = 1
+Not every hit is necessarily a security vulnerability.
+There may be other security vulnerabilities; review your code!

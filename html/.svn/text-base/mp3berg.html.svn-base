@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>MP3BERG -- Not Your Average mp3-player</title>
+<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body> 
+<div id="container"> 
+  <div id="header"> 
+    <img src="mp3berg.jpg" alt="mp3berg" />
+  </div> 
+  <div id="navigation"> 
+    <ul id="navlist"> 
+      <li><a href="#dedication">In dedication</a></li> 
+      <li><a href="#intro">Intro</a></li> 
+      <li><a href="#inspiration">Inspiration</a></li> 
+      <li><a href="#solution">Solution</a></li> 
+      <li><a href="#features">Features</a></li> 
+      <li><a href="#requirements">Requirements</a></li> 
+      <li><a href="#screenshots">Screen shots</a></li>
+      <li><a href="#futuredevelopment">Future development</a></li>
+      <li><a href="#downloads">Downloads</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul> 
+  </div> 
+  <div id="content"> 
+    <h2>Welcome to mp3berg.</h2> 
+    <p><strong>Brought to you by:<br/> 
+      Krister Brus &lt;kristerbrus[at]fastmail.fm&gt;<br />
+      and Mattias Stahre &lt;mattias.stahre[at]gmail.com&gt;</strong></p>
+    <h2><a name="dedication" id="dedication"></a>In dedication to: </h2> 
+    <p>In dedication to Krister's dear, beloved wife Anna; who tragically died in a car accident on the 17/2 of 2003. <br /> May her soul forever be among us MP3'ers.</p>
+
+	<h2><a name="intro" id="intro"></a>Intro:</h2>
+	Have you ever tried a standard Media Player application on a large MP3-collection?
+	Most of them are painstakingly slow: 
+	<ul>
+	<li>the "Adding files to library" phase</li>
+	<li>the loading phase of the program</li> 
+	<li>the search and browse phase</li>
+	</ul>
+	All of those steps are often slow, even on high-end systems.
+	<p><!--  --></p>
+	
+	<h2><a name="inspiration" id="inspiration"></a>Inspiration:</h2>
+	<ul>
+		<li>There has got to be a <u>faster</u> way to play mp3's!</li>
+		<li>Got tired of writing on the NT-based MP3BERG-system. </li>
+		<li>Looked at a couple of Perl and PHP-based application... </li>
+	</ul>
+	<p><!--  --></p>
+	
+	
+	<h2><a name="solution" id="solution"></a>Solution:</h2>
+	<ul>
+		<li>Internal storage architecture especially tailored for low-end, low-memory systems.</li>
+		<li>Easily copes with 50,000 mp3's on old "throw-away" 32MB Pentium-100 systems.</li>
+		<li>Successfully tested with (artificial generated) 10,000,000 mp3's; which equals ~50 TeraBytes of storage. 
+		    Tested on a high-end 512MB Pentium 4 1.4GHz.</li>
+		<li>Sub-second response time for most user initiated actions, even on old systems. </li>
+		<li>Written in C. C is what makes this thing really fly.</li>
+		<li>To the user, it looks like all songs "are-just-there", no need to browse into directories or anything.</li>
+		<li>Text-based user interface, no more "try-to-point-at-small-icons".</li>
+	</ul><p><!--  --></p>
+	
+	<h2><a name="features" id="features"></a>Features:</h2>
+	<ul>
+		<li>Easy to use "load-and-save"-playlist feature.</li>
+		<li>Extremely quick and easy to use "put-this-song-into-the-playlist" feature.</li>
+		<li>Advanced multi-disk support, for hdparm's -S flag, which let the disks sleep while not in use. MP3BERG pre-loads the next song, 10 seconds before the currently playing song ends, to give the next disk time to wakeup.</li>
+		<li>On-demand generation of top-10-played-songs list.</li>
+		<li>Automatic generation of per-day played songs. Answers the question: "-What song did we play at 10:15 last Saturday?".</li>
+		<li>Generates, on demand, a list of 100 random songs, for the days when you want to hear something you've probably not have heard for a while.</li>
+		<li>Relaxed mp3 naming convention. Dump any mp3's to the system and it will try to make sense of it.  </li>
+		<li>Relaxed and user friendly search. Type "lullaby cure", "cure lullaby", or "disi cu lu" to find	"Cure - Disintegration - 03. Lullaby".</li>
+		<li>Unique "find-music" browsing feature. Press F4, Genre, Artist or Date to find music in the same genre, made by this artist, or uploaded on this date.</li>
+		<li>Extremely fast and usable sort feature; sort on name, size, date, bit-rate, genre. Generated list is playable.</li>
+	</ul><p><!--  --></p>
+	
+	<h2><a name="requirements" id="requirements"></a>Requirements:</h2>
+	<ul>
+		<li>Pentium class-system with at least 16MB RAM.</li>
+		<li>Bare-bone install of any modern Linux distribution. 
+		    Tested with Red Hat 6.2/7.3/8/9, Fedora Core 3/4/5, Slackware 9/10, 
+		    Debian Sarge/Etch/Lenny/Sid, Ubuntu Hoary/Breezy/Dapper/Edgy/Feisty/Gutsy and FreeBSD 6.2. </li>
+		<li>Access to your mp3's; stored on the local system or via NFS/Samba-network disks.</li>
+	</ul><p><!--  --></p>
+	
+	
+	<h2><a name="details"></a>Program details:</h2>
+	<p>The standalone database builder program, <strong>mp3build</strong>, scans all your mp3's, 
+	and builds the database (files named 0.db, 1.db, 2.db, 3.db and 4.db) in the /mp3 directory. <br />
+	<strong>mp3build</strong> will normally be run as a cron-job, but can also be run on demand.  
+	<strong>mp3build</strong> will also calculate the song length and bitrate of each mp3 file.
+	When <strong>mp3build</strong> has been run once, no further song length calculations will be necessary 
+	on existing songs, thus speeding up the scanning process.
+	As new songs gets copied onto the MP3BERG, <strong>mp3build</strong> rescans all directories, 
+	looking for the new songs.<br />
+	Finally, <strong>mp3berg</strong> reads the database and displays the main MP3BERG screen. </p>
+	
+	<h2><a name="screenshots"></a>The mandatory screen shots:</h2>
+	<p>
+	<a href="love.jpg"><img src="love_thumb.png" alt="thumb" /> Screenshot 1.</a>
+	<a href="love.jpg"><img src="love_thumb.png" alt="thumb" /> Screenshot 2.</a>
+	<a href="love.jpg"><img src="love_thumb.png" alt="thumb" /> Screenshot 3.</a>
+	<a href="love.jpg"><img src="love_thumb.png" alt="thumb" /> Screenshot 4.</a>
+	</p>
+	
+	<h2><a name="faq"></a>Questions / FAQ:</h2>
+	<ul>
+	<li>1</li>
+	<li>2</li>
+	</ul>
+	<p><!--  --></p>
+	
+	<h2><a name="futuredevelopment"></a>Future development:</h2>
+	<ul>
+	   <li>     Remote song selection via Bluetooth/IR connected mobile phone. 	</li>
+	   <li>     Remote song selection with web interface.				</li>
+	   <li>     Binary packages for .RPM-based distributions. 			</li>
+	   <li>     Binary packages for FreeBSD, NetBSD and OpenBSD.			</li>
+	</ul>
+	<p><!--  --></p>
+	
+	<h2><a name="downloads" id="downloads"></a>Downloads:</h2>
+	On Debian and Ubuntu, add the following line to your sources.list file :
+	<pre>
+	deb http://krisb.oxo.nu/apt etch main
+	</pre>
+	followed by
+	<pre> 
+	$ sudo aptitude update
+	$ sudo aptitude install mp3berg
+	</pre>
+	to install the Debian binary package complete with all necessary dependencies. And yes, as
+	a service to the Ubuntu community, the same package also works on all tested versions of Ubuntu.
+	<br />
+	<br />
+	Complete source code is available in the subversion repository at :
+	<pre>
+	$ svn co svn://krisb.oxo.nu/mp3berg
+	</pre>
+	<p><!--  --></p>
+	
+	<h2><a name="contact" id="contact"></a>Contact:</h2>
+	<p>
+	<strong>Krister Brus &lt;kristerbrus[at]fastmail.fm&gt;</strong><br />
+	Krister has been programming in Assembler, C and Pascal professionally for 20 years.<br /><br />
+	<strong>Mattias Stahre &lt;mattias.stahre[at]gmail.com&gt;</strong><br />
+	Mattias has spent way to many years with different languaes. He might not have the experince Krister has,
+	but hey, life is learning, right? :)
+	</p>
+	
+  </div> 
+  <div id="footer"> 
+    <p><a href="http://validator.w3.org/check?uri=referer" target="_blank">Valid XHTML</a> | <a href="http://jigsaw.w3.org/css-validator/check/referer" target="_blank">Valid CSS</a> | Copyright &copy; Krister Brus / Mattias Stahre | </p> 
+  </div> 
+</div> 
+</body>
+</html>

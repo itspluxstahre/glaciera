@@ -1,0 +1,8 @@
+CXXFLAGS=-Wall -O2
+
+someprog: somemodule1.o somemodule2.o somemodule3.o 
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+clean:
+	rm -f someprog
+	rm -f *.o

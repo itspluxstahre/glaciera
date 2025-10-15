@@ -1,0 +1,200 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2008 Krister Brus
+# This file is distributed under the same license as the MP3BERG package.
+# Kriser Brus <kristerbrus@fastmail.fm>, 2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-23 08:56+0200\n"
+"PO-Revision-Date: 2008-03-11 22:09+0100\n"
+"Last-Translator: kristerbrus <kristerbrus@fastmail.fm>\n"
+"Language-Team: kristerbrus <kristerbrus@fastmail.fm>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mp3berg.c:528
+msgid "(unknown)"
+msgstr "(unknown)"
+
+#: mp3berg.c:903
+#, c-format
+msgid "%d songs in database"
+msgstr "%d songs in database"
+
+#: mp3berg.c:920
+msgid "Info"
+msgstr "Info"
+
+#: mp3berg.c:921
+msgid "View"
+msgstr "View"
+
+#: mp3berg.c:922
+msgid "Sort"
+msgstr "Sort"
+
+#: mp3berg.c:923
+msgid "Context"
+msgstr "Context"
+
+#: mp3berg.c:924
+msgid "ShowPL"
+msgstr "ShowPL"
+
+#: mp3berg.c:925
+msgid "LoadPL"
+msgstr "LoadPL"
+
+#: mp3berg.c:926
+msgid "SavePL"
+msgstr "SavePL"
+
+#: mp3berg.c:927
+msgid "Burn"
+msgstr "Burn"
+
+#: mp3berg.c:928
+msgid "Time"
+msgstr "Time"
+
+#: mp3berg.c:929
+msgid "Rate!"
+msgstr "Rate!"
+
+#: mp3berg.c:929
+msgid "Rate"
+msgstr "Rate"
+
+#: mp3berg.c:931
+msgid "Back"
+msgstr "Back"
+
+#: mp3berg.c:933
+msgid "Tag"
+msgstr "Tag"
+
+#: mp3berg.c:1467
+#, c-format
+msgid "Loading '%s'..."
+msgstr "Loading '%s'..."
+
+#: mp3berg.c:1640
+msgid "Generating list..."
+msgstr "Generating list..."
+
+#: mp3berg.c:1675
+msgid "Available play-lists."
+msgstr "Available play-lists."
+
+#: mp3berg.c:1691
+msgid "Enter first letter (A..Z, 0..9) or SPACE for all. "
+msgstr "Enter first letter (A..Z, 0..9) or SPACE for all. "
+
+#: mp3berg.c:1762
+msgid "Can't open playlist directory!"
+msgstr "Can't open playlist directory!"
+
+#: mp3berg.c:1766
+msgid "Generating list, step 1..."
+msgstr "Generating list, step 1..."
+
+#: mp3berg.c:1794
+msgid "Generating list, step 2..."
+msgstr "Generating list, step 2..."
+
+#: mp3berg.c:1821
+msgid "Generating list 3..."
+msgstr "Generating list 3..."
+
+#: mp3berg.c:1859
+msgid "Available genres."
+msgstr "Available genres."
+
+#: mp3berg.c:1904
+msgid "Enter weeks back (1..9)  "
+msgstr "Enter weeks back (1..9)  "
+
+#: mp3berg.c:1959
+msgid "View: 0-9=Weeks back  R)andom  T)opList  A)rtists  G)enre  N)ew "
+msgstr "View: 0-9=Weeks back  R)andom  T)opList  A)rtists  G)enre  N)ew "
+
+#: mp3berg.c:1986
+#: mp3berg.c:2268
+#, c-format
+msgid "Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"
+msgstr "Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"
+
+#: mp3berg.c:2157
+msgid "No information available."
+msgstr "No information available."
+
+#: mp3berg.c:2185
+msgid "Nothing is playing!"
+msgstr "Nothing is playing!"
+
+#: mp3berg.c:2190
+msgid "Context: F4=Songlist  G)enre  A)rtist  D)ate  I)nformation  R)andom "
+msgstr "Context: F4=Songlist  G)enre  A)rtist  D)ate  I)nformation  R)andom "
+
+#: mp3berg.c:2225
+msgid "Showing songlist context."
+msgstr "Showing songlist context."
+
+#: mp3berg.c:2236
+#, c-format
+msgid "Showing genre context (%s)."
+msgstr "Showing genre context (%s)."
+
+#: mp3berg.c:2253
+#, c-format
+msgid "Showing artist context (%s)."
+msgstr "Showing artist context (%s)."
+
+#: mp3berg.c:2315
+msgid "error: Can't write to directory '/burn'!"
+msgstr "error: Can't write to directory '/burn'!"
+
+#: mp3berg.c:2319
+msgid "Preparing for burning..."
+msgstr "Preparing for burning..."
+
+#: mp3berg.c:2337
+#, c-format
+msgid "%d of %d songs prepared for burning."
+msgstr "%d of %d songs prepared for burning."
+
+#: mp3berg.c:2411
+#, c-format
+msgid "%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"
+msgstr "%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"
+
+#: mp3berg.c:2688
+msgid "Info: N)ormal  L)ength  S)ize  D)ate  B)itrate  G)enre  R)ating  P)ath  F)inish "
+msgstr "Info: N)ormal  L)ength  S)ize  D)ate  B)itrate  G)enre  R)ating  P)ath  F)inish "
+
+#: mp3berg.c:2899
+#, c-format
+msgid "Playlist '%s' saved."
+msgstr "Playlist '%s' saved."
+
+#: mp3berg.c:2905
+msgid "Save cancelled."
+msgstr "Save cancelled."
+
+#: mp3berg.c:3009
+msgid "Enter a playlist name."
+msgstr "Enter a playlist name."
+
+#: mp3berg.c:3141
+#, c-format
+msgid "yada"
+msgstr "yada"
+
+#: mp3berg.c:3205
+#, c-format
+msgid "No songs in song database!\n"
+msgstr "Låtdatabasen är tom!\n"
+
