@@ -76,6 +76,8 @@
 #include "git_version.h"
 #include "music.h"
 
+static char *massage_full_path(char *buf, char *fullpath);
+
 void * g_mm[5];
 int g_mmsize[5];
 FILE * g_db[5];
@@ -368,6 +370,107 @@ void trim_space_dot_space(char *src)
         *dst = 0;
 }
 
+static void build_display_from_filename(const char *dir,
+                                        const char *filename,
+                                        BITS keepers[],
+                                        char *out,
+                                        size_t out_size)
+{
+        char fullpath[1024 * 4];
+        char gbuf[1024 * 4];
+        size_t dir_len = strlen(dir);
+
+        if (dir_len >= sizeof(fullpath)) {
+                snprintf(out, out_size, "%s", filename);
+                return;
+        }
+
+        strncpy(fullpath, dir, sizeof(fullpath));
+        fullpath[sizeof(fullpath) - 1] = '\0';
+        trim_display_path(fullpath);
+        strip_ripper(fullpath);
+        strncat(fullpath, "/", sizeof(fullpath) - strlen(fullpath) - 1);
+
+        char *p = fullpath + strlen(fullpath);
+        for (int i = 0; filename[i] && (size_t)(p - fullpath) < sizeof(fullpath) - 1; i++) {
+                if (bittest(keepers, i))
+                        *p++ = filename[i];
+        }
+        *p = '\0';
+
+        strcpy(gbuf, massage_full_path(gbuf, fullpath));
+        trim_display_path(gbuf);
+        strip_ripper(gbuf);
+        trim_double_spaces(gbuf);
+        trim_double_minuses(gbuf);
+        trim_minus_space_minus(gbuf);
+        trim_space_dot_space(gbuf);
+
+        p = gbuf;
+        while (*p && !isalnum((unsigned char)*p))
+                p++;
+
+        snprintf(out, out_size, "%s", p);
+}
+
+static void append_album_suffix(char *buffer, size_t buffer_size, const char *album)
+{
+        if (!album || !*album)
+                return;
+        size_t len = strlen(buffer);
+        if (len == 0) {
+                snprintf(buffer, buffer_size, "%s", album);
+                return;
+        }
+        if (strcmp(buffer, album) == 0)
+                return;
+        if (len + 3 >= buffer_size)
+                return;
+        strncat(buffer, " (", buffer_size - len - 1);
+        strncat(buffer, album, buffer_size - strlen(buffer) - 1);
+        strncat(buffer, ")", buffer_size - strlen(buffer) - 1);
+}
+
+static void build_display_from_metadata(const struct track_metadata *meta,
+                                        char *out,
+                                        size_t out_size)
+{
+        out[0] = '\0';
+        if (!meta)
+                return;
+
+        if (meta->artist && meta->title) {
+                if (meta->track_number > 0)
+                        snprintf(out, out_size, "%s - %02d. %s", meta->artist, meta->track_number, meta->title);
+                else
+                        snprintf(out, out_size, "%s - %s", meta->artist, meta->title);
+        } else if (meta->title) {
+                if (meta->track_number > 0)
+                        snprintf(out, out_size, "%02d. %s", meta->track_number, meta->title);
+                else
+                        snprintf(out, out_size, "%s", meta->title);
+        } else if (meta->artist) {
+                snprintf(out, out_size, "%s", meta->artist);
+        }
+
+        if (out[0] == '\0' && meta->album)
+                snprintf(out, out_size, "%s", meta->album);
+
+        if (out[0] != '\0')
+                append_album_suffix(out, out_size, meta->album);
+        else if (meta->album)
+                snprintf(out, out_size, "%s", meta->album);
+
+        if (out[0] == '\0' && meta->track)
+                snprintf(out, out_size, "%s", meta->track);
+
+        trim_double_spaces(out);
+        trim_double_minuses(out);
+        trim_minus_space_minus(out);
+        trim_space_dot_space(out);
+}
+
+
 char *fix_01_to_fullname(int offset, char *s)
 {
         int i;
@@ -461,13 +564,8 @@ void process_one_file(char *dir,
                       char *afullpath,
                       char *filename,
                       struct tuneinfo *pfti,
-		      BITS keepers[])
+                      BITS keepers[])
 {
-        char *p;
-        int i;
-        char fullpath[1024*4];
-        char gbuf[1024*4];
-
         /*
          * Run ftell against db1, db2, db3 and db4
          */
@@ -478,42 +576,27 @@ void process_one_file(char *dir,
          */
         g_posblock.p1 += fwrite(afullpath, 1, strlen(afullpath) + 1, g_db[1]);
 
-        /*
-         * 2. Write "display" to 2.db
-         * Trim filename and keep all unique characters
-         */
-        strcpy(fullpath, dir);
-        trim_display_path(fullpath);	
-        strip_ripper(fullpath);
-        strcat(fullpath, "/");
-        p = fullpath + strlen(fullpath);
-        for (i = 0; filename[i]; i++) {
-		if (bittest(keepers, i))
-                        *p++ = filename[i];
-        }
-        *p = 0;
-	strcpy(gbuf, massage_full_path(gbuf, fullpath));
-        trim_display_path(gbuf);
-        strip_ripper(gbuf);
-        trim_double_spaces(gbuf);
-        trim_double_minuses(gbuf);
-        trim_minus_space_minus(gbuf);
-        trim_space_dot_space(gbuf);
-#ifdef DEBUG
-printf("*******");
-printf(gbuf);	
-printf("*******\n");
-#endif
+        char display[1024 * 4];
+        struct track_metadata meta;
+        track_metadata_init(&meta);
+        bool have_meta = music_metadata(afullpath, &meta);
 
-	/*
-	 * !!2005-05-10 
-	 * If the name begins with - or . or , step to
-	 * where the characters begins
-	 */
-	p = gbuf;
-	while (*p && !isalnum(*p))
-		p++;
-        g_posblock.p2 += fwrite(p, 1, strlen(p) + 1, g_db[2]);
+        if (have_meta)
+                build_display_from_metadata(&meta, display, sizeof(display));
+
+        if (!have_meta || display[0] == '\0')
+                build_display_from_filename(dir, filename, keepers, display, sizeof(display));
+
+        if (display[0] == '\0')
+                snprintf(display, sizeof(display), "%s", filename);
+
+        char *trimmed = display;
+        while (*trimmed && !isalnum((unsigned char)*trimmed))
+                trimmed++;
+
+        g_posblock.p2 += fwrite(trimmed, 1, strlen(trimmed) + 1, g_db[2]);
+
+        track_metadata_clear(&meta);
 
         /*
          * 3. There is no step 3. "search" are calculated later
@@ -524,6 +607,7 @@ printf("*******\n");
          */
         g_posblock.p4 += fwrite(pfti, 1, sizeof(struct tuneinfo), g_db[4]);
 }
+
 
 /*
  * Find duplicate titles for this directory

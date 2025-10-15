@@ -36,6 +36,8 @@
 #include <sys/mman.h>
 
 #include <FLAC/all.h>
+#include <strings.h>
+#include <limits.h>
 
 #include "common.h"
 
@@ -66,6 +68,88 @@ bool flac_info(char *filename, struct tuneinfo *ti)
 
 	return true;
 }
+
+
+static void flac_metadata_set(char **dest, const char *value)
+{
+    if (!value || !*value)
+        return;
+    if (*dest)
+        return;
+    *dest = strdup(value);
+}
+
+static void flac_metadata_try_set_track(struct track_metadata *meta, const char *value)
+{
+    if (!value || !*value)
+        return;
+    if (!meta->track)
+        meta->track = strdup(value);
+    if (meta->track_number < 0) {
+        char *endptr = NULL;
+        long parsed = strtol(value, &endptr, 10);
+        if (parsed > 0 && parsed < INT_MAX)
+            meta->track_number = (int) parsed;
+    }
+}
+
+bool flac_metadata(char *filename, struct track_metadata *meta)
+{
+    if (!meta)
+        return false;
+
+    FLAC__StreamMetadata *tags = NULL;
+    if (!FLAC__metadata_get_tags(filename, &tags))
+        return false;
+
+    bool found = false;
+    if (tags && tags->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+        FLAC__StreamMetadata_VorbisComment *vc = &tags->data.vorbis_comment;
+        for (unsigned int i = 0; i < vc->num_comments; i++) {
+            const FLAC__StreamMetadata_VorbisComment_Entry *entry = &vc->comments[i];
+            if (!entry->entry || entry->length == 0)
+                continue;
+            char *comment = malloc(entry->length + 1);
+            if (!comment)
+                continue;
+            memcpy(comment, entry->entry, entry->length);
+            comment[entry->length] = '\0';
+
+            char *sep = strchr(comment, '=');
+            if (sep) {
+                size_t key_len = (size_t)(sep - comment);
+                const char *value = sep + 1;
+                if (*value) {
+                    if (key_len == 5 && strncasecmp(comment, "TITLE", 5) == 0) {
+                        flac_metadata_set(&meta->title, value);
+                        if (meta->title)
+                            found = true;
+                    } else if (key_len == 6 && strncasecmp(comment, "ARTIST", 6) == 0) {
+                        flac_metadata_set(&meta->artist, value);
+                        if (meta->artist)
+                            found = true;
+                    } else if (key_len == 5 && strncasecmp(comment, "ALBUM", 5) == 0) {
+                        flac_metadata_set(&meta->album, value);
+                        if (meta->album)
+                            found = true;
+                    } else if ((key_len == 11 && strncasecmp(comment, "TRACKNUMBER", 11) == 0) ||
+                               (key_len == 5 && strncasecmp(comment, "TRACK", 5) == 0)) {
+                        flac_metadata_try_set_track(meta, value);
+                        if (meta->track || meta->track_number >= 0)
+                            found = true;
+                    }
+                }
+            }
+            free(comment);
+        }
+    }
+
+    if (tags)
+        FLAC__metadata_object_delete(tags);
+    return found;
+}
+
+/* -------------------------------------------------------------------------- */
 
 bool flac_isit(char *s, int len)
 {

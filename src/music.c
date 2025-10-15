@@ -58,6 +58,7 @@
 struct filetype {
 	bool (*isit) (char *, int);
 	bool (*info) (char *, struct tuneinfo *);
+	bool (*metadata) (char *, struct track_metadata *);
 	void (*play) (char *);
 	struct filetype *next;
 };
@@ -68,6 +69,7 @@ static struct filetype *fthead = NULL;
 
 static void music_register_filetype(bool (*isitproc) (char *, int),
 				    bool (*infoproc) (char *, struct tuneinfo *),
+				    bool (*metaproc) (char *, struct track_metadata *),
 				    void (*playproc) (char *)) 
 {
 	struct filetype *ft;
@@ -75,6 +77,7 @@ static void music_register_filetype(bool (*isitproc) (char *, int),
 	ft = malloc(sizeof(*ft));
 	ft->isit = isitproc;
 	ft->info = infoproc;
+	ft->metadata = metaproc;
 	ft->play = playproc;
 	ft->next = fthead;
 	fthead = ft;
@@ -102,6 +105,18 @@ bool music_info(char *filename, struct tuneinfo *si)
 	
 	ft = music_isit(filename);
 	return ft ? ft->info(filename, si) : false;
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool music_metadata(char *filename, struct track_metadata *meta)
+{
+	struct filetype *ft;
+
+	ft = music_isit(filename);
+	if (!ft || !ft->metadata)
+		return false;
+	return ft->metadata(filename, meta);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -134,11 +149,11 @@ void music_register_all_modules(void)
 {
 	/* 
 	 * INSERT NEW music_register_filetype's HERE
-	 * music_register_filetype(&XXX_isit, &XXX_info, &XXX_play);
+	 * music_register_filetype(&XXX_isit, &XXX_info, &XXX_metadata, &XXX_play);
 	 * =========================================
 	 */
-	music_register_filetype( &pls_isit,  &pls_info,  &pls_play);	
-	music_register_filetype(&flac_isit, &flac_info, &flac_play);	
-	music_register_filetype( &ogg_isit,  &ogg_info,  &ogg_play);	
-	music_register_filetype( &mp3_isit,  &mp3_info,  &mp3_play);
+	music_register_filetype(&pls_isit,  &pls_info,  NULL,        &pls_play);	
+	music_register_filetype(&flac_isit, &flac_info, &flac_metadata, &flac_play);	
+	music_register_filetype(&ogg_isit,  &ogg_info,  &ogg_metadata,  &ogg_play);	
+	music_register_filetype(&mp3_isit,  &mp3_info,  &mp3_metadata,  &mp3_play);
 }

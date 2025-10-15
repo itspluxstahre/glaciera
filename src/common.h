@@ -38,6 +38,14 @@ struct tune0 {
         BIGPTR p4;
 };
 
+struct track_metadata {
+        char *title;
+        char *artist;
+        char *album;
+        char *track;
+        int track_number;
+};
+
 extern char opt_mp3path[100];
 extern char opt_ripperspath[100];
 extern char opt_mp3playerpath[100];
@@ -69,3 +77,5 @@ char *find_actual_file_name(char *buf, char *fullfilename);
 char *gethomedir(void);
 void read_rc_file(void);
 void sanitize_rc_parameters(bool check_binpaths);
+void track_metadata_init(struct track_metadata *meta);
+void track_metadata_clear(struct track_metadata *meta);

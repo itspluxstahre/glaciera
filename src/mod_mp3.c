@@ -31,6 +31,8 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdint.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -161,6 +163,279 @@ struct mp3_id3v1 {
         unsigned char genre;
 };
 
+static char *mp3_dup_trim_ascii(const unsigned char *src, size_t len)
+{
+        size_t start = 0;
+        size_t end = len;
+
+        while (start < len && (src[start] == '\0' || isspace((unsigned char) src[start])))
+                start++;
+        while (end > start && (src[end - 1] == '\0' || isspace((unsigned char) src[end - 1])))
+                end--;
+        if (end <= start)
+                return NULL;
+
+        char *out = malloc(end - start + 1);
+        if (!out)
+                return NULL;
+        memcpy(out, src + start, end - start);
+        out[end - start] = '\0';
+        return out;
+}
+
+static void metadata_set_if_empty(char **dest, char *value)
+{
+        if (!value)
+                return;
+        if (*value == '\0') {
+            free(value);
+            return;
+        }
+        if (*dest) {
+                free(value);
+                return;
+        }
+        *dest = value;
+}
+
+static void metadata_try_set_track_number(struct track_metadata *meta, const char *value)
+{
+        if (!value || meta->track_number >= 0)
+                return;
+        char *endptr = NULL;
+        long parsed = strtol(value, &endptr, 10);
+        if (parsed > 0 && parsed < INT_MAX)
+                meta->track_number = (int) parsed;
+}
+
+static uint32_t mp3_read_be32(const unsigned char *data)
+{
+        return ((uint32_t)data[0] << 24) |
+               ((uint32_t)data[1] << 16) |
+               ((uint32_t)data[2] << 8)  |
+               ((uint32_t)data[3]);
+}
+
+static uint32_t mp3_read_synchsafe32(const unsigned char *data)
+{
+        return ((uint32_t)(data[0] & 0x7f) << 21) |
+               ((uint32_t)(data[1] & 0x7f) << 14) |
+               ((uint32_t)(data[2] & 0x7f) << 7)  |
+               ((uint32_t)(data[3] & 0x7f));
+}
+
+static char *mp3_decode_utf16(const unsigned char *data, size_t len, bool big_endian)
+{
+        if (len < 2)
+                return NULL;
+
+        size_t out_cap = len * 2 + 1;
+        char *out = malloc(out_cap);
+        if (!out)
+                return NULL;
+
+        size_t out_len = 0;
+        for (size_t i = 0; i + 1 < len; i += 2) {
+                uint16_t code = big_endian ?
+                                (uint16_t)((data[i] << 8) | data[i + 1]) :
+                                (uint16_t)((data[i + 1] << 8) | data[i]);
+                if (code == 0)
+                        break;
+
+                uint32_t value = code;
+
+                if (code >= 0xD800 && code <= 0xDBFF) {
+                        if (i + 3 >= len)
+                                break;
+                        uint16_t low = big_endian ?
+                                       (uint16_t)((data[i + 2] << 8) | data[i + 3]) :
+                                       (uint16_t)((data[i + 3] << 8) | data[i + 2]);
+                        if (low >= 0xDC00 && low <= 0xDFFF) {
+                                value = 0x10000 + (((code - 0xD800) << 10) | (low - 0xDC00));
+                                i += 2;
+                        } else {
+                                continue;
+                        }
+                }
+
+                if (value <= 0x7F) {
+                        out[out_len++] = (char)value;
+                } else if (value <= 0x7FF) {
+                        out[out_len++] = (char)(0xC0 | (value >> 6));
+                        out[out_len++] = (char)(0x80 | (value & 0x3F));
+                } else if (value <= 0xFFFF) {
+                        out[out_len++] = (char)(0xE0 | (value >> 12));
+                        out[out_len++] = (char)(0x80 | ((value >> 6) & 0x3F));
+                        out[out_len++] = (char)(0x80 | (value & 0x3F));
+                } else {
+                        out[out_len++] = (char)(0xF0 | (value >> 18));
+                        out[out_len++] = (char)(0x80 | ((value >> 12) & 0x3F));
+                        out[out_len++] = (char)(0x80 | ((value >> 6) & 0x3F));
+                        out[out_len++] = (char)(0x80 | (value & 0x3F));
+                }
+
+                if (out_len + 4 >= out_cap) {
+                        out_cap *= 2;
+                        char *tmp = realloc(out, out_cap);
+                        if (!tmp) {
+                                free(out);
+                                return NULL;
+                        }
+                        out = tmp;
+                }
+        }
+
+        out[out_len] = '\0';
+        return out;
+}
+
+static char *mp3_decode_id3_text(uint8_t encoding, const unsigned char *data, size_t len)
+{
+        if (!data || len == 0)
+                return NULL;
+
+        switch (encoding) {
+        case 0: /* ISO-8859-1 */
+                return mp3_dup_trim_ascii(data, len);
+        case 3: /* UTF-8 */
+                return mp3_dup_trim_ascii(data, strnlen((const char *)data, len));
+        case 1: /* UTF-16 with BOM */
+        {
+                bool big_endian = true;
+                size_t offset = 0;
+                if (len >= 2) {
+                        if (data[0] == 0xFF && data[1] == 0xFE) {
+                                big_endian = false;
+                                offset = 2;
+                        } else if (data[0] == 0xFE && data[1] == 0xFF) {
+                                big_endian = true;
+                                offset = 2;
+                        }
+                }
+                return mp3_decode_utf16(data + offset, len - offset, big_endian);
+        }
+        case 2: /* UTF-16BE without BOM */
+                return mp3_decode_utf16(data, len, true);
+        default:
+                return NULL;
+        }
+}
+
+static bool mp3_parse_id3v2(const unsigned char *data, size_t size, struct track_metadata *meta)
+{
+        if (size < 10 || memcmp(data, "ID3", 3) != 0)
+                return false;
+
+        uint8_t version = data[3];
+        uint8_t flags = data[5];
+        uint32_t tag_size = mp3_read_synchsafe32(data + 6);
+        size_t offset = 10;
+        size_t limit = offset + tag_size;
+        if (limit > size)
+                limit = size;
+
+        if ((flags & 0x40) && offset < limit) {
+                if (version == 4) {
+                        if (offset + 4 <= limit) {
+                                uint32_t ext_size = mp3_read_synchsafe32(data + offset);
+                                if (offset + ext_size <= limit)
+                                        offset += ext_size;
+                        }
+                } else if (version == 3) {
+                        if (offset + 4 <= limit) {
+                                uint32_t ext_size = mp3_read_be32(data + offset);
+                                if (offset + 4 + ext_size <= limit)
+                                        offset += 4 + ext_size;
+                        }
+                }
+        }
+
+        bool found = false;
+        while (offset + 10 <= limit) {
+                const unsigned char *frame = data + offset;
+                if (frame[0] == 0)
+                        break;
+
+                char frame_id[5];
+                memcpy(frame_id, frame, 4);
+                frame_id[4] = '\0';
+
+                uint32_t frame_size = (version == 4) ?
+                                      mp3_read_synchsafe32(frame + 4) :
+                                      mp3_read_be32(frame + 4);
+                if (frame_size == 0)
+                        break;
+                if (offset + 10 + frame_size > limit)
+                        break;
+
+                const unsigned char *frame_data = frame + 10;
+                if (frame_id[0] == 'T' && frame_size > 1) {
+                        uint8_t encoding = frame_data[0];
+                        char *value = mp3_decode_id3_text(encoding, frame_data + 1, frame_size - 1);
+                        if (value) {
+                                if (strcmp(frame_id, "TIT2") == 0) {
+                                        metadata_set_if_empty(&meta->title, value);
+                                        found = true;
+                                } else if (strcmp(frame_id, "TPE1") == 0) {
+                                        metadata_set_if_empty(&meta->artist, value);
+                                        found = true;
+                                } else if (strcmp(frame_id, "TALB") == 0) {
+                                        metadata_set_if_empty(&meta->album, value);
+                                        found = true;
+                                } else if (strcmp(frame_id, "TRCK") == 0) {
+                                        metadata_try_set_track_number(meta, value);
+                                        metadata_set_if_empty(&meta->track, value);
+                                        found = true;
+                                } else {
+                                        free(value);
+                                }
+                        }
+                }
+
+                offset += 10 + frame_size;
+        }
+
+        return found;
+}
+
+static bool mp3_parse_id3v1(const unsigned char *data, size_t size, struct track_metadata *meta)
+{
+        if (size < 128)
+                return false;
+        const struct mp3_id3v1 *tag = (const struct mp3_id3v1 *)(data + size - 128);
+        if (tag->id[0] != 'T' || tag->id[1] != 'A' || tag->id[2] != 'G')
+                return false;
+
+        bool found = false;
+
+        char *title = mp3_dup_trim_ascii((const unsigned char *)tag->title, sizeof(tag->title));
+        metadata_set_if_empty(&meta->title, title);
+        if (title && meta->title == title)
+                found = true;
+
+        char *artist = mp3_dup_trim_ascii((const unsigned char *)tag->artist, sizeof(tag->artist));
+        metadata_set_if_empty(&meta->artist, artist);
+        if (artist && meta->artist == artist)
+                found = true;
+
+        char *album = mp3_dup_trim_ascii((const unsigned char *)tag->album, sizeof(tag->album));
+        metadata_set_if_empty(&meta->album, album);
+        if (album && meta->album == album)
+                found = true;
+
+        if (meta->track_number < 0 && tag->comment[28] == 0 && tag->comment[29] != 0) {
+                meta->track_number = tag->comment[29];
+                found = true;
+        }
+
+        if (!meta->track && meta->track_number > 0) {
+                char buf[16];
+                snprintf(buf, sizeof(buf), "%d", meta->track_number);
+                metadata_set_if_empty(&meta->track, strdup(buf));
+        }
+
+        return found;
+}
 /* --------------------------------------------------------------------------- */
 
 bool mp3_info(char *filename, struct tuneinfo *ti)
@@ -287,6 +562,30 @@ printf("%8d %4d %4d %4d %s\n", variable_frames, ti->duration, ti->bitrate, ti->g
                 fprintf(stderr,"\nmp3_read_info: cannot find mp3-info for '%s'\n", filename);
         return is_valid_mp3;
 }
+bool mp3_metadata(char *filename, struct track_metadata *meta)
+{
+	if (!meta)
+		return false;
+	int fd = open(filename, O_RDONLY);
+	if (fd == -1)
+		return false;
+	struct stat ss;
+	if (fstat(fd, &ss) != 0 || ss.st_size <= 0) {
+		close(fd);
+		return false;
+	}
+	unsigned char *mapped = mmap(0, ss.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	close(fd);
+	if (mapped == MAP_FAILED)
+		return false;
+	bool found = false;
+	found |= mp3_parse_id3v2(mapped, ss.st_size, meta);
+	found |= mp3_parse_id3v1(mapped, ss.st_size, meta);
+	munmap(mapped, ss.st_size);
+	return found;
+}
+
+
 
 /* -------------------------------------------------------------------------- */
 

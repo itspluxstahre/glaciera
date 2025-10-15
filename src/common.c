@@ -383,5 +383,35 @@ void urlencode(char *dst, const char *src)
 		src++;
 	}
 	*dst = '\0';
-}	
-	
+}
+
+/* -------------------------------------------------------------------------- */
+
+
+void track_metadata_init(struct track_metadata *meta)
+{
+	if (!meta)
+		return;
+	meta->title = NULL;
+	meta->artist = NULL;
+	meta->album = NULL;
+	meta->track = NULL;
+	meta->track_number = -1;
+}
+
+void track_metadata_clear(struct track_metadata *meta)
+{
+	if (!meta)
+		return;
+	free(meta->title);
+	free(meta->artist);
+	free(meta->album);
+	free(meta->track);
+	meta->title = NULL;
+	meta->artist = NULL;
+	meta->album = NULL;
+	meta->track = NULL;
+	meta->track_number = -1;
+}
+
+
