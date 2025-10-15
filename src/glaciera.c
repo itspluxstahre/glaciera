@@ -324,14 +324,15 @@ void make_local_copy_of_database(int showprogress) {
 	unsigned long bytes_written = 0;
 	time_t timeprogress = 0;
 	time_t now;
+	const char *data_dir = config_get_data_dir();
 
-	if (stat(opt_datapath, &st) != 0) {
-		printf("Error: Could not read path \"%s\"\n", opt_datapath);
+	if (stat(data_dir, &st) != 0) {
+		printf("Error: Could not read path \"%s\"\n", data_dir);
 		exit(-1);
 	}
 
 	for (i = 0; i < 5; i++) {
-		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
+		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", data_dir, i);
 		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
 		bytes = filesize(srcfilename);
 		bytes_total += bytes;
@@ -342,7 +343,7 @@ void make_local_copy_of_database(int showprogress) {
 		return;
 
 	for (i = 0; i < 5; i++) {
-		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", opt_datapath, i);
+		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", data_dir, i);
 		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db.tmp", playlist_dir, i);
 
 		read_fd = open(srcfilename, O_RDONLY);
@@ -3597,18 +3598,6 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Failed to initialize configuration\n");
 		exit(EXIT_FAILURE);
 	}
-
-	/* Populate legacy variables from new config */
-	strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
-	strcat(opt_datapath, "/");
-	strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
-	strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
-	strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
-	strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
-	strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
-	strncpy(opt_flacplayerpath, global_config.flac_player_path, sizeof(opt_flacplayerpath) - 1);
-	strncpy(opt_flacplayerflags, global_config.flac_player_flags,
-		sizeof(opt_flacplayerflags) - 1);
 
 	music_register_all_modules();
 

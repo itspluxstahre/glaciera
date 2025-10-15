@@ -19,6 +19,7 @@
 
 // Local headers
 #include "common.h"
+#include "config.h"
 
 /* -------------------------------------------------------------------------- */
 
@@ -150,26 +151,29 @@ void flac_play(char *filename) {
 	 *
 	 * But now we have a dedicated FLAC player config option!
 	 */
+	const char *player = config_get_flac_player_path();
+	const char *flags = config_get_flac_player_flags();
+	
 	char *player_args[3];
-	player_args[0] = opt_flacplayerpath;
+	player_args[0] = (char *)player;
 	player_args[1] = filename;
 	player_args[2] = NULL;
 
-	if (strlen(opt_flacplayerflags) > 0) {
+	if (strlen(flags) > 0) {
 		/* If flags are configured, we need to split them */
 		char flags_copy[256];
-		strncpy(flags_copy, opt_flacplayerflags, sizeof(flags_copy) - 1);
+		strncpy(flags_copy, flags, sizeof(flags_copy) - 1);
 		flags_copy[sizeof(flags_copy) - 1] = '\0';
 
 		/* Simple approach: if flags exist, add them before filename */
 		char *flag_args[4];
-		flag_args[0] = opt_flacplayerpath;
+		flag_args[0] = (char *)player;
 		flag_args[1] = flags_copy;
 		flag_args[2] = filename;
 		flag_args[3] = NULL;
 
-		execvp(opt_flacplayerpath, flag_args);
+		execvp(player, flag_args);
 	} else {
-		execvp(opt_flacplayerpath, player_args);
+		execvp(player, player_args);
 	}
 }

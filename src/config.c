@@ -441,3 +441,27 @@ const char *config_get_music_library_path(void) {
 	}
 	return NULL;
 }
+
+/* Get data directory with trailing slash */
+const char *config_get_data_dir(void) {
+	static char data_dir_with_slash[520];
+	if (data_dir_with_slash[0] == '\0') {
+		snprintf(data_dir_with_slash, sizeof(data_dir_with_slash), "%s/", xdg_data_dir);
+	}
+	return data_dir_with_slash;
+}
+
+/* Player path getters */
+const char *config_get_mp3_player_path(void) { return global_config.mp3_player_path; }
+
+const char *config_get_mp3_player_flags(void) { return global_config.mp3_player_flags; }
+
+const char *config_get_ogg_player_path(void) { return global_config.ogg_player_path; }
+
+const char *config_get_ogg_player_flags(void) { return global_config.ogg_player_flags; }
+
+const char *config_get_flac_player_path(void) { return global_config.flac_player_path; }
+
+const char *config_get_flac_player_flags(void) { return global_config.flac_player_flags; }
+
+const char *config_get_rippers_path(void) { return global_config.rippers_path; }

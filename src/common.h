@@ -46,15 +46,6 @@ struct track_metadata {
         int track_number;
 };
 
-/* Legacy config variables - populated from new config system */
-extern char opt_datapath[100];
-extern char opt_ripperspath[100];
-extern char opt_mp3playerpath[100];
-extern char opt_mp3playerflags[100];
-extern char opt_oggplayerpath[100];
-extern char opt_oggplayerflags[100];
-extern char opt_flacplayerpath[100];
-extern char opt_flacplayerflags[100];
 extern char tolowerarray[256];
 
 bool inrange(int v, int min, int max);

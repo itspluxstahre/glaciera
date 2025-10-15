@@ -71,3 +71,15 @@ const char *config_get_db_path(void);
 
 /* Get primary music library path (first index path or default) */
 const char *config_get_music_library_path(void);
+
+/* Get data directory path (same as XDG_DATA_HOME with trailing slash) */
+const char *config_get_data_dir(void);
+
+/* Get player paths and flags */
+const char *config_get_mp3_player_path(void);
+const char *config_get_mp3_player_flags(void);
+const char *config_get_ogg_player_path(void);
+const char *config_get_ogg_player_flags(void);
+const char *config_get_flac_player_path(void);
+const char *config_get_flac_player_flags(void);
+const char *config_get_rippers_path(void);

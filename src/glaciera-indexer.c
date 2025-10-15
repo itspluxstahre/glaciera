@@ -96,7 +96,7 @@ int rip_sort_function(const void *a, const void *b) {
 	return strcasecmp(((struct ripvars *)a)->str, ((struct ripvars *)b)->str);
 }
 
-void load_rippers(char *filename) {
+void load_rippers(const char *filename) {
 	FILE *f;
 	char buf[255];
 	int i;
@@ -826,7 +826,7 @@ void start_recurse_disc(const char *argdir) {
 	for (p = buf; *p; p++)
 		if ('/' == *p)
 			*p = '_';
-	snprintf(freefilename, sizeof(freefilename), "%s%s.free", opt_datapath, buf);
+	snprintf(freefilename, sizeof(freefilename), "%s%s.free", config_get_data_dir(), buf);
 
 	f = fopen(freefilename, "r");
 	if (f) {
@@ -880,7 +880,7 @@ void start_recurse_disc(const char *argdir) {
 
 /* --------------------------------------------------------------------------- */
 
-bool can_create_database(char *dir) {
+bool can_create_database(const char *dir) {
 	char buf[100];
 	FILE *f;
 	bool writeable = false;
@@ -950,23 +950,12 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* Populate legacy variables from new config */
-	strncpy(opt_datapath, xdg_data_dir, sizeof(opt_datapath) - 1);
-	strcat(opt_datapath, "/");
-	strncpy(opt_ripperspath, global_config.rippers_path, sizeof(opt_ripperspath) - 1);
-	strncpy(opt_mp3playerpath, global_config.mp3_player_path, sizeof(opt_mp3playerpath) - 1);
-	strncpy(opt_mp3playerflags, global_config.mp3_player_flags, sizeof(opt_mp3playerflags) - 1);
-	strncpy(opt_oggplayerpath, global_config.ogg_player_path, sizeof(opt_oggplayerpath) - 1);
-	strncpy(opt_oggplayerflags, global_config.ogg_player_flags, sizeof(opt_oggplayerflags) - 1);
-	strncpy(opt_flacplayerpath, global_config.flac_player_path, sizeof(opt_flacplayerpath) - 1);
-	strncpy(opt_flacplayerflags, global_config.flac_player_flags,
-		sizeof(opt_flacplayerflags) - 1);
-
 	music_register_all_modules();
 	build_fastarrays();
 
-	if (!can_create_database(opt_datapath)) {
-		fprintf(stderr, "Error: The path '%s' must be writeable.\n", opt_datapath);
+	const char *data_dir = config_get_data_dir();
+	if (!can_create_database(data_dir)) {
+		fprintf(stderr, "Error: The path '%s' must be writeable.\n", data_dir);
 		exit(EXIT_FAILURE);
 	}
 
@@ -977,7 +966,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	fprintf(stderr, "Loading rippers database...");
-	load_rippers(opt_ripperspath);
+	load_rippers(config_get_rippers_path());
 
 	/* Get existing track count for statistics */
 	allcount = db_get_track_count();

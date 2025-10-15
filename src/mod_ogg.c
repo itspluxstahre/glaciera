@@ -21,6 +21,7 @@
 
 // Local headers
 #include "common.h"
+#include "config.h"
 
 /* -------------------------------------------------------------------------- */
 
@@ -150,5 +151,6 @@ bool ogg_isit(char *s, int len) {
 }
 
 void ogg_play(char *filename) {
-	execlp(opt_oggplayerpath, opt_oggplayerpath, filename, NULL);
+	const char *player = config_get_ogg_player_path();
+	execlp(player, player, filename, NULL);
 }

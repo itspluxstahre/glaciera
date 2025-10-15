@@ -20,6 +20,7 @@
 
 // Local headers
 #include "common.h"
+#include "config.h"
 
 /* --------------------------------------------------------------------------- */
 
@@ -631,7 +632,8 @@ bool mp3_isit(char *s, int len) {
 }
 
 void mp3_play(char *filename) {
-	execlp(opt_mp3playerpath, opt_mp3playerpath, filename, NULL);
+	const char *player = config_get_mp3_player_path();
+	execlp(player, player, filename, NULL);
 
 	/*
 	 * !!20061123 KB
