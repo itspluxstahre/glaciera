@@ -53,35 +53,29 @@
 #define _LARGEFILE_SOURCE 
 #define _LARGEFILE64_SOURCE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <stddef.h>
-#include <ctype.h>
 #include <unistd.h>
-#include <signal.h>
-#include <pthread.h>
-#include <time.h>
-#include <limits.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-
+#include <sys/wait.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <dirent.h>
+#include <ctype.h>
+#include <pthread.h>
+#include <limits.h>
+#include <sqlite3.h>
 #include "common.h"
+#include "db.h"
 #include "git_version.h"
 #include "music.h"
 
 static char *massage_full_path(char *buf, char *fullpath);
-
-void * g_mm[5];
-int g_mmsize[5];
-FILE * g_db[5];
-struct tune0 g_posblock;
 
 struct smalltune *smalltunes = NULL;
 int allcount = 0;
@@ -94,52 +88,6 @@ bool opt_force_build = false;
 bool opt_skip_file_info = false;
 
 pthread_mutex_t filemutex = PTHREAD_MUTEX_INITIALIZER;
-
-/* --------------------------------------------------------------------------- */
-
-void load_all_mp3_database(const char *srcdir)
-{
-        int i;
-        int f[5];
-        struct stat ss;
-        char buf[1024];
-        struct tune0 *alltunesbase;
-
-        for (i = 0; i < 5; i++) {
-                snprintf(buf, sizeof(buf), "%s%d.db", srcdir, i);
-                f[i] = open(buf, O_RDONLY);
-                if (-1 == f[i])
-                        return;
-                fstat(f[i], &ss);
-                g_mmsize[i] = ss.st_size;
-                if (i == 0) 
-                        allcount = g_mmsize[i] / sizeof(struct tune);
-		g_mm[i] = mmap(0, g_mmsize[i], PROT_READ, MAP_SHARED, f[i], 0);
-                close(f[i]);
-        }
-
-        /*
-         * Make the smalltunes pointers point to the data
-         */
-	smalltunes = malloc(sizeof(struct smalltune) * allcount);
-        for (alltunesbase = g_mm[0], i = 0; i < allcount; i++, alltunesbase++) {
-		smalltunes[i].path = (void*) ((BIGPTR) alltunesbase->p1 + (BIGPTR) g_mm[1]);
-		smalltunes[i].ti   = (void*) ((BIGPTR) alltunesbase->p4 + (BIGPTR) g_mm[4]);
-	}
-}
-
-/* --------------------------------------------------------------------------- */
-
-int sort_function(const void *a, const void *b)
-{
-        return strcmp(((struct smalltune *) a)->path,
-                      ((struct smalltune *) b)->path);
-}
-
-void sort_mp3_database(void)
-{
-        qsort((void *) smalltunes, allcount, sizeof(struct smalltune), sort_function);
-}
 
 /* --------------------------------------------------------------------------- */
 
@@ -267,22 +215,16 @@ void strip_path_ripper(char *s)
 
 void get_cached_info(char *filename, struct tuneinfo *ti)
 {
-        struct smalltune *t = NULL;
-        struct smalltune key;
+        struct db_track *track = db_get_track_by_filepath(filename);
 
-        if (allcount) {
-                key.path = &filename[0];
-                t = bsearch(&key, (void *) smalltunes, allcount, sizeof(struct smalltune),
-                                  sort_function);
+        if (track) {
+                memcpy(ti, &track->ti, sizeof(struct tuneinfo));
+                db_free_track(track);
+        } else if (!opt_skip_file_info) {
+                if (music_info(filename, ti))
+                        new_files++;
         }
 
-        if (t)
-		memcpy(ti, t->ti, sizeof(struct tuneinfo));
-	else if (!opt_skip_file_info) {
-		if (music_info(filename, ti))
-			new_files++;
-	}
-	
         total_files++;
         total_bytes += ti->filesize;
 }
@@ -566,17 +508,8 @@ void process_one_file(char *dir,
                       struct tuneinfo *pfti,
                       BITS keepers[])
 {
-        /*
-         * Run ftell against db1, db2, db3 and db4
-         */
-        fwrite(&g_posblock, 1, sizeof(g_posblock), g_db[0]);
-
-        /*
-         * 1. Write "fullpath" to 1.db
-         */
-        g_posblock.p1 += fwrite(afullpath, 1, strlen(afullpath) + 1, g_db[1]);
-
         char display[1024 * 4];
+        char search_text[1024 * 4];
         struct track_metadata meta;
         track_metadata_init(&meta);
         bool have_meta = music_metadata(afullpath, &meta);
@@ -594,18 +527,25 @@ void process_one_file(char *dir,
         while (*trimmed && !isalnum((unsigned char)*trimmed))
                 trimmed++;
 
-        g_posblock.p2 += fwrite(trimmed, 1, strlen(trimmed) + 1, g_db[2]);
+        /* Create search text from display name */
+        strcpy(search_text, trimmed);
+        only_searchables(search_text);
+
+        /* Check if track already exists and update or insert */
+        if (db_track_exists(afullpath)) {
+                struct db_track *existing = db_get_track_by_filepath(afullpath);
+                if (existing) {
+                        /* Update existing track */
+                        db_update_track(existing->id, afullpath, trimmed, search_text, pfti);
+                        db_free_track(existing);
+                }
+        } else {
+                /* Insert new track */
+                db_insert_track(afullpath, trimmed, search_text, pfti);
+                new_files++;
+        }
 
         track_metadata_clear(&meta);
-
-        /*
-         * 3. There is no step 3. "search" are calculated later
-         */
-
-        /*
-         * 4. Write "tuneinfo" to 4.db
-         */
-        g_posblock.p4 += fwrite(pfti, 1, sizeof(struct tuneinfo), g_db[4]);
 }
 
 
@@ -868,238 +808,24 @@ void * prim_recurse_disc(void *argdir)
 
 /* --------------------------------------------------------------------------- */
 
-void * mm2;
-
-int tune0_sort(const void * mm0_a, const void * mm0_b)
-{
-        return strcasecmp((char *) ((struct tune0 *) mm0_a)->p2 + (BIGPTR)mm2,
-                          (char *) ((struct tune0 *) mm0_b)->p2 + (BIGPTR)mm2);
-}
-
-void sort_0_file(void)
-{
-        int db0;
-        int db2;
-        int size0;
-        int size2;
-        struct stat ss;
-        struct tune0 * mm0;
-
-        db0 = open("/tmp/0.db", O_RDWR);
-        fstat(db0, &ss);
-        size0 = ss.st_size;
-        mm0 = mmap(0, size0, PROT_READ|PROT_WRITE, MAP_SHARED, db0, 0);
-
-        db2 = open("/tmp/2.db", O_RDONLY);
-        fstat(db2, &ss);
-        size2 = ss.st_size;
-        mm2 = mmap(0, size2, PROT_READ, MAP_SHARED, db2, 0);
-        qsort(mm0, size0 / sizeof(struct tune0), sizeof(struct tune0), tune0_sort);
-        munmap(mm2, size2);
-        close(db2);
-
-        munmap(mm0, size0);
-        close(db0);
-}
-
-/* --------------------------------------------------------------------------- */
-
-void copy_db(const char *dstdir)
-{
-        int i;
-        int f[5];
-        BIGPTR mm[5];
-        unsigned int mmsize[5];
-        struct stat ss;
-        char buf[1024];
-        FILE * output[5];
-        char * p;
-        struct tune0 posblock;
-        struct tune0 * base;
-        time_t now;
-        int prev = 0;
-        FILE * allmp3db = NULL;
-	char oldname[255];
-	char newname[255];
-	int error;
-
-        /*
-         * Setup memory maps from source files
-         */
-        for (i = 0; i < 5; i++) {
-                snprintf(buf, sizeof(buf), "/tmp/%d.db", i);
-                f[i] = open(buf, O_RDONLY);
-                fstat(f[i], &ss);
-                mmsize[i] = ss.st_size;
-                if (0 == i)
-                        allcount = mmsize[i] / sizeof(struct tune);
-                mm[i] = (BIGPTR) mmap(0, mmsize[i], PROT_READ, MAP_SHARED, f[i], 0);
-                close(f[i]);
-        }
-
-        /*
-         * Create the destination files
-         */
-        for (i = 0; i < 5; i++) {
-                snprintf(buf, sizeof(buf), "%s%d.db.tmp", dstdir, i);
-                output[i] = fopen(buf, "w");
-                if (!output[i]) {
-			fprintf(stderr, "\ncopy_db: Cannot create our database!\n\nFatal error! Quiting!\n");
-			exit(0);
-		}
-        }	
-	if (opt_generate_allmp3db) {
-                snprintf(buf, sizeof(buf), "%sallmp3.db.tmp", dstdir);
-	        allmp3db = fopen(buf, "w");
-	}
-
-        memset(&posblock, 0, sizeof(posblock));
-        for (base = (void*)mm[0], i = 0; i < allcount; i++, base++) {
-                now = time(NULL);
-                if (now > timeprogress) {
-			char progress[61];
-			int filled = 0;
-
-			if (allcount > 0) {
-				filled = (int) ((60L * i) / allcount);
-				if (filled > 60)
-					filled = 60;
-			}
-
-			memset(progress, '#', filled);
-			memset(progress + filled, ' ', 60 - filled);
-			progress[60] = '\0';
-
-                        fprintf (stderr, "%7d (%7d/sec)[%s]\r",
-                                i,
-                                i-prev,
-                                progress);
-                        timeprogress = now;
-                        prev=i;
-                }
-
-                /*
-                 * Write the new index file
-                 */
-                fwrite(&posblock, 1, sizeof(posblock), output[0]);
-
-                p = (char *) (base->p1 + mm[1]);
-                posblock.p1 += fwrite(p, 1, strlen(p)+1, output[1]);
-                if (allmp3db)
-			fprintf(allmp3db, "%s\r\n", p);
-
-                p = (char *) (base->p2 + mm[2]);
-                posblock.p2 += fwrite(p, 1, strlen(p)+1, output[2]);
-                if (allmp3db)
-                        fprintf(allmp3db, "%s\r\n", p);
-
-                strcpy(buf, (char *) (base->p2 + mm[2]));
-                only_searchables(buf);
-                posblock.p3 += fwrite(buf, 1, strlen(buf)+1, output[3]);
-
-                p = (char *) (base->p4 + mm[4]);
-                posblock.p4 += fwrite(p, 1, sizeof(struct tuneinfo), output[4]);
-        }
-
-        /*
-         * Close destination files
-         */
-        for (i = 0; i < 5; i++) {
-                munmap((void *) mm[i], mmsize[i]);
-                fclose(output[i]);
-        }
-        if (allmp3db)
-                fclose(allmp3db);
-		
-	/*
-	 * Now the copying is done.
-	 * Atomically rename the .tmp-files to the real files.
-	 */
-        for (i = 0; i < 5; i++) {
-                snprintf(oldname, sizeof(oldname), "%s%d.db.tmp", dstdir, i);
-                snprintf(newname, sizeof(newname), "%s%d.db", dstdir, i);
-		error = rename(oldname, newname);
-		if (error) {
-	                fprintf(stderr, "\nError renaming '%s' to '%s'", oldname, newname);
-		}
-	}
-        if (allmp3db) {
-                snprintf(oldname, sizeof(oldname), "%sallmp3.db.tmp", dstdir);
-                snprintf(newname, sizeof(newname), "%sallmp3.db", dstdir);
-		error = rename(oldname, newname);
-		if (error) {
-	                fprintf(stderr, "\nError renaming '%s' to '%s'", oldname, newname);
-		}
-	}
-}
-
-/* --------------------------------------------------------------------------- */
-
 pthread_t threads[100];
 int threadcount = 0;
 
-void * prim_just_build_files(void * argdir)
-{
-        char * dir = argdir;
-        int dirlen;
-        int i;
-        struct tune t;
-
-        /*
-         * Don't use the alltunes array to search for filenames.
-         * The array points to different places in the 0.db, 1.db files,
-         * trashing the VM-cache.
-         * The fix is to "read" the (already sorted) 0.db file directly via 
-         * the memory-map pointer. That makes all accesses linear.
-         *
-         * with alltunes array (BAD):
-         *  6 4 3 9 28 89 2 5
-         * without alltunes array (GOOD):
-         *  2 3 4 5 6 9 28 89
-         */
-        dirlen = strlen(dir);
-        t.path    = g_mm[1];
-        t.display = g_mm[2];
-        t.ti      = g_mm[4];
-
-        for (i = 0; i < allcount; i++) {
-                if (0 == strncmp(t.path, dir, dirlen) && '/' == t.path[dirlen]) {
-                        pthread_mutex_lock(&filemutex);
-
-                                         fwrite(&g_posblock, 1, sizeof(g_posblock),      g_db[0]);
-                        g_posblock.p1 += fwrite(t.path,      1, strlen(t.path)    + 1,   g_db[1]);
-                        g_posblock.p2 += fwrite(t.display,   1, strlen(t.display) + 1,   g_db[2]);
-                        g_posblock.p4 += fwrite(t.ti,        1, sizeof(struct tuneinfo), g_db[4]);
-
-                        total_files++;
-			total_bytes += t.ti->filesize;
-
-                        pthread_mutex_unlock(&filemutex);
-                }
-
-                t.path    += strlen(t.path) + 1;
-                t.display += strlen(t.display) + 1;
-                t.ti++;
-        }
-
-        return NULL;
-}
-
 bool is_path_in_mounts(char *path)
 {
-	FILE *f;
-	char buf[1024];
-	bool hasmount = false;
+        FILE *f;
+        char buf[1024];
+        bool hasmount = false;
 
-	f = fopen("/proc/mounts", "r");
-	if (f) {
-		while (fgets(buf, sizeof(buf), f)) {
-			if (strstr(buf, path))
-				hasmount = true;
-		}
-		fclose(f);
-	}
-	return hasmount;
+        f = fopen("/proc/mounts", "r");
+        if (f) {
+                while (fgets(buf, sizeof(buf), f)) {
+                        if (strstr(buf, path))
+                                hasmount = true;
+                }
+                fclose(f);
+        }
+        return hasmount;
 }
 
 bool path_has_files(char *path)
@@ -1182,9 +908,10 @@ void start_recurse_disc(const char * argdir)
                 fprintf(stderr, "\nJust parsing mp3-files '%s'...", dir);
 		fflush(stderr);
 
+                /* For now, just fall back to full scan */
                 pthread_create(&threads[threadcount++],
                                 NULL,
-                                &prim_just_build_files,
+                                &prim_recurse_disc,
                                 dir);
         } else {
                 fprintf(stderr, "\nBrowsing for mp3-files in '%s'...", dir);
@@ -1243,7 +970,6 @@ int main(int argc, char *argv[])
 {
         int i;
 	int arg;
-        time_t start;
 
         while ((arg = getopt(argc, argv, "hvwfs")) > -1) {
                 switch (arg) {
@@ -1277,29 +1003,26 @@ int main(int argc, char *argv[])
 	sanitize_rc_parameters(false);
 	music_register_all_modules();
         build_fastarrays();
-        memset(&g_posblock, 0, sizeof(g_posblock));
 
 	if (!can_create_database(opt_datapath)) {
 		fprintf(stderr, "Error: The path '%s' must be writeable.\n", opt_datapath);
 		exit(EXIT_FAILURE);
 	}
 
+        fprintf(stderr, "Initializing database...");
+        char db_path[1024];
+        snprintf(db_path, sizeof(db_path), "%sglaciera.db", opt_datapath);
+        if (!db_init(db_path)) {
+                fprintf(stderr, "Failed to initialize database\n");
+                exit(EXIT_FAILURE);
+        }
+
         fprintf(stderr, "Loading rippers database...");
         load_rippers(opt_ripperspath);
 
-        fprintf(stderr, "\nLoading audio database...");
-        load_all_mp3_database(opt_datapath);
-
-        fprintf(stderr, "\nSorting audio database, (%d) songs...", allcount);
-        start = time(NULL);
-        sort_mp3_database();
-        fprintf(stderr, " sort took %ld seconds.\n", time(NULL) - start);
-
-        for (i = 0; i < 5; i++) {
-                char buf[100];
-                snprintf(buf, sizeof(buf), "/tmp/%d.db", i);
-                g_db[i] = fopen(buf, "w");
-        }
+        /* Get existing track count for statistics */
+        allcount = db_get_track_count();
+        fprintf(stderr, "\nExisting database has %d tracks.\n", allcount);
 	
 	/*
  	 * Setup a "report progress" alarm 
@@ -1320,21 +1043,8 @@ int main(int argc, char *argv[])
  	 */
 	alarm(0);                                                 
 
-        for (i = 0; i < 5; i++) {
-                if (g_mm[i])
-                        munmap(g_mm[i], g_mmsize[i]);
-                fclose(g_db[i]);
-        }
-
-        fprintf(stderr, "\nSorting index file...");
-        start = time(NULL);
-        sort_0_file();
-        fprintf(stderr, " sort took %ld seconds.", time(NULL) - start);
-
-        fprintf(stderr, "\nCopying database files...");
-        copy_db(opt_datapath);
-
         fprintf(stderr, "\nglaciera-indexer: total files: %d  new files: %d\n", total_files, new_files);
 
+        db_close();
         exit(0);
 }

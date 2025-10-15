@@ -2,6 +2,7 @@ src_inc = include_directories('.')
 
 common_sources = files(
   'common.c',
+  'db.c',
   'music.c',
   'mod_mp3.c',
   'mod_ogg.c',
@@ -22,6 +23,7 @@ glaciera_indexer_sources = common_sources + [
 glaciera_deps = [
   ncurses_dep,
   threads_dep,
+  sqlite3_dep,
   vorbisfile_dep,
   vorbis_dep,
   flac_dep,
@@ -31,6 +33,7 @@ glaciera_deps += glaciera_extra_deps
 
 glaciera_indexer_deps = [
   threads_dep,
+  sqlite3_dep,
   vorbisfile_dep,
   vorbis_dep,
   flac_dep,

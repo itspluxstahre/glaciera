@@ -16,6 +16,7 @@ if not ncurses_dep.found()
 endif
 
 threads_dep = dependency('threads')
+sqlite3_dep = dependency('sqlite3')
 vorbisfile_dep = dependency('vorbisfile')
 vorbis_dep = dependency('vorbis')
 flac_dep = dependency('flac')

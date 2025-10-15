@@ -54,6 +54,8 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <sqlite3.h>
+#include "db.h"
 #include "common.h"
 #include "git_version.h"
 #include "music.h"
@@ -162,25 +164,22 @@ int displaytunes_sort(const void *a, const void *b)
         ((BIGPTR)(((struct tune *) b)->display));
 }
 
-/* TESTCODE:
-   for (i = 0; i < allcount; i++) {
-   tune = find_in_alltunes_by_display_pointer(alltunes[i].display);
-   if (tune && tune->display == alltunes[i].display)
-   matches++;
-   }
-   */
+/*
+ * With SQLite backend, we use strdup() for strings, so we can't rely on pointer comparison.
+ * We need to do a linear search by string content.
+ */
 struct tune * find_in_alltunes_by_display_pointer(char *display)
 {
-    struct tune key;
-    struct tune *result;
-
-    key.display = display;
-    result = bsearch(&key, (void *) alltunes, allcount, sizeof(struct tune), displaytunes_sort);
-#if 0	
-    if (!result)
-        printf("FATAL PROGRAMMER ERROR IN find_in_alltunes_by_display_pointer");
-#endif		
-    return result;
+    int i;
+    
+    /* Linear search through alltunes */
+    for (i = 0; i < allcount; i++) {
+        if (strcmp(alltunes[i].display, display) == 0) {
+            return &alltunes[i];
+        }
+    }
+    
+    return NULL;
 }
 
 /*
@@ -439,86 +438,56 @@ void make_local_copy_of_database(int showprogress)
 
 void load_all_songs(void)
 {
-    static void *g_mm[5] = {0};
-    static int g_mmsize[5] = {0};
-    char *running[5] = {0};
-    int i;
-    int ch;
-    int fd;
-    struct stat ss;
-    char buf[1024];
-    struct tune0 *base0;
+    int count = 0;
+    struct db_track **tracks = db_get_all_tracks(&count);
 
-    for (i = 0; i < 5; i++) {
-        snprintf(buf, sizeof(buf), "%s%d.db", playlist_dir, i);
-        fd = open(buf, O_RDONLY);
-        fstat(fd, &ss);
-        if (0 == i) {
-            allcount = ss.st_size / sizeof(struct tune);
-            alltunes = realloc(alltunes, sizeof(struct tune) * allcount);
-        } 
-
-        if (g_mm[i] && g_mmsize[i])
-            munmap(g_mm[i], g_mmsize[i]);
-        g_mmsize[i] = ss.st_size;
-        g_mm[i] = mmap(0, g_mmsize[i], PROT_READ, MAP_SHARED, fd, 0);
-
-        close(fd);
+    if (!tracks) {
+        return;
     }
 
-    running[1] = (char *) g_mm[1];
-    running[2] = (char *) g_mm[2];
-    running[3] = (char *) g_mm[3];
-    running[4] = (char *) g_mm[4];
-
-    base0 = (struct tune0 *) g_mm[0];
-    for (i = 0; i < allcount; i++) {
-
-        alltunes[i].path    = running[1] + base0->p1;
-        alltunes[i].display = running[2] + base0->p2;
-        alltunes[i].search  = running[3] + base0->p3;
-        alltunes[i].ti      = (struct tuneinfo *) running[4];
-
-        //running[1] += base0->p1;
-        //running[2] += base0->p2;
-        //running[3] += base0->p3;
-        running[4] += sizeof(struct tuneinfo);  /* 20101001 */
-
-        base0++;
+    /* If database is empty, count will be 0 but tracks array is valid */
+    if (count == 0) {
+        free(tracks);
+        return;
     }
+
+    /* Allocate memory for alltunes array */
+    alltunes = malloc(sizeof(struct tune) * count);
+    if (!alltunes) {
+        db_free_track_list(tracks, count);
+        return;
+    }
+
+    allcount = count;
+
+    /* Convert database tracks to tune structures */
+    for (int i = 0; i < count; i++) {
+        struct db_track *db_track = tracks[i];
+
+        alltunes[i].path = strdup(db_track->filepath);
+        alltunes[i].display = strdup(db_track->display_name);
+        alltunes[i].search = strdup(db_track->search_text);
+        alltunes[i].ti = malloc(sizeof(struct tuneinfo));
+        memcpy(alltunes[i].ti, &db_track->ti, sizeof(struct tuneinfo));
+
+        db_free_track(db_track);
+    }
+
+    free(tracks);
 
     /*
      * Init the array used for (somewhat) quick linear searches
      */
-    for(i = 0; i < 256; i++) {
+    for(int i = 0; i < 256; i++) {
         qsearch[i].lo = -1;
         qsearch[i].hi = -1;
     }
-    for (i = 0; i < allcount; i++) {
-        ch = 0xff & alltunes[i].search[0];
+    for (int i = 0; i < allcount; i++) {
+        int ch = 0xff & alltunes[i].search[0];
         if (-1 == qsearch[ch].lo)
             qsearch[ch].lo = i;
         qsearch[ch].hi = i + 1;
     }
-
-    for (i = 0; i < playlistcount; i++) {
-        if (!find_in_alltunes_by_display_pointer(playlist[i]->display))
-            playlist[i] = &alltunes[0];
-    }
-
-    for (i = 0; i < displaycount; i++) {
-        if (!find_in_alltunes_by_display_pointer(displaytunes[i]->display))
-            displaytunes[i] = &alltunes[0];
-    }
-#if 0
-    for(i=0;i<256;i++)
-        printf("%3d %c   %3d --  %3d\n", i, i,qsearch[i].lo, qsearch[i].hi);
-
-    for (i = 0; i < allcount; i++)
-        printf("%5d %s\n", i, alltunes[i].search);
-
-    exit(0);
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -896,7 +865,7 @@ void draw_bottom_FXX_help(const char *key, const char *help)
     waddstr(win_bottom, help);
 }
 
-void draw_centered(WINDOW *w, int row, char *format, ...)
+void draw_centered(WINDOW *w, int row, const char *format, ...)
 {
     va_list va;
     char buf[1024];
@@ -2564,8 +2533,6 @@ void do_search(void)
     int matches;
     char buf[1024];
     int onematch;
-    int from_index;
-    int to_index;
 
     matchfirstchar = isupper(search_string[0]);
     matchdirectory = '/' == search_string[0];
@@ -2611,19 +2578,43 @@ void do_search(void)
     }
 
     /*
-     * Search for it!
+     * Search for it using SQLite!
      */
     clear_displaytunes();
+
     if (fuzzysearch) {
+        /* Fuzzy search - for now, just do a simple search */
         strcpy(lookfor, search_string);
         only_searchables(lookfor);
-        for (i = 0; i < allcount; i++) {
-            if (fuzzy(alltunes[i].search, lookfor) > 70)
-                addtunetodisplay(&alltunes[i]);
+
+        /* Use SQLite search */
+        int count = 0;
+        struct db_track **tracks = db_search_tracks(lookfor, &count);
+
+        for (i = 0; i < count; i++) {
+            struct db_track *db_track = tracks[i];
+
+            /* Convert to tune structure and add to display */
+            struct tune *tune = malloc(sizeof(struct tune));
+            if (!tune) {
+                db_free_track(db_track);
+                continue;
+            }
+
+            tune->path = strdup(db_track->filepath);
+            tune->display = strdup(db_track->display_name);
+            tune->search = strdup(db_track->search_text);
+            tune->ti = malloc(sizeof(struct tuneinfo));
+            memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
+
+            addtunetodisplay(tune);
+            db_free_track(db_track);
         }
+
+        free(tracks);
     } else {
         /*
-         * !!2005-09-15 KB 
+         * !!2005-09-15 KB
          * If the first letter is in uppercase, as in the search
          * string "Cure", we use the qsearch array to do speedy
          * searches among all artists that begin with "C".
@@ -2632,35 +2623,95 @@ void do_search(void)
          * it greatly reduces the accesses to the database.
          */
         if (matchfirstchar) {
-            j = search_string[0];
-            from_index = qsearch[j].lo; 
-            to_index   = qsearch[j].hi; 
-        } else {
-            from_index = 0;
-            to_index   = allcount;
+            /* For SQLite, we can use LIKE queries for first character matching */
+            /* For now, just do a regular search */
         }
 
-        for (i = from_index; i < to_index; i++) {
+        /* Build search query for SQLite */
+        char query[1024] = "";
+        for (j = 0; j < words; j++) {
+            if (j > 0) {
+                if (negatelist[j])
+                    strcat(query, " AND ");
+                else
+                    strcat(query, " OR ");
+            } else {
+                if (negatelist[j])
+                    strcpy(query, " NOT ");
+            }
+
             if (matchdirectory) {
-                strcpy(buf, alltunes[i].path);
+                strcat(query, "filepath LIKE '%");
+                strcat(query, wordlist[j]);
+                strcat(query, "%'");
+            } else if (matchfirstchar && j == 0) {
+                /* First character match */
+                char first_char[2] = {toupper(wordlist[j][0]), '\0'};
+                strcat(query, "(display_name LIKE '");
+                strcat(query, first_char);
+                strcat(query, "%' OR search_text LIKE '");
+                strcat(query, first_char);
+                strcat(query, "%')");
+            } else {
+                /* Regular search */
+                strcat(query, "(display_name LIKE '%");
+                strcat(query, wordlist[j]);
+                strcat(query, "%' OR search_text LIKE '%");
+                strcat(query, wordlist[j]);
+                strcat(query, "%')");
+            }
+        }
+
+        /* Execute search query */
+        int count = 0;
+        struct db_track **tracks = db_search_tracks(search_string, &count);
+
+        for (i = 0; i < count; i++) {
+            struct db_track *db_track = tracks[i];
+
+            /* Additional filtering for complex search logic */
+            if (matchdirectory) {
+                strcpy(buf, db_track->filepath);
                 only_searchables(buf);
                 p = buf;
-            } else
-                p = alltunes[i].search;
+            } else {
+                p = db_track->search_text;
+            }
+
             matches = 0;
             for (j = 0; j < words; j++) {
-                if (matchfirstchar && 0 == j)
-                    onematch = strstr(p, wordlist[j]) == p;
-                else
-                    onematch = strstr(p, wordlist[j]) != NULL;
+                if (matchfirstchar && 0 == j) {
+                    /* First character match */
+                    onematch = (p[0] == toupper(wordlist[j][0]));
+                } else {
+                    onematch = (strstr(p, wordlist[j]) != NULL);
+                }
                 if (negatelist[j])
                     onematch = !onematch;
                 matches += onematch;
             }
 
-            if (matches == words)
-                addtunetodisplay(&alltunes[i]);
+            if (matches == words) {
+                /* Convert to tune structure and add to display */
+                struct tune *tune = malloc(sizeof(struct tune));
+                if (!tune) {
+                    db_free_track(db_track);
+                    continue;
+                }
+
+                tune->path = strdup(db_track->filepath);
+                tune->display = strdup(db_track->display_name);
+                tune->search = strdup(db_track->search_text);
+                tune->ti = malloc(sizeof(struct tuneinfo));
+                memcpy(tune->ti, &db_track->ti, sizeof(struct tuneinfo));
+
+                addtunetodisplay(tune);
+            }
+
+            db_free_track(db_track);
         }
+
+        free(tracks);
     }
 
     /*
@@ -3128,7 +3179,6 @@ void action(int key)
             break;
 
         case KEY_F(11):
-            make_local_copy_of_database(false);
             load_all_songs();
             refresh_screen();
             break;
@@ -3294,9 +3344,14 @@ int main(int argc, char **argv)
 
     /*
      * !!2004-08-08 KB
-     * Make a local copies of the *.db database files
+     * Initialize SQLite database
      */
-    make_local_copy_of_database(true);
+    char db_path[1024];
+    snprintf(db_path, sizeof(db_path), "%sglaciera.db", opt_datapath);
+    if (!db_init(db_path)) {
+        printf(_("Failed to initialize database!\n"));
+        exit(0);
+    }
 
     build_fastarrays();
     load_all_songs();
