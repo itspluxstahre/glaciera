@@ -37,9 +37,9 @@
 #include <pwd.h>
 #include "common.h"
 
-char opt_mp3path       [100] = "/mp3";
-char opt_ripperspath   [100] = "/mp3/rippers";
-char opt_mp3playerpath [100] = "mpg321";	/* Don't need absolute path thanks to execlp */
+char opt_mp3path       [100] = "/Users/ellie/Music/mp3berg";
+char opt_ripperspath   [100] = "/Users/ellie/Music/mp3berg/rippers";
+char opt_mp3playerpath [100] = "mpg123";	/* Don't need absolute path thanks to execlp */
 char opt_mp3playerflags[100] = "";
 char opt_oggplayerpath [100] = "ogg123";	/* Don't need absolute path thanks to execlp */
 char opt_oggplayerflags[100] = "";

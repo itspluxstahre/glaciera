@@ -6,13 +6,13 @@
 # This is the path to your musicfolder.
 
 :mp3path:
-/mp3/
+/Users/ellie/Music/mp3berg
 
 # This is where you have your rippers database,
 # probalbly in the path above example /mp3/rippers.
 
 :rippersdatabase:
-/mp3/rippers
+/Users/ellie/Music/mp3berg/rippers
 
 # Full path to your mp3player,
 # We will catch some settings for it below.

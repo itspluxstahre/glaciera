@@ -1,0 +1,5 @@
+*.o
+*.fcgi
+svn_version.*
+mp3berg
+mp3build

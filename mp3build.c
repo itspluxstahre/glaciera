@@ -708,8 +708,12 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 void * prim_recurse_disc(void *argdir)
 {
         DIR *pdir;
+#if defined(__APPLE__)
+        struct dirent *sd;
+#else
         struct dirent64 *sd;
-	struct dirent64 *sdbuf;
+        struct dirent64 *sdbuf;
+#endif
         struct stat ss;
         char *fullpath;
         char *dir = argdir;
@@ -725,12 +729,14 @@ void * prim_recurse_disc(void *argdir)
 	memset(keepers, 0, sizeof(keepers));
         find_redundant_song_names(pdir, keepers);
                     
-	sdbuf = (struct dirent64 *) malloc(offsetof(struct dirent64, d_name) + NAME_MAX + 1);
-
         rewinddir(pdir);
-//	while (NULL != (sd = readdir(pdir))) {
 
+#if defined(__APPLE__)
+        while ((sd = readdir(pdir)) != NULL) {
+#else
+	sdbuf = (struct dirent64 *) malloc(offsetof(struct dirent64, d_name) + NAME_MAX + 1);
 	while (readdir64_r(pdir, sdbuf, &sd) == 0 && sd) {
+#endif
                 /*
                  * Do not even consider directories or files starting with .
                  */
@@ -767,7 +773,9 @@ void * prim_recurse_disc(void *argdir)
                 free(fullpath);
         }
         closedir(pdir);
+#if !defined(__APPLE__)
 	free(sdbuf);
+#endif
         return NULL;
 }
 
@@ -862,11 +870,23 @@ void copy_db(const char *dstdir)
         for (base = (void*)mm[0], i = 0; i < allcount; i++, base++) {
                 now = time(NULL);
                 if (now > timeprogress) {
-                        fprintf (stderr, "%7d (%7d/sec)[%-60s]\r",
+			char progress[61];
+			int filled = 0;
+
+			if (allcount > 0) {
+				filled = (int) ((60L * i) / allcount);
+				if (filled > 60)
+					filled = 60;
+			}
+
+			memset(progress, '#', filled);
+			memset(progress + filled, ' ', 60 - filled);
+			progress[60] = '\0';
+
+                        fprintf (stderr, "%7d (%7d/sec)[%s]\r",
                                 i,
                                 i-prev,
-                                "############################################################" +
-                                59 - (int) (60L * i / allcount));
+                                progress);
                         timeprogress = now;
                         prev=i;
                 }
@@ -1085,7 +1105,7 @@ void start_recurse_disc(const char * argdir)
 
                 f = fopen(freefilename, "w");
                 if (f) {
-                        fprintf(f, "%lu\n", df.f_bfree);
+                        fprintf(f, "%lu\n", (unsigned long) df.f_bfree);
                         fclose(f);
                 }
         }

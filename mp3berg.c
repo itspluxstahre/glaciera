@@ -46,6 +46,7 @@
 #include <sys/ioctl.h>
 #include <sys/file.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <dirent.h>
@@ -391,9 +392,20 @@ void make_local_copy_of_database(int showprogress)
                 if (showprogress) {
                     now = time(NULL);
                     if (now > timeprogress) {
-                        fprintf (stderr, "[%-60s]\r",
-                                "############################################################" +
-                                59 - (int) ((60L*(bytes_written/100)) / (bytes_total/100)));
+                        char progress[61];
+                        int filled = 0;
+
+                        if (bytes_total > 0) {
+                            filled = (int) ((bytes_written * 60UL) / bytes_total);
+                            if (filled > 60)
+                                filled = 60;
+                        }
+
+                        memset(progress, '#', filled);
+                        memset(progress + filled, ' ', 60 - filled);
+                        progress[60] = '\0';
+
+                        fprintf(stderr, "[%s]\r", progress);
                         timeprogress = now;
                     }
                 }
@@ -423,9 +435,9 @@ void make_local_copy_of_database(int showprogress)
 
 void load_all_songs(void)
 {
-    static BIGPTR g_mm[5] = {0};
+    static void *g_mm[5] = {0};
     static int g_mmsize[5] = {0};
-    void * running[5] = {0};
+    char *running[5] = {0};
     int i;
     int ch;
     int fd;
@@ -443,25 +455,25 @@ void load_all_songs(void)
         } 
 
         if (g_mm[i] && g_mmsize[i])
-            munmap((void *) g_mm[i], g_mmsize[i]);
+            munmap(g_mm[i], g_mmsize[i]);
         g_mmsize[i] = ss.st_size;
-        g_mm[i] = (BIGPTR) mmap(0, g_mmsize[i], PROT_READ, MAP_SHARED, fd, 0);
+        g_mm[i] = mmap(0, g_mmsize[i], PROT_READ, MAP_SHARED, fd, 0);
 
         close(fd);
     }
 
-    running[1] = g_mm[1];
-    running[2] = g_mm[2];
-    running[3] = g_mm[3];
-    running[4] = g_mm[4];
+    running[1] = (char *) g_mm[1];
+    running[2] = (char *) g_mm[2];
+    running[3] = (char *) g_mm[3];
+    running[4] = (char *) g_mm[4];
 
-    base0 = g_mm[0];
+    base0 = (struct tune0 *) g_mm[0];
     for (i = 0; i < allcount; i++) {
 
-        alltunes[i].path    = running[1]+base0->p1;
-        alltunes[i].display = running[2]+base0->p2;
-        alltunes[i].search  = running[3]+base0->p3;
-        alltunes[i].ti      = running[4];
+        alltunes[i].path    = running[1] + base0->p1;
+        alltunes[i].display = running[2] + base0->p2;
+        alltunes[i].search  = running[3] + base0->p3;
+        alltunes[i].ti      = (struct tuneinfo *) running[4];
 
         //running[1] += base0->p1;
         //running[2] += base0->p2;

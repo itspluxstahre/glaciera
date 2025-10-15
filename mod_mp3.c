@@ -197,7 +197,7 @@ int mp3_info(char *filename, struct tuneinfo *ti)
 	 * Tell the OS NOT to cache the scanned mp3's into memory, 
 	 * since they are only read once. 
 	 */
-#ifndef __MACOSX__
+#if defined(POSIX_FADV_DONTNEED)
 	fdatasync(f);
 	posix_fadvise(f, 0, 0, POSIX_FADV_DONTNEED);
 #endif
@@ -303,8 +303,8 @@ int mp3_isit(char *s, int len)
 	return FALSE;
 }	
 
-void mp3_play(char *filename)
-{
+void mp3_play(char *filename) {
+
 	execlp(opt_mp3playerpath, opt_mp3playerpath, filename, NULL);	
 
 	/*
