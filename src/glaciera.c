@@ -1416,8 +1416,6 @@ void do_load_playlist(const char *playlistname)
 
 /* -------------------------------------------------------------------------- */
 
-int loops = 0;
-
 void precache_a_song(struct tune *tune)
 {
     int fd;
@@ -1429,6 +1427,7 @@ void precache_a_song(struct tune *tune)
 
     /*
      * Read the first two 4K pages of the file.
+     * This helps avoid disk I/O latency during playback transitions.
      */
     fd = open(tune->path, O_RDONLY);
     if (-1 != fd) {
@@ -1437,25 +1436,6 @@ void precache_a_song(struct tune *tune)
                 break;
         }
         close(fd);
-    }
-
-    /*
-     * !! 2004-01-06 KB
-     * Try to keep our search strings in Linux' cache.
-     * Since the search function isn't used _all_ of the time,
-     * the memory associated with the search strings, may (i.e will)
-     * otherwise get paged out.
-     *
-     * This is to make the user happy when searching for a new song.
-     * The user _does_not_want_ to hear the disk paging in the
-     * searchstrings when he/she is typing!
-     *
-     * The 2.6 kernel option /proc/sys/vm/swappiness could fix this?
-     * TODO: IS THIS REALLY NECESSARY NOW? WITH THE MEMORYMAPPED FILES??
-     */
-    for (i = 0; i < allcount; i += 10) {
-        if ('X' == alltunes[i].search[0])
-            loops++;
     }
 }
 
