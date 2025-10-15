@@ -1231,8 +1231,8 @@ bool can_create_database(char * dir)
 
 void print_version(void)
 {
-        fprintf(stderr, "Database builder for GLACIERA - Version 4.0.%s - %s\n", 
-			git_version(),
+        fprintf(stderr, "Database builder for GLACIERA - %s - %s\n",
+			complete_version(),
 			__DATE__ " " __TIME__);
         fprintf(stderr, "Copyright (c) Krister Brus 2003-2010 <kristerbrus@fastmail.fm>\n");
 }

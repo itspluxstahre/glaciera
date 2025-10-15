@@ -3219,7 +3219,7 @@ void action(int key)
 
 void print_version(void)
 {
-    printf("MP3BERG - Heavy Duty Jukebox - Version 4.0.%s - %s\n", git_version(), __DATE__ " " __TIME__);
+    printf("GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(), __DATE__ " " __TIME__);
     printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
     printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
 }
