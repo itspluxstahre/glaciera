@@ -72,7 +72,7 @@
 #include <sys/mount.h>
 
 #include "common.h"
-#include "svn_version.h"
+#include "git_version.h"
 #include "music.h"
 
 void * g_mm[5];
@@ -1140,7 +1140,7 @@ int can_create_database(char * dir)
 void print_version(void)
 {
         fprintf(stderr, "Database builder for MP3BERG - Version 4.0.%s - %s\n", 
-			svn_version(), 
+			git_version(),
 			__DATE__ " " __TIME__);
         fprintf(stderr, "Copyright (c) Krister Brus 2003-2010 <kristerbrus@fastmail.fm>\n");
 }

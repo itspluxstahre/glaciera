@@ -14,15 +14,15 @@ BUILD_DIR := build
 OBJ_DIR := $(BUILD_DIR)/obj
 BIN_DIR := $(BUILD_DIR)/bin
 
-MP3BERG_OBJS := $(OBJ_DIR)/mp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o \
+MP3BERG_OBJS := $(OBJ_DIR)/mp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.o \
                 $(OBJ_DIR)/mod_mp3.o $(OBJ_DIR)/mod_ogg.o $(OBJ_DIR)/mod_flac.o \
                 $(OBJ_DIR)/mod_pls.o $(OBJ_DIR)/music.o
-MP3BUILD_OBJS := $(OBJ_DIR)/mp3build.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o \
+MP3BUILD_OBJS := $(OBJ_DIR)/mp3build.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.o \
                  $(OBJ_DIR)/mod_mp3.o $(OBJ_DIR)/mod_ogg.o $(OBJ_DIR)/mod_flac.o \
                  $(OBJ_DIR)/mod_pls.o $(OBJ_DIR)/music.o
-SEARCHMP3BERG_OBJS := $(OBJ_DIR)/searchmp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/svn_version.o
+SEARCHMP3BERG_OBJS := $(OBJ_DIR)/searchmp3berg.o $(OBJ_DIR)/common.o $(OBJ_DIR)/git_version.o
 
-SVN_VERSION_SRC := $(SRC_DIR)/svn_version.c
+GIT_VERSION_SRC := $(SRC_DIR)/git_version.c
 
 TARGETS := $(BIN_DIR)/mp3berg $(BIN_DIR)/mp3build $(BIN_DIR)/searchmp3berg.fcgi
 
@@ -49,10 +49,10 @@ $(BIN_DIR)/searchmp3berg.fcgi: $(SEARCHMP3BERG_OBJS) | $(BIN_DIR)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(SVN_VERSION_SRC): FORCE
-	printf 'char* svn_version(void) { static char* SVN_Version = "' > $@
-	svnversion -n . >> $@
-	printf '"; return SVN_Version; }\n' >> $@
+$(GIT_VERSION_SRC): FORCE
+	@version=$$(git describe --tags --dirty --always 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo unknown); \
+	escaped=$$(printf '%s' "$$version" | sed 's/\\/\\\\/g; s/"/\\"/g'); \
+	printf 'const char* git_version(void) { static const char* GIT_Version = "%s"; return GIT_Version; }\n' "$$escaped" > $@
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

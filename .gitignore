@@ -1,7 +1,7 @@
 build/
 *.o
 *.fcgi
-src/svn_version.c
+src/git_version.c
 mp3berg
 mp3build
 .DS_Store

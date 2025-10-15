@@ -53,7 +53,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include "common.h"
-#include "svn_version.h"
+#include "git_version.h"
 #include "music.h"
 
 #ifdef USE_GETTEXT
@@ -932,7 +932,7 @@ void refresh_screen(void)
         draw_centered(win_middle,  6, "|    | |     \\ | \\ |   | \\  | |");
         draw_centered(win_middle,  7, "|    | |   \\_/ |_/ |__ |  \\ \\_/");
         draw_centered(win_middle,  9, "- Heavy Duty Jukebox -");
-        draw_centered(win_middle, 11, "Version 4.0.%s", svn_version());
+        draw_centered(win_middle, 11, "Version 4.0.%s", git_version());
         draw_centered(win_middle, 12, "Copyright (c) Krister Brus 2000-2010");
         draw_centered(win_middle, 13, "<kristerbrus@fastmail.fm>");
         draw_centered(win_middle, 15, _("%d songs in database"), allcount);
@@ -3209,7 +3209,7 @@ void action(int key)
 
 void print_version(void)
 {
-    printf("MP3BERG - Heavy Duty Jukebox - Version 4.0.%s - %s\n", svn_version(), __DATE__ " " __TIME__);
+    printf("MP3BERG - Heavy Duty Jukebox - Version 4.0.%s - %s\n", git_version(), __DATE__ " " __TIME__);
     printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
     printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
 }
