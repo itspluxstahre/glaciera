@@ -3519,7 +3519,7 @@ int main(int argc, char **argv)
      * Playlists are now stored in /home/joeuser/playlists
      * The directory is created with 700 permission
      */
-    strcpy(playlist_dir, gethomedir());
+    strcpy(playlist_dir, getenv("HOME"));
     strcat(playlist_dir, "/playlists/");
     mkdir(playlist_dir, 0700);
 

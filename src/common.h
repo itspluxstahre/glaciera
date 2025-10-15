@@ -75,7 +75,5 @@ bool bittest(BITS *abits, int i);
 void bitnull(BITS *abits, int bits);
 BITS *bitalloc(int bits);
 
-/* Legacy config functions - deprecated, use config.h instead */
-char *gethomedir(void);
 void track_metadata_init(struct track_metadata *meta);
 void track_metadata_clear(struct track_metadata *meta);

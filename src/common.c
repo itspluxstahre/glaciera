@@ -63,24 +63,6 @@ bool inrange(int v, int min, int max)
 
 /* -------------------------------------------------------------------------- */
 
-char *gethomedir(void)
-{
-	/*
-	 * Use the _standard_ way of getting the users home directory.
-	 * The previous, "getpwuid(getuid())->pw_dir" was too strange and unreadable.
-	 * Why it didn't work on OSX, is a mystery, since it's a documented function
-	 * http://developer.apple.com/documentation/Darwin/Reference/Manpages/man3/getpwuid.3.html 	 
-	 *
-	 * Plux:
-	 * Well who said programming is easy? Apple perhaps does some kind of black magic?
-	 * It worked _MOST_ of the time, but sometimes it failed.
-	 * Sometimes it is the simple things that screw the most :) 
-	 */
-	return getenv("HOME");
-}
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * Swap two tune pointers in an array.
  * 
