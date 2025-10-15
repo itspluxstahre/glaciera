@@ -1231,7 +1231,7 @@ bool can_create_database(char * dir)
 
 void print_version(void)
 {
-        fprintf(stderr, "Database builder for MP3BERG - Version 4.0.%s - %s\n", 
+        fprintf(stderr, "Database builder for GLACIERA - Version 4.0.%s - %s\n", 
 			git_version(),
 			__DATE__ " " __TIME__);
         fprintf(stderr, "Copyright (c) Krister Brus 2003-2010 <kristerbrus@fastmail.fm>\n");
@@ -1259,7 +1259,7 @@ int main(int argc, char *argv[])
                 case 'h':
                 case '?':
                         print_version();
-                        printf("usage: mp3build [-h] [-w] [-f] [-s]\n");
+                        printf("usage: glaciera-indexer [-h] [-w] [-f] [-s]\n");
                         printf("options:\n");
                         printf("        -w      Generate allmp3.db for the Windows client\n");
                         printf("        -f      Force parsing (disable TurboScan)\n");
