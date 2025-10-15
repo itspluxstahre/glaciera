@@ -64,6 +64,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <time.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -86,9 +87,9 @@ int total_files = 0;
 double total_bytes = 0;
 int new_files = 0;
 time_t timeprogress = 0;
-int opt_generate_allmp3db = false;
-int opt_force_build = false;
-int opt_skip_file_info = false;
+bool opt_generate_allmp3db = false;
+bool opt_force_build = false;
+bool opt_skip_file_info = false;
 
 pthread_mutex_t filemutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -541,7 +542,7 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
         struct dirent *sd;
         char *p;
         int i;
-	int justnames;
+	bool justnames = false;
 	int trackstarts;
 	int trackcount;
 
@@ -998,11 +999,11 @@ void * prim_just_build_files(void * argdir)
         return NULL;
 }
 
-int is_path_in_mounts(char *path)
+bool is_path_in_mounts(char *path)
 {
 	FILE *f;
 	char buf[1024];
-	int hasmount = false;
+	bool hasmount = false;
 
 	f = fopen("/proc/mounts", "r");
 	if (f) {
@@ -1015,15 +1016,20 @@ int is_path_in_mounts(char *path)
 	return hasmount;
 }
 
-int path_has_files(char *path)
+bool path_has_files(char *path)
 {
 	DIR *pdir;
 	struct dirent *sd;
-	int result = false;
+	bool result = false;
 
 	pdir = opendir(path);
 	if (pdir) {
 		while (NULL != (sd = readdir(pdir))) {
+			if (strcmp(sd->d_name, ".") != 0 &&
+			    strcmp(sd->d_name, "..") != 0) {
+				result = true;
+				break;
+			}
 		}
 		closedir(pdir);
 	}
@@ -1038,9 +1044,9 @@ void start_recurse_disc(const char * argdir)
         char buf[1024];
         char freefilename[1024];
         char * p;
-        unsigned long int stored_free = -1;
+        unsigned long stored_free = ULONG_MAX;
 	int err;
-	int use_cache = false;
+	bool use_cache = false;
 
 	/*
 	 * If the directory ends with a /, remove it
@@ -1063,7 +1069,7 @@ void start_recurse_disc(const char * argdir)
         }
 
 	if (opt_force_build)
-		stored_free = -1;
+		stored_free = ULONG_MAX;
 
 	/*
  	 * NEW FEATURE!!! I call it "ElephantMemory".
@@ -1084,7 +1090,7 @@ void start_recurse_disc(const char * argdir)
 	if (is_path_in_mounts(dir))
         	use_cache = df.f_bfree == stored_free;
 	else
-		use_cache = stored_free != -1;
+		use_cache = stored_free != ULONG_MAX;
 
         if (use_cache) {
                 fprintf(stderr, "\nJust parsing mp3-files '%s'...", dir);
@@ -1113,11 +1119,11 @@ void start_recurse_disc(const char * argdir)
 
 /* --------------------------------------------------------------------------- */
 
-int can_create_database(char * dir)
+bool can_create_database(char * dir)
 {
 	char buf[100];
 	FILE *f;
-	int writeable = false;
+	bool writeable = false;
 
 	/*
 	 * When the /mp3 directory is shared via samba, this is the only

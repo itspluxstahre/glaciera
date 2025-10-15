@@ -118,15 +118,15 @@ char search_string[100] = "";
 char last_search_string[100] = "";
 char latest_playlist_name[100] = "";
 
-int in_input_mode = false;
-int in_action = false;
+bool in_input_mode = false;
+bool in_action = false;
 int sort_arg = ARG_NORMAL;
 time_t showprogressagain = 0;
 int col_step = 0;
 int key_count = 0;
-int wanna_quit = false;
-int needs_strcasecmp_sort = false;
-int paused = false;
+bool wanna_quit = false;
+bool needs_strcasecmp_sort = false;
+bool paused = false;
 
 pid_t player_pid = 0;
 pthread_attr_t detachedattr;
@@ -349,7 +349,7 @@ void make_local_copy_of_database(int showprogress)
     int i;
     char srcfilename[255];
     char dstfilename[255];
-    int mustcopy = false;
+    bool mustcopy = false;
     int read_fd;
     int write_fd;
     char *buf;
@@ -903,7 +903,7 @@ void draw_centered(WINDOW *w, int row, char *format, ...)
 
 void refresh_screen(void)
 {
-    static int show_splash = true;
+    static bool show_splash = true;
     int row;
 
     /*
@@ -2174,10 +2174,10 @@ void do_show_infofiles(void)
     char workdir[1024];
     char text[255];
     char *p;
-    int hasinfo = false;
+    bool hasinfo = false;
     int c;
     int colpos;
-    int lastempty = true;
+    bool lastempty = true;
 
     /*
      * TODO: if no files found in the current directory.
@@ -2726,7 +2726,7 @@ void do_move_song(int delta)
 void do_query_info(void)
 {
     static int last_key_count = 0;
-    static int show_path = false;
+    static bool show_path = false;
     struct tune *tune;
     struct tm tm;
 
