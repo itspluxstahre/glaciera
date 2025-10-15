@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 // Local headers
 #include "config.h"
@@ -25,61 +26,40 @@ static void rgb_to_hex(int r, int g, int b, char *hex) {
 static void print_theme_preview(const theme_t *theme) {
 	char hex[8];
 
-	printf("╭─────────────────────────────────────────────────────────────╮\n");
-	printf("│ Theme: %-49s │\n", theme->name);
-	printf("├─────────────────────────────────────────────────────────────┤\n");
+	printf("╭───────────────────────────────────────────────╮\n");
+	printf("│ Theme: %-38s │\n", theme->name);
+	printf("├──────────────┬──────────────────────┬─────────┤\n");
 
-	/* Print each color property */
-	printf("│ main_bg      ");
-	print_color_block(theme->main_bg.r, theme->main_bg.g, theme->main_bg.b);
-	rgb_to_hex(theme->main_bg.r, theme->main_bg.g, theme->main_bg.b, hex);
-	printf("  %-7s │\n", hex);
+	/* Print each color property with column separators
+	 * Format: │ name(12) │ color_block(20) │ hex(7) │
+	 * Total: 14 + 22 + 9 = 45 chars */
+#define PRINT_COLOR_ROW(label, r, g, b)                                                            \
+	do {                                                                                       \
+		rgb_to_hex(r, g, b, hex);                                                          \
+		int label_len = strlen(label);                                                     \
+		int pad = 12 - label_len;                                                          \
+		printf("│ %s", label);                                                              \
+		for (int i = 0; i < pad; i++)                                                      \
+			printf(" ");                                                               \
+		printf(" │ ");                                                                     \
+		print_color_block(r, g, b);                                                        \
+		printf(" │ %s │\n", hex);                                                          \
+	} while (0)
 
-	printf("│ main_fg      ");
-	print_color_block(theme->main_fg.r, theme->main_fg.g, theme->main_fg.b);
-	rgb_to_hex(theme->main_fg.r, theme->main_fg.g, theme->main_fg.b, hex);
-	printf("  %-7s │\n", hex);
+	PRINT_COLOR_ROW("main_bg", theme->main_bg.r, theme->main_bg.g, theme->main_bg.b);
+	PRINT_COLOR_ROW("main_fg", theme->main_fg.r, theme->main_fg.g, theme->main_fg.b);
+	PRINT_COLOR_ROW("accent_bg", theme->accent_bg.r, theme->accent_bg.g, theme->accent_bg.b);
+	PRINT_COLOR_ROW("accent_fg", theme->accent_fg.r, theme->accent_fg.g, theme->accent_fg.b);
+	PRINT_COLOR_ROW("playing", theme->playing.r, theme->playing.g, theme->playing.b);
+	PRINT_COLOR_ROW("playlist", theme->playlist.r, theme->playlist.g, theme->playlist.b);
+	PRINT_COLOR_ROW("highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g,
+	                theme->highlight_bg.b);
+	PRINT_COLOR_ROW("highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g,
+	                theme->highlight_fg.b);
 
-	printf("│ accent_bg    ");
-	print_color_block(theme->accent_bg.r, theme->accent_bg.g, theme->accent_bg.b);
-	rgb_to_hex(theme->accent_bg.r, theme->accent_bg.g, theme->accent_bg.b, hex);
-	printf("  %-7s │\n", hex);
+#undef PRINT_COLOR_ROW
 
-	printf("│ accent_fg    ");
-	print_color_block(theme->accent_fg.r, theme->accent_fg.g, theme->accent_fg.b);
-	rgb_to_hex(theme->accent_fg.r, theme->accent_fg.g, theme->accent_fg.b, hex);
-	printf("  %-7s │\n", hex);
-
-	printf("│ playing      ");
-	print_color_block(theme->playing.r, theme->playing.g, theme->playing.b);
-	rgb_to_hex(theme->playing.r, theme->playing.g, theme->playing.b, hex);
-	printf("  %-7s │\n", hex);
-
-	printf("│ playlist     ");
-	print_color_block(theme->playlist.r, theme->playlist.g, theme->playlist.b);
-	rgb_to_hex(theme->playlist.r, theme->playlist.g, theme->playlist.b, hex);
-	printf("  %-7s │\n", hex);
-
-	printf("│ highlight_bg ");
-	print_color_block(theme->highlight_bg.r, theme->highlight_bg.g, theme->highlight_bg.b);
-	rgb_to_hex(theme->highlight_bg.r, theme->highlight_bg.g, theme->highlight_bg.b, hex);
-	printf("  %-7s │\n", hex);
-
-	printf("│ highlight_fg ");
-	print_color_block(theme->highlight_fg.r, theme->highlight_fg.g, theme->highlight_fg.b);
-	rgb_to_hex(theme->highlight_fg.r, theme->highlight_fg.g, theme->highlight_fg.b, hex);
-	printf("  %-7s │\n", hex);
-
-	printf("╰─────────────────────────────────────────────────────────────╯\n\n");
-}
-
-/* Convert hex color to RGB */
-static void hex_to_rgb_struct(const char *hex, int *r, int *g, int *b) {
-	unsigned int color;
-	sscanf(hex + 1, "%x", &color); /* Skip # */
-	*r = (color >> 16) & 0xFF;
-	*g = (color >> 8) & 0xFF;
-	*b = color & 0xFF;
+	printf("╰──────────────┴──────────────────────┴─────────╯\n\n");
 }
 
 /* Load a single theme file */
@@ -95,70 +75,46 @@ static bool load_theme_file(const char *theme_path, theme_t *theme) {
 	if (!conf)
 		return false;
 
-	/* Parse theme section */
-	toml_table_t *theme_table = toml_table_in(conf, "theme");
-	if (!theme_table) {
+	/* Parse top-level name */
+	toml_datum_t name = toml_string_in(conf, "name");
+	if (name.ok) {
+		strncpy(theme->name, name.u.s, sizeof(theme->name) - 1);
+		free(name.u.s);
+	}
+
+	/* Parse [colors] section */
+	toml_table_t *colors = toml_table_in(conf, "colors");
+	if (!colors) {
 		toml_free(conf);
 		return false;
 	}
 
-	/* Parse theme properties */
-	toml_datum_t name = toml_string_in(theme_table, "name");
-	toml_datum_t main_bg = toml_string_in(theme_table, "main_bg");
-	toml_datum_t main_fg = toml_string_in(theme_table, "main_fg");
-	toml_datum_t accent_bg = toml_string_in(theme_table, "accent_bg");
-	toml_datum_t accent_fg = toml_string_in(theme_table, "accent_fg");
-	toml_datum_t playing = toml_string_in(theme_table, "playing");
-	toml_datum_t playlist = toml_string_in(theme_table, "playlist");
-	toml_datum_t highlight_bg = toml_string_in(theme_table, "highlight_bg");
-	toml_datum_t highlight_fg = toml_string_in(theme_table, "highlight_fg");
+	/* Helper macro to parse RGB sub-tables */
+#define PARSE_COLOR(name, dest)                                                                    \
+	do {                                                                                       \
+		toml_table_t *color_table = toml_table_in(colors, name);                          \
+		if (color_table) {                                                                 \
+			toml_datum_t r = toml_int_in(color_table, "r");                           \
+			toml_datum_t g = toml_int_in(color_table, "g");                           \
+			toml_datum_t b = toml_int_in(color_table, "b");                           \
+			if (r.ok && g.ok && b.ok) {                                                \
+				dest.r = r.u.i;                                                    \
+				dest.g = g.u.i;                                                    \
+				dest.b = b.u.i;                                                    \
+			}                                                                          \
+		}                                                                                  \
+	} while (0)
 
-	if (name.ok)
-		strncpy(theme->name, name.u.s, sizeof(theme->name) - 1);
-	if (main_bg.ok)
-		hex_to_rgb_struct(main_bg.u.s, &theme->main_bg.r, &theme->main_bg.g,
-		                  &theme->main_bg.b);
-	if (main_fg.ok)
-		hex_to_rgb_struct(main_fg.u.s, &theme->main_fg.r, &theme->main_fg.g,
-		                  &theme->main_fg.b);
-	if (accent_bg.ok)
-		hex_to_rgb_struct(accent_bg.u.s, &theme->accent_bg.r, &theme->accent_bg.g,
-		                  &theme->accent_bg.b);
-	if (accent_fg.ok)
-		hex_to_rgb_struct(accent_fg.u.s, &theme->accent_fg.r, &theme->accent_fg.g,
-		                  &theme->accent_fg.b);
-	if (playing.ok)
-		hex_to_rgb_struct(playing.u.s, &theme->playing.r, &theme->playing.g,
-		                  &theme->playing.b);
-	if (playlist.ok)
-		hex_to_rgb_struct(playlist.u.s, &theme->playlist.r, &theme->playlist.g,
-		                  &theme->playlist.b);
-	if (highlight_bg.ok)
-		hex_to_rgb_struct(highlight_bg.u.s, &theme->highlight_bg.r, &theme->highlight_bg.g,
-		                  &theme->highlight_bg.b);
-	if (highlight_fg.ok)
-		hex_to_rgb_struct(highlight_fg.u.s, &theme->highlight_fg.r, &theme->highlight_fg.g,
-		                  &theme->highlight_fg.b);
+	PARSE_COLOR("main_bg", theme->main_bg);
+	PARSE_COLOR("main_fg", theme->main_fg);
+	PARSE_COLOR("accent_bg", theme->accent_bg);
+	PARSE_COLOR("accent_fg", theme->accent_fg);
+	PARSE_COLOR("playing", theme->playing);
+	PARSE_COLOR("playlist", theme->playlist);
+	PARSE_COLOR("highlight_bg", theme->highlight_bg);
+	PARSE_COLOR("highlight_fg", theme->highlight_fg);
 
-	/* Free strings */
-	if (name.ok)
-		free(name.u.s);
-	if (main_bg.ok)
-		free(main_bg.u.s);
-	if (main_fg.ok)
-		free(main_fg.u.s);
-	if (accent_bg.ok)
-		free(accent_bg.u.s);
-	if (accent_fg.ok)
-		free(accent_fg.u.s);
-	if (playing.ok)
-		free(playing.u.s);
-	if (playlist.ok)
-		free(playlist.u.s);
-	if (highlight_bg.ok)
-		free(highlight_bg.u.s);
-	if (highlight_fg.ok)
-		free(highlight_fg.u.s);
+#undef PARSE_COLOR
 
 	toml_free(conf);
 	return true;
@@ -173,27 +129,33 @@ void display_theme_previews(const char *themes_dir) {
 	}
 
 	printf("\n");
-	printf("═══════════════════════════════════════════════════════════════\n");
-	printf("                    GLACIERA THEME PREVIEW\n");
-	printf("═══════════════════════════════════════════════════════════════\n");
+	printf("═════════════════════════════════════════════════════════\n");
+	printf("               GLACIERA THEME PREVIEW\n");
+	printf("═════════════════════════════════════════════════════════\n");
 	printf("\n");
 
 	struct dirent *entry;
 	int theme_count = 0;
 
 	while ((entry = readdir(dir)) != NULL) {
-		/* Only process .toml files */
-		if (entry->d_type != DT_REG)
+		/* Skip hidden files and . / .. */
+		if (entry->d_name[0] == '.')
 			continue;
 
+		/* Only process .toml files */
 		size_t len = strlen(entry->d_name);
 		if (len < 6 || strcmp(entry->d_name + len - 5, ".toml") != 0)
 			continue;
 
-		/* Load and display theme */
+		/* Build full path and verify it's a regular file */
 		char theme_path[1024];
 		snprintf(theme_path, sizeof(theme_path), "%s/%s", themes_dir, entry->d_name);
 
+		struct stat st;
+		if (stat(theme_path, &st) != 0 || !S_ISREG(st.st_mode))
+			continue;
+
+		/* Load and display theme */
 		theme_t theme = {0};
 		if (load_theme_file(theme_path, &theme)) {
 			print_theme_preview(&theme);
