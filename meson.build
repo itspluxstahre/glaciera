@@ -52,10 +52,15 @@ if git_exe.found()
   endif
 endif
 
+# Create complete version string like "Version 4.0-d2599dc"
+complete_version = 'Version @0@-@1@'.format(meson.project_version(), git_description)
+
 git_desc_escaped = git_description.replace('\\', '\\\\').replace('"', '\\"')
+complete_version_escaped = complete_version.replace('\\', '\\\\').replace('"', '\\"')
 
 git_version_conf = configuration_data()
 git_version_conf.set('GIT_DESCRIPTION', '"@0@"'.format(git_desc_escaped))
+git_version_conf.set('COMPLETE_VERSION', '"@0@"'.format(complete_version_escaped))
 
 git_version = configure_file(
   output: 'git_version.c',

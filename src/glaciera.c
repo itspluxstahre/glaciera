@@ -940,7 +940,7 @@ void refresh_screen(void)
         draw_centered(win_middle,  7, " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
         draw_centered(win_middle,  8, "        \\/          \\/     \\/        \\/           \\/  ");
         draw_centered(win_middle,  10, "- Heavy Duty Jukebox -");
-        draw_centered(win_middle, 11, "Version 4.0.%s", git_version());
+        draw_centered(win_middle, 11, complete_version());
         draw_centered(win_middle, 12, "Copyright (c) Krister Brus 2000-2010");
         draw_centered(win_middle, 13, "<kristerbrus@fastmail.fm>");
         draw_centered(win_middle, 15, _("%d songs in database"), allcount);

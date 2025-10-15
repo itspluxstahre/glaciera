@@ -1,1 +1,2 @@
 const char* git_version(void) { static const char* GIT_Version = @GIT_DESCRIPTION@; return GIT_Version; }
+const char* complete_version(void) { static const char* Complete_Version = @COMPLETE_VERSION@; return Complete_Version; }
