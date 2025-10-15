@@ -1,37 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (c) 2000-2010 Krister Brus <kristerbrus@fastmail.fm>
+// Portions Copyright (c) 1997 Kristian Wiklund <kw@dtek.chalmers.se>
+//
+// If you use this program, Kristian would appreciate a postcard sent to:
+// Kristian Wiklund, Dept. of Computer Engineering,
+// Chalmers University of Technology, S-412 96 GOTHENBURG, SWEDEN
+
 #define dontUSE_GETTEXT
 #define dontUSE_BACK
 #define dontUSE_FINISH
-
-/*
- * glaciera - curses based jukebox for audio files.
- *
- * Copyright (c) 2000-2010 Krister Brus <kristerbrus@fastmail.fm>
- * Portions Copyright (c) 1997 Kristian Wiklund <kw@dtek.chalmers.se>
- *
- * The Gnu General Public License as described below is available
- * in the file COPYING distributed with this package.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * If you use this program I'd appreciate a postcard sent to
- * Kristian Wiklund
- * Department of Computer Engineering
- * Chalmers University of Technology
- * S-412 96 GOTHENBURG
- * SWEDEN
- */
 
 #include <ncurses.h>
 #include <signal.h>
