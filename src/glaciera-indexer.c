@@ -518,43 +518,24 @@ void process_one_file(char *dir,
 
 
 /*
- * Find duplicate titles for this directory
- * "01. Band - One"
- * "02. Band - Two"
- * "03. Band - Three"
- *
- * Here, the string "Band" is
+ * Analyze filename patterns across directory to find common/unique characters
  */
- 
-void find_redundant_song_names(DIR *pdir, BITS keepers[])
+static int analyze_filename_patterns(DIR *pdir, char basefilename[256], 
+                                     int samecolumn[256], int sumcolumn[256], 
+                                     int trackcolumn[256])
 {
-        int musicfiles;
-        char basefilename[256];
-        int samecolumn[256];
-        int sumcolumn[256];
-	int trackcolumn[256];
         struct dirent *sd;
         char *p;
         int i;
-	bool justnames = false;
-	int trackstarts;
-	int trackcount;
+        int musicfiles = 0;
 
-        musicfiles = 0;
-        memset(basefilename, 0, sizeof(basefilename));
-        memset(samecolumn, 0, sizeof(samecolumn));
-        memset(trackcolumn, 0, sizeof(trackcolumn));
-        memset(sumcolumn, 0, sizeof(sumcolumn));
-	
         while (NULL != (sd = readdir(pdir))) {
                 if (!music_isit(sd->d_name))
                         continue;
 
                 musicfiles++;
 		
-		/*
-		 * Chop the file extention
-		 */
+		/* Chop the file extension */
 	        p = strrchr(sd->d_name, '.');
 	       	if (p)
         	       	*p = 0;
@@ -562,6 +543,7 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 		if (!basefilename[0])
                         strcpy(basefilename, sd->d_name);
 
+                /* Analyze each character position */
                 for (p = sd->d_name, i = 0; *p; p++, i++) {
                         if (' ' == *p || ispunct(*p))
                                 continue;
@@ -573,37 +555,32 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 			}
                 }
         }
+        
+        return musicfiles;
+}
 
-	/*
-	 * Keep all characters if there is only one file in the directory
-	 */
-        if (0 == musicfiles || 1 == musicfiles) {
-		for (i = 0; i < 256; i++) 
-			bitset(keepers, i);
-		return;
-	}
-
-        /*
-         * Find which characters to keep
-         */
-        for (i = 0; i < 256; i++) {
+/*
+ * Convert column counts to boolean flags based on number of files
+ */
+static void normalize_column_stats(int musicfiles, int samecolumn[256], int trackcolumn[256])
+{
+        for (int i = 0; i < 256; i++) {
                 if (samecolumn[i] != musicfiles)
                         samecolumn[i] = false;
                 if (trackcolumn[i] != musicfiles)
                         trackcolumn[i] = false;
 	}
+}
 
-	/*
-	 * Remove repeated "cd1" from "cd1-01-song"
-	 *			      "cd1-02-song"
-	 *			      "cd1-03-song"
-	 *			      "cd1-04-song"
-	 * Remove repeated "cd1" from "01-cd1-song"
-	 *                            "02-cd1-song"
-	 *                            "03-cd1-song"
-	 *                            "04-cd1-song"
-	 */	
-        for (i = 0; i < 256; i++) {
+/*
+ * Remove redundant text that appears with track numbers
+ * e.g., "cd1" in "cd1-01-song", "cd1-02-song"
+ */
+static void remove_redundant_with_tracknums(int musicfiles, const char basefilename[256],
+                                            int samecolumn[256], int sumcolumn[256],
+                                            int trackcolumn[256])
+{
+        for (int i = 0; i < 256; i++) {
 		if (trackcolumn[i]) {
 			sumcolumn[i] /= musicfiles;
 			if (sumcolumn[i] == basefilename[i] && samecolumn[i]) {
@@ -612,15 +589,17 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 			}
 		}
 	}
-	
+}
 
-	/*
-	 * Clear xxxx from "xxxx03.song"
-	 * Find from left the first non-repeated digit column
-	 * Clean from start of name to the digits
- 	 */        
-	trackstarts = -1;
-        for (i = 255; i; i--) {
+/*
+ * Find where track numbers start and clean prefix
+ */
+static void find_and_clean_track_prefix(int samecolumn[256], int trackcolumn[256])
+{
+	int trackstarts = -1;
+        
+        /* Find leftmost track number column */
+        for (int i = 255; i; i--) {
 		while (i>=0 && trackcolumn[i]) {
 		 	trackstarts = i;
 			i--;
@@ -628,46 +607,107 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[])
 		if (trackstarts != -1)
 			 break;
 	}
-        for (i = 0; i < trackstarts; i++) {
+        
+        /* Clear everything before track numbers */
+        for (int i = 0; i < trackstarts; i++) {
 		trackcolumn[i] = false;
 		samecolumn[i] = true;
 	}
+}
 
-	/*
-	 * Fix the cases where the leading 0 digit is removed
-	 */	
-	trackcount = 0;
-	for (i = 0; i < 256; i++)
+/*
+ * Handle edge case where leading 0 is removed (e.g., "1" vs "01")
+ */
+static void fix_missing_leading_zero(int trackcolumn[256])
+{
+	int trackcount = 0;
+        
+	for (int i = 0; i < 256; i++)
 		trackcount += trackcolumn[i] ? 1 : 0;
+        
 	if (1 == trackcount) {
-		for (i = 1; i < 256; i++)
+		for (int i = 1; i < 256; i++)
 			if (trackcolumn[i])
-				trackcolumn[i-1] = true;					
+				trackcolumn[i-1] = true;
 	}
+}
 
-	justnames = true;
-        for (i = 0; i < 256; i++) {
+/*
+ * Build final keepers bitmap from analysis
+ */
+static void build_keepers_bitmap(const int samecolumn[256], const int trackcolumn[256], BITS keepers[])
+{
+	/* Check if we have any track numbers */
+	bool justnames = true;
+        for (int i = 0; i < 256; i++) {
 		if (trackcolumn[i])
-			justnames = false;		
+			justnames = false;
 	}
+        
+	/* If no track numbers, keep all differences */
 	if (justnames) {
-	        for (i = 0; i < 256; i++) 
-                        samecolumn[i] = false;
+	        for (int i = 0; i < 256; i++) 
+			if (!samecolumn[i])
+				bitset(keepers, i);
+		return;
 	}
 
-	for (i = 0; i < 256; i++) {
-		/*
-		 * Keep those characters that isn't repeated in the same column
-		 */		
-                if (!samecolumn[i])
+	/* Keep unique chars and track number columns */
+	for (int i = 0; i < 256; i++) {
+		if (!samecolumn[i])
 			bitset(keepers, i);
-			
-		/*
-		 * Ensure that the tracknumber column doesn't disappear
-		 */		
 		if (trackcolumn[i])
-			bitset(keepers, i);		
+			bitset(keepers, i);
 	}
+}
+
+/*
+ * Find duplicate titles for this directory
+ * "01. Band - One"
+ * "02. Band - Two"
+ * "03. Band - Three"
+ *
+ * Removes redundant parts like "Band" that appear in all files
+ */
+void find_redundant_song_names(DIR *pdir, BITS keepers[])
+{
+        char basefilename[256];
+        int samecolumn[256];
+        int sumcolumn[256];
+	int trackcolumn[256];
+        int musicfiles;
+
+        memset(basefilename, 0, sizeof(basefilename));
+        memset(samecolumn, 0, sizeof(samecolumn));
+        memset(trackcolumn, 0, sizeof(trackcolumn));
+        memset(sumcolumn, 0, sizeof(sumcolumn));
+
+        /* Analyze all music files in directory */
+        musicfiles = analyze_filename_patterns(pdir, basefilename, samecolumn, 
+                                               sumcolumn, trackcolumn);
+
+	/* Keep all characters if there's only one file */
+        if (musicfiles <= 1) {
+		for (int i = 0; i < 256; i++) 
+			bitset(keepers, i);
+		return;
+	}
+
+        /* Normalize statistics */
+        normalize_column_stats(musicfiles, samecolumn, trackcolumn);
+        
+        /* Remove redundant text around track numbers */
+        remove_redundant_with_tracknums(musicfiles, basefilename, samecolumn, 
+                                        sumcolumn, trackcolumn);
+        
+        /* Find and clean prefixes before track numbers */
+        find_and_clean_track_prefix(samecolumn, trackcolumn);
+        
+        /* Handle missing leading zeros */
+        fix_missing_leading_zero(trackcolumn);
+        
+        /* Build final result */
+        build_keepers_bitmap(samecolumn, trackcolumn, keepers);
 }
 
 void * prim_recurse_disc(void *argdir)
