@@ -2703,6 +2703,12 @@ void do_search(void) {
 	 */
 	wordlist = malloc(words * sizeof(char *));
 	negatelist = malloc(words * sizeof(int));
+	if (!wordlist || !negatelist) {
+		/* Out of memory - free what we allocated and return */
+		free(wordlist);
+		free(negatelist);
+		return;
+	}
 	words = 0;
 	safe_strcpy(lookfor, search_string, sizeof(lookfor));
 	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
