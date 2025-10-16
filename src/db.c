@@ -28,12 +28,12 @@ static bool db_migrate_from_mmap(const char *db_path) {
 	int track_count = 0;
 
 	/* Extract directory path from db_path */
-	strcpy(db_dir, db_path);
+	safe_strcpy(db_dir, db_path, sizeof(db_dir));
 	char *last_slash = strrchr(db_dir, '/');
 	if (last_slash) {
 		*last_slash = '\0';
 	} else {
-		strcpy(db_dir, ".");
+		safe_strcpy(db_dir, ".", sizeof(db_dir));
 	}
 
 	/* Check if old database files exist */
