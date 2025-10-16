@@ -1670,8 +1670,10 @@ void start_play(int userpressed_enter, struct tune *tune) {
 	 */
 	FILE *f;
 	f = fopen("/tmp/glaciera-nowplaying", "w");
-	fprintf(f, "%s", tune->display);
-	fclose(f);
+	if (f) {
+		fprintf(f, "%s", tune->display);
+		fclose(f);
+	}
 
 	signal(SIGCHLD, find_and_play_next_handler);
 	update_song_progress_handler(0);
@@ -2706,6 +2708,8 @@ void do_search(void) {
 	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
 		negatelist[words] = strchr(p, '!') ? 1 : 0;
 		wordlist[words] = strdup(p);
+		if (!wordlist[words])
+			break; /* Out of memory */
 		only_searchables(wordlist[words]);
 		words++;
 	}
