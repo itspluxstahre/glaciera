@@ -1189,12 +1189,14 @@ void save_playlist(const char *playlistname) {
 	int i;
 	char filename[512];
 
-	strcpy(latest_playlist_name, playlistname);
+	safe_strcpy(latest_playlist_name, playlistname, sizeof(latest_playlist_name));
 
-	strcpy(filename, playlist_dir);
-	strcat(filename, playlistname);
+	if (!safe_path_join(filename, sizeof(filename), playlist_dir, playlistname)) {
+		show_info(_("Error: playlist path too long"));
+		return;
+	}
 	if (!strstr(filename, ".list"))
-		strcat(filename, ".list");
+		safe_strcat(filename, ".list", sizeof(filename));
 	f = fopen(filename, "w");
 	if (f) {
 		for (i = 0; i < playlistcount; i++)
@@ -1285,7 +1287,7 @@ struct tune *find_tune_by_displayname(char *displayname, int hardness) {
 	if (!tune && hardness > 0) {
 		tune = get_from_cache(displayname);
 		if (!tune) {
-			strcpy(buf, displayname);
+			safe_strcpy(buf, displayname, sizeof(buf));
 			only_searchables(buf);
 			tune = find_tune_by_displayname_harder(buf);
 
@@ -1333,20 +1335,22 @@ void add_tune_to_playlist(struct tune *tune) {
 
 void do_load_playlist(const char *playlistname) {
 	FILE *f;
-	char filename[512];
 	char buf[1024];
+	char filename[512];
 	struct tune *tune;
 
-	strcpy(filename, playlist_dir);
-	strcat(filename, playlistname);
+	if (!safe_path_join(filename, sizeof(filename), playlist_dir, playlistname)) {
+		show_info(_("Error: playlist path too long"));
+		return;
+	}
 	if (!strstr(filename, ".list"))
-		strcat(filename, ".list");
+		safe_strcat(filename, ".list", sizeof(filename));
 	f = fopen(filename, "r");
 	if (!f)
 		return;
 
 	playlistcount = 0;
-	strcpy(latest_playlist_name, playlistname);
+	safe_strcpy(latest_playlist_name, playlistname, sizeof(latest_playlist_name));
 	while (fgets(buf, sizeof(buf), f)) {
 		/*
 		 * Ignore the "this-song-was-played-on-this-date" line
