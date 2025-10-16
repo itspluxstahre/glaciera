@@ -1,4 +1,5 @@
 // System headers
+#include <errno.h>
 #include <fcntl.h>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -127,6 +128,31 @@ static bool db_migrate_from_mmap(const char *db_path) {
 }
 
 /* Database initialization and management */
+/* Recursively create directories (like mkdir -p) */
+static bool mkdir_recursive(const char *path) {
+	char tmp[1024];
+	char *p = NULL;
+	size_t len;
+
+	safe_strcpy(tmp, path, sizeof(tmp));
+	len = strlen(tmp);
+	if (tmp[len - 1] == '/')
+		tmp[len - 1] = 0;
+
+	for (p = tmp + 1; *p; p++) {
+		if (*p == '/') {
+			*p = 0;
+			if (mkdir(tmp, 0755) != 0 && errno != EEXIST)
+				return false;
+			*p = '/';
+		}
+	}
+	if (mkdir(tmp, 0755) != 0 && errno != EEXIST)
+		return false;
+
+	return true;
+}
+
 bool db_init(const char *db_path) {
 	int rc;
 
@@ -135,10 +161,11 @@ bool db_init(const char *db_path) {
 	char *last_slash = strrchr(dir, '/');
 	if (last_slash) {
 		*last_slash = '\0';
-		char cmd[1024];
-		snprintf(cmd, sizeof(cmd), "mkdir -p '%s'", dir);
-		system(cmd);
-		*last_slash = '/';
+		if (!mkdir_recursive(dir)) {
+			fprintf(stderr, "Failed to create database directory: %s\n", dir);
+			free(dir);
+			return false;
+		}
 	}
 	free(dir);
 
