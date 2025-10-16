@@ -162,6 +162,16 @@ Contributions are welcome! Areas where help is needed:
 - Documentation improvements
 - Bug reports and feature requests
 
+### Code Formatting
+
+Before submitting a pull request, please format all code using clang-format:
+
+```bash
+ninja -C builddir format
+```
+
+This ensures consistent code style across the project. The formatting rules are defined in `.clang-format` (WebKit style with 8-space indentation).
+
 See [`MIGRATION.md`](MIGRATION.md) for technical details about the v4.0 modernization.
 
 ## Credits
