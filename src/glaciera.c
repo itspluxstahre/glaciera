@@ -1368,8 +1368,8 @@ void do_load_playlist(const char *playlistname) {
 			 * list but not available at the moment.
 			 */
 			char buf2[1024];
-			strcpy(buf2, "??? ");
-			strcat(buf2, buf);
+			safe_strcpy(buf2, "??? ", sizeof(buf2));
+			safe_strcat(buf2, buf, sizeof(buf2));
 
 			tune = malloc(sizeof(struct tune));
 			tune->path = strdup(buf2);
@@ -1476,7 +1476,7 @@ void parse_shoutcaststream_log(char *result) {
 		if (strstr(buf, "StreamTitle")) { /* Don't localize */
 			p = strstr(buf, "='");
 			if (p) {
-				strcpy(result, p + 2);
+				safe_strcpy(result, p + 2, sizeof(result));
 				p = strstr(result, "';");
 				if (p)
 					*p = '\0';
@@ -1891,7 +1891,7 @@ void do_view_artists(void) {
 	hash_init();
 	for (ch = lo_ch; ch <= hi_ch; ch++) {
 		for (i = qsearch[ch].lo; i < qsearch[ch].hi; i++) {
-			strcpy(buf, alltunes[i].display);
+			safe_strcpy(buf, alltunes[i].display, sizeof(buf));
 			s = strstr(buf, " - ");
 			if (s) {
 				while (' ' == *s)
@@ -2097,7 +2097,7 @@ void do_show_new_songs(void) {
 	hash_init();
 	for (i = 0; i < allcount; i++) {
 		if (inrange(alltunes[i].ti->filedate, lolimit, hilimit)) {
-			strcpy(buf, alltunes[i].display);
+			safe_strcpy(buf, alltunes[i].display, sizeof(buf));
 			s = strchr(buf, '/');
 			if (s)
 				*s = 0;
@@ -2280,7 +2280,7 @@ void do_show_infofiles(void) {
 	 * Find the path to the song we're playing now.
 	 * Construct "/mp3/thepath/" from "/mp3/thepath/thesong.mp3"
 	 */
-	strcpy(workdir, now_playing_tune->path);
+	safe_strcpy(workdir, now_playing_tune->path, sizeof(workdir));
 	p = strrchr(workdir, '/');
 	if (p)
 		*++p = 0;
@@ -2427,7 +2427,7 @@ void do_context(void) {
 	case 'a':
 		clear_displaytunes();
 
-		strcpy(buf, now_playing_tune->display);
+		safe_strcpy(buf, now_playing_tune->display, sizeof(buf));
 		s = strtok(buf, "-");
 		if (s) {
 			only_searchables(s);
@@ -2692,7 +2692,7 @@ void do_search(void) {
 	 * How many words is in the search string?
 	 */
 	words = 0;
-	strcpy(lookfor, search_string);
+	safe_strcpy(lookfor, search_string, sizeof(lookfor));
 	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " "))
 		words++;
 
@@ -2702,7 +2702,7 @@ void do_search(void) {
 	wordlist = malloc(words * sizeof(char *));
 	negatelist = malloc(words * sizeof(int));
 	words = 0;
-	strcpy(lookfor, search_string);
+	safe_strcpy(lookfor, search_string, sizeof(lookfor));
 	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
 		negatelist[words] = strchr(p, '!') ? 1 : 0;
 		wordlist[words] = strdup(p);
@@ -2717,7 +2717,7 @@ void do_search(void) {
 
 	if (fuzzysearch) {
 		/* Fuzzy search - for now, just do a simple search */
-		strcpy(lookfor, search_string);
+		safe_strcpy(lookfor, search_string, sizeof(lookfor));
 		only_searchables(lookfor);
 
 		/* Use SQLite search */
@@ -2765,17 +2765,18 @@ void do_search(void) {
 		for (j = 0; j < words; j++) {
 			if (j > 0) {
 				if (negatelist[j])
-					strcat(query, " AND ");
+					safe_strcat(query, " AND ", sizeof(query));
 				else
-					strcat(query, " OR ");
+					safe_strcat(query, " OR ", sizeof(query));
 			} else {
 				if (negatelist[j])
-					strcpy(query, " NOT ");
+					safe_strcpy(query, " NOT ", sizeof(query));
 			}
 
 			if (matchdirectory) {
-				strcat(query, "filepath LIKE '%");
-				strcat(query, wordlist[j]);
+				safe_strcat(query, "filepath LIKE '%", sizeof(query));
+				safe_strcat(query, wordlist[j], sizeof(query));
+				safe_strcat(query, "%'", sizeof(query));
 				strcat(query, "%'");
 			} else if (matchfirstchar && j == 0) {
 				/* First character match */
@@ -2804,7 +2805,7 @@ void do_search(void) {
 
 			/* Additional filtering for complex search logic */
 			if (matchdirectory) {
-				strcpy(buf, db_track->filepath);
+				safe_strcpy(buf, db_track->filepath, sizeof(buf));
 				only_searchables(buf);
 				p = buf;
 			} else {
