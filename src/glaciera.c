@@ -3456,7 +3456,7 @@ void action(int key) {
 void print_version(void) {
 	printf(
 	    "GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(), __DATE__ " " __TIME__);
-	printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
+	printf("Copyright (c) Plux Stahre 2025\n");
 	printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
 }
 
