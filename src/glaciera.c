@@ -2560,34 +2560,34 @@ void do_time(void) {
 
 	switch (base) {
 	case 0:
-		strcpy(suffix, "");
+		safe_strcpy(suffix, "", sizeof(suffix));
 		break;
 	case 3:
-		strcpy(suffix, "Ki");
+		safe_strcpy(suffix, "Ki", sizeof(suffix));
 		break;
 	case 6:
-		strcpy(suffix, "Mi");
+		safe_strcpy(suffix, "Mi", sizeof(suffix));
 		break;
 	case 9:
-		strcpy(suffix, "Gi");
+		safe_strcpy(suffix, "Gi", sizeof(suffix));
 		break; /* Giga  2^30 = 1KSongs */
 	case 12:
-		strcpy(suffix, "Ti");
+		safe_strcpy(suffix, "Ti", sizeof(suffix));
 		break; /* Tera  2^40 = 1MSongs */
 	case 15:
-		strcpy(suffix, "Pi");
+		safe_strcpy(suffix, "Pi", sizeof(suffix));
 		break; /* Peta  2^50 = 1GSongs */
 	case 18:
-		strcpy(suffix, "Ei");
+		safe_strcpy(suffix, "Ei", sizeof(suffix));
 		break; /* Exa   2^60 = 1TSongs */
 	case 21:
-		strcpy(suffix, "Zi");
+		safe_strcpy(suffix, "Zi", sizeof(suffix));
 		break; /* Zetta 2^70 = 1PSongs */
 	case 24:
-		strcpy(suffix, "Yi");
+		safe_strcpy(suffix, "Yi", sizeof(suffix));
 		break; /* Yotta 2^80 = 1ESongs */
 	default:
-		strcpy(suffix, "duh");
+		safe_strcpy(suffix, "duh", sizeof(suffix));
 		break; /* can't happen */
 	}
 
