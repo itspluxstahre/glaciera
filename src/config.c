@@ -71,12 +71,41 @@ static void resolve_home_directory(void) {
 		return;
 	}
 
-	struct passwd *pwd = getpwuid(getuid());
-	if (pwd && pwd->pw_dir && path_is_secure(pwd->pw_dir)) {
-		set_home_dir(pwd->pw_dir);
+	struct passwd pwd;
+	struct passwd *result;
+	char *buf;
+	size_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+	if (bufsize == (size_t)-1) { // Cast -1 to size_t for comparison
+		bufsize = 16384; // Fallback size if sysconf fails
+	}
+
+	buf = malloc(bufsize);
+	if (buf == NULL) {
+		fprintf(stderr, "Error: Failed to allocate memory for getpwuid_r\n");
+		goto fallback;
+	}
+
+	if (getpwuid_r(getuid(), &pwd, buf, bufsize, &result) != 0 || result == NULL) {
+		fprintf(stderr, "Error: Failed to get user information\n");
+		free(buf);
+		goto fallback;
+	}
+
+	if (pwd.pw_dir && path_is_secure(pwd.pw_dir)) {
+		char *home = strdup(pwd.pw_dir);
+		free(buf);
+		if (home) {
+			set_home_dir(home);
+			free(home);
+		} else {
+			fprintf(stderr, "Error: Failed to allocate memory for home directory\n");
+			goto fallback;
+		}
 		return;
 	}
 
+	free(buf);
+fallback:
 	fprintf(stderr, "Warning: HOME is unset or unsafe; falling back to /tmp\n");
 	set_home_dir_fallback();
 }
