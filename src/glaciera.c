@@ -1142,7 +1142,7 @@ void update_searchstring(void) {
 void trigger_realtime_search(void) {
 	if (0 != strcmp(search_string, last_search_string)) {
 		do_search();
-		strcpy(last_search_string, search_string);
+		safe_strcpy(last_search_string, search_string, sizeof(last_search_string));
 		refresh_screen();
 	}
 }
@@ -2877,7 +2877,7 @@ void do_enter(void) {
 			do_show_playlist();
 		} else {
 			/* Search for the selected item's name */
-			strcpy(search_string, displaytunes[tunenr]->display);
+			safe_strcpy(search_string, displaytunes[tunenr]->display, sizeof(search_string));
 			only_searchables(search_string);
 			trigger_realtime_search();
 		}
@@ -3046,8 +3046,8 @@ void do_restore_displaystate(int state_num) {
 		chop(buf);
 		switch (cnt++) {
 		case 0:
-			strcpy(search_string, buf);
-			strcpy(last_search_string, buf);
+			safe_strcpy(search_string, buf, sizeof(search_string));
+			safe_strcpy(last_search_string, buf, sizeof(last_search_string));
 			break;
 		case 1:
 			tunenr = atoi(buf);
@@ -3249,7 +3249,7 @@ static bool handle_function_keys(int key) {
 	case KEY_F(7):
 		show_info(_("Enter a playlist name."));
 		in_input_mode = true;
-		strcpy(search_string, latest_playlist_name);
+		safe_strcpy(search_string, latest_playlist_name, sizeof(search_string));
 		update_searchstring();
 		return true;
 
