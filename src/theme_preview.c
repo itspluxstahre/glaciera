@@ -26,14 +26,14 @@ static void rgb_to_hex(int r, int g, int b, char *hex) {
 static void print_color_row(const char *label, int r, int g, int b) {
 	char hex[8];
 	rgb_to_hex(r, g, b, hex);
-	
+
 	int label_len = strlen(label);
 	int pad = 12 - label_len;
-	
+
 	printf("│ %s", label);
 	for (int i = 0; i < pad; i++)
 		printf(" ");
-	
+
 	printf(" │ ");
 	print_color_block(r, g, b);
 	printf(" │ %s │\n", hex);
@@ -53,17 +53,17 @@ static void print_theme_preview(const theme_t *theme) {
 	print_color_row("accent_fg", theme->accent_fg.r, theme->accent_fg.g, theme->accent_fg.b);
 	print_color_row("playing", theme->playing.r, theme->playing.g, theme->playing.b);
 	print_color_row("playlist", theme->playlist.r, theme->playlist.g, theme->playlist.b);
-	print_color_row("highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g,
-	    theme->highlight_bg.b);
-	print_color_row("highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g,
-	    theme->highlight_fg.b);
+	print_color_row(
+	    "highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g, theme->highlight_bg.b);
+	print_color_row(
+	    "highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g, theme->highlight_fg.b);
 
 	printf("╰──────────────┴──────────────────────┴─────────╯\n\n");
 }
 
 /* Helper function to parse RGB color from TOML sub-table */
-static void parse_color(toml_table_t *colors, const char *name, int *r_out, int *g_out,
-    int *b_out) {
+static void parse_color(
+    toml_table_t *colors, const char *name, int *r_out, int *g_out, int *b_out) {
 	toml_table_t *color_table = toml_table_in(colors, name);
 	if (!color_table)
 		return;
@@ -108,10 +108,10 @@ static bool load_theme_file(const char *theme_path, theme_t *theme) {
 
 	parse_color(colors, "main_bg", &theme->main_bg.r, &theme->main_bg.g, &theme->main_bg.b);
 	parse_color(colors, "main_fg", &theme->main_fg.r, &theme->main_fg.g, &theme->main_fg.b);
-	parse_color(colors, "accent_bg", &theme->accent_bg.r, &theme->accent_bg.g,
-	    &theme->accent_bg.b);
-	parse_color(colors, "accent_fg", &theme->accent_fg.r, &theme->accent_fg.g,
-	    &theme->accent_fg.b);
+	parse_color(
+	    colors, "accent_bg", &theme->accent_bg.r, &theme->accent_bg.g, &theme->accent_bg.b);
+	parse_color(
+	    colors, "accent_fg", &theme->accent_fg.r, &theme->accent_fg.g, &theme->accent_fg.b);
 	parse_color(colors, "playing", &theme->playing.r, &theme->playing.g, &theme->playing.b);
 	parse_color(colors, "playlist", &theme->playlist.r, &theme->playlist.g, &theme->playlist.b);
 	parse_color(colors, "highlight_bg", &theme->highlight_bg.r, &theme->highlight_bg.g,
