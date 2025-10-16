@@ -63,7 +63,6 @@ void swap(struct tune **a, struct tune **b) {
 bool is_typeable_key(int key) {
 	return ((key >= 'a') && (key <= 'z')) || ((key >= 'A') && (key <= 'Z'))
 	    || ((key >= '0') && (key <= '9'));
-	/*return isalnum(key);*/
 }
 
 static bool istypeablearray[256];
