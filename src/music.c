@@ -53,9 +53,8 @@ struct filetype {
 static struct filetype *fthead = NULL;
 
 static void music_register_filetype(bool (*isitproc)(char *, int),
-				    bool (*infoproc)(char *, struct tuneinfo *),
-				    bool (*metaproc)(char *, struct track_metadata *),
-				    void (*playproc)(char *)) {
+    bool (*infoproc)(char *, struct tuneinfo *), bool (*metaproc)(char *, struct track_metadata *),
+    void (*playproc)(char *)) {
 	struct filetype *ft;
 
 	ft = malloc(sizeof(*ft));

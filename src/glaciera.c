@@ -92,8 +92,8 @@ WINDOW *win_top = NULL;
 WINDOW *win_info = NULL;
 WINDOW *win_middle = NULL;
 WINDOW *win_bottom = NULL;
-int tunenr = 0;     /* the currently selected tune */
-int toptunenr = 0;  /* the tune at the top of middle window */
+int tunenr = 0; /* the currently selected tune */
+int toptunenr = 0; /* the tune at the top of middle window */
 int middlesize = 0; /* size of displayed tunelist */
 
 char playlist_dir[100] = "";
@@ -365,8 +365,8 @@ void make_local_copy_of_database(int showprogress) {
 						int filled = 0;
 
 						if (bytes_total > 0) {
-							filled = (int)((bytes_written * 60UL) /
-								       bytes_total);
+							filled = (int)((bytes_written * 60UL)
+							    / bytes_total);
 							if (filled > 60)
 								filled = 60;
 						}
@@ -459,158 +459,32 @@ void load_all_songs(void) {
 /* -------------------------------------------------------------------------- */
 
 char *genre_names[256] = {
-    /*
-     * NOTE: The spelling of these genre names is identical to those found in
-     * Winamp and mp3info.
-     */
-    "Blues",
-    "Classic Rock",
-    "Country",
-    "Dance",
-    "Disco",
-    "Funk",
-    "Grunge",
-    "Hip-Hop",
-    "Jazz",
-    "Metal",
-    "New Age",
-    "Oldies",
-    "Other",
-    "Pop",
-    "R&B",
-    "Rap",
-    "Reggae",
-    "Rock",
-    "Techno",
-    "Industrial",
-    "Alternative",
-    "Ska",
-    "Death Metal",
-    "Pranks",
-    "Soundtrack",
-    "Euro-Techno",
-    "Ambient",
-    "Trip-Hop",
-    "Vocal",
-    "Jazz+Funk",
-    "Fusion",
-    "Trance",
-    "Classical",
-    "Instrumental",
-    "Acid",
-    "House",
-    "Game",
-    "Sound Clip",
-    "Gospel",
-    "Noise",
-    "Alt. Rock",
-    "Bass",
-    "Soul",
-    "Punk",
-    "Space",
-    "Meditative",
-    "Instrumental Pop",
-    "Instrumental Rock",
-    "Ethnic",
-    "Gothic",
-    "Darkwave",
-    "Techno-Industrial",
-    "Electronic",
-    "Pop-Folk",
-    "Eurodance",
-    "Dream",
-    "Southern Rock",
-    "Comedy",
-    "Cult",
-    "Gangsta Rap",
-    "Top 40",
-    "Christian Rap",
-    "Pop/Funk",
-    "Jungle",
-    "Native American",
-    "Cabaret",
-    "New Wave",
-    "Psychedelic",
-    "Rave",
-    "Showtunes",
-    "Trailer",
-    "Lo-Fi",
-    "Tribal",
-    "Acid Punk",
-    "Acid Jazz",
-    "Polka",
-    "Retro",
-    "Musical",
-    "Rock & Roll",
-    "Hard Rock",
-    "Folk",
-    "Folk/Rock",
-    "National Folk",
-    "Swing",
-    "Fast-Fusion",
-    "Bebob",
-    "Latin",
-    "Revival",
-    "Celtic",
-    "Bluegrass",
-    "Avantgarde",
-    "Gothic Rock",
-    "Progressive Rock",
-    "Psychedelic Rock",
-    "Symphonic Rock",
-    "Slow Rock",
-    "Big Band",
-    "Chorus",
-    "Easy Listening",
-    "Acoustic",
-    "Humour",
-    "Speech",
-    "Chanson",
-    "Opera",
-    "Chamber Music",
-    "Sonata",
-    "Symphony",
-    "Booty Bass",
-    "Primus",
-    "Porn Groove",
-    "Satire",
-    "Slow Jam",
-    "Club",
-    "Tango",
-    "Samba",
-    "Folklore",
-    "Ballad",
-    "Power Ballad",
-    "Rhythmic Soul",
-    "Freestyle",
-    "Duet",
-    "Punk Rock",
-    "Drum Solo",
-    "A Cappella",
-    "Euro-House",
-    "Dance Hall",
-    "Goa",
-    "Drum & Bass",
-    "Club-House",
-    "Hardcore",
-    "Terror",
-    "Indie",
-    "BritPop",
-    "Negerpunk",
-    "Polsk Punk",
-    "Beat",
-    "Christian Gangsta Rap",
-    "Heavy Metal",
-    "Black Metal",
-    "Crossover",
-    "Contemporary Christian",
-    "Christian Rock",
-    "Merengue",
-    "Salsa",
-    "Thrash Metal",
-    "Anime",
-    "JPop",
-    "Synthpop"};
+	/*
+	 * NOTE: The spelling of these genre names is identical to those found in
+	 * Winamp and mp3info.
+	 */
+	"Blues", "Classic Rock", "Country", "Dance", "Disco", "Funk", "Grunge", "Hip-Hop", "Jazz",
+	"Metal", "New Age", "Oldies", "Other", "Pop", "R&B", "Rap", "Reggae", "Rock", "Techno",
+	"Industrial", "Alternative", "Ska", "Death Metal", "Pranks", "Soundtrack", "Euro-Techno",
+	"Ambient", "Trip-Hop", "Vocal", "Jazz+Funk", "Fusion", "Trance", "Classical",
+	"Instrumental", "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise", "Alt. Rock",
+	"Bass", "Soul", "Punk", "Space", "Meditative", "Instrumental Pop", "Instrumental Rock",
+	"Ethnic", "Gothic", "Darkwave", "Techno-Industrial", "Electronic", "Pop-Folk", "Eurodance",
+	"Dream", "Southern Rock", "Comedy", "Cult", "Gangsta Rap", "Top 40", "Christian Rap",
+	"Pop/Funk", "Jungle", "Native American", "Cabaret", "New Wave", "Psychedelic", "Rave",
+	"Showtunes", "Trailer", "Lo-Fi", "Tribal", "Acid Punk", "Acid Jazz", "Polka", "Retro",
+	"Musical", "Rock & Roll", "Hard Rock", "Folk", "Folk/Rock", "National Folk", "Swing",
+	"Fast-Fusion", "Bebob", "Latin", "Revival", "Celtic", "Bluegrass", "Avantgarde",
+	"Gothic Rock", "Progressive Rock", "Psychedelic Rock", "Symphonic Rock", "Slow Rock",
+	"Big Band", "Chorus", "Easy Listening", "Acoustic", "Humour", "Speech", "Chanson", "Opera",
+	"Chamber Music", "Sonata", "Symphony", "Booty Bass", "Primus", "Porn Groove", "Satire",
+	"Slow Jam", "Club", "Tango", "Samba", "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul",
+	"Freestyle", "Duet", "Punk Rock", "Drum Solo", "A Cappella", "Euro-House", "Dance Hall",
+	"Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie", "BritPop", "Negerpunk",
+	"Polsk Punk", "Beat", "Christian Gangsta Rap", "Heavy Metal", "Black Metal", "Crossover",
+	"Contemporary Christian", "Christian Rock", "Merengue", "Salsa", "Thrash Metal", "Anime",
+	"JPop", "Synthpop"
+};
 
 /*
  * Return the name of the genre. O(1)
@@ -794,31 +668,31 @@ void make_ui(void) {
 #define THEME_HIGHLIGHT_FG 23
 
 			init_color(THEME_MAIN_BG, RGB_SCALE(global_config.theme.main_bg.r),
-				   RGB_SCALE(global_config.theme.main_bg.g),
-				   RGB_SCALE(global_config.theme.main_bg.b));
+			    RGB_SCALE(global_config.theme.main_bg.g),
+			    RGB_SCALE(global_config.theme.main_bg.b));
 			init_color(THEME_MAIN_FG, RGB_SCALE(global_config.theme.main_fg.r),
-				   RGB_SCALE(global_config.theme.main_fg.g),
-				   RGB_SCALE(global_config.theme.main_fg.b));
+			    RGB_SCALE(global_config.theme.main_fg.g),
+			    RGB_SCALE(global_config.theme.main_fg.b));
 			init_color(THEME_ACCENT_BG, RGB_SCALE(global_config.theme.accent_bg.r),
-				   RGB_SCALE(global_config.theme.accent_bg.g),
-				   RGB_SCALE(global_config.theme.accent_bg.b));
+			    RGB_SCALE(global_config.theme.accent_bg.g),
+			    RGB_SCALE(global_config.theme.accent_bg.b));
 			init_color(THEME_ACCENT_FG, RGB_SCALE(global_config.theme.accent_fg.r),
-				   RGB_SCALE(global_config.theme.accent_fg.g),
-				   RGB_SCALE(global_config.theme.accent_fg.b));
+			    RGB_SCALE(global_config.theme.accent_fg.g),
+			    RGB_SCALE(global_config.theme.accent_fg.b));
 			init_color(THEME_PLAYING, RGB_SCALE(global_config.theme.playing.r),
-				   RGB_SCALE(global_config.theme.playing.g),
-				   RGB_SCALE(global_config.theme.playing.b));
+			    RGB_SCALE(global_config.theme.playing.g),
+			    RGB_SCALE(global_config.theme.playing.b));
 			init_color(THEME_PLAYLIST, RGB_SCALE(global_config.theme.playlist.r),
-				   RGB_SCALE(global_config.theme.playlist.g),
-				   RGB_SCALE(global_config.theme.playlist.b));
+			    RGB_SCALE(global_config.theme.playlist.g),
+			    RGB_SCALE(global_config.theme.playlist.b));
 			init_color(THEME_HIGHLIGHT_BG,
-				   RGB_SCALE(global_config.theme.highlight_bg.r),
-				   RGB_SCALE(global_config.theme.highlight_bg.g),
-				   RGB_SCALE(global_config.theme.highlight_bg.b));
+			    RGB_SCALE(global_config.theme.highlight_bg.r),
+			    RGB_SCALE(global_config.theme.highlight_bg.g),
+			    RGB_SCALE(global_config.theme.highlight_bg.b));
 			init_color(THEME_HIGHLIGHT_FG,
-				   RGB_SCALE(global_config.theme.highlight_fg.r),
-				   RGB_SCALE(global_config.theme.highlight_fg.g),
-				   RGB_SCALE(global_config.theme.highlight_fg.b));
+			    RGB_SCALE(global_config.theme.highlight_fg.r),
+			    RGB_SCALE(global_config.theme.highlight_fg.g),
+			    RGB_SCALE(global_config.theme.highlight_fg.b));
 
 			/* Main window */
 			init_pair(1, THEME_MAIN_FG, THEME_MAIN_BG);
@@ -885,7 +759,7 @@ static inline int utf8_char_len_ui(unsigned char c) {
 		return 3; /* 1110xxxx - 3-byte */
 	if ((c & 0xF8) == 0xF0)
 		return 4; /* 11110xxx - 4-byte */
-	return 1;         /* Invalid UTF-8, treat as single byte */
+	return 1; /* Invalid UTF-8, treat as single byte */
 }
 
 /*
@@ -1012,7 +886,7 @@ void draw_one_song(int row, int item, int highlight) {
 	case ARG_DATE:
 		localtime_r(&tune->ti->filedate, &tm);
 		snprintf(buf, sizeof(buf), "%4d-%02d-%02d ", 1900 + tm.tm_year, 1 + tm.tm_mon,
-			 tm.tm_mday);
+		    tm.tm_mday);
 		break;
 	case ARG_BITRATE:
 		snprintf(buf, sizeof(buf), "%3d ", tune->ti->bitrate);
@@ -1055,8 +929,9 @@ void draw_one_song(int row, int item, int highlight) {
 	if (ARG_PATH == sort_arg) {
 		const size_t path_len = strlen(tune->path);
 		/* Use UTF-8 safe offset for horizontal scrolling */
-		size_t safe_step =
-		    (step < 0 || (size_t)step > path_len) ? 0 : utf8_safe_offset(tune->path, step);
+		size_t safe_step = (step < 0 || (size_t)step > path_len)
+		    ? 0
+		    : utf8_safe_offset(tune->path, step);
 		p = tune->path + safe_step;
 
 		/* UTF-8 safe copy - copy up to COLS characters, not bytes */
@@ -1076,8 +951,8 @@ void draw_one_song(int row, int item, int highlight) {
 		const size_t display_len = strlen(tune->display);
 		/* Use UTF-8 safe offset for horizontal scrolling */
 		size_t safe_step = (step < 0 || (size_t)step > display_len)
-				       ? 0
-				       : utf8_safe_offset(tune->display, step);
+		    ? 0
+		    : utf8_safe_offset(tune->display, step);
 		p = tune->display + safe_step;
 		depath(buf + strlen(buf), p);
 	}
@@ -1160,18 +1035,18 @@ void refresh_screen(void) {
 	wbkgd(win_middle, COLOR_PAIR(1));
 	werase(win_middle);
 	if (show_splash) {
-		draw_centered(win_middle, 3,
-			      "  ________.__                .__                     ");
-		draw_centered(win_middle, 4,
-			      " /  _____/|  | _____    ____ |__| ________________   ");
-		draw_centered(win_middle, 5,
-			      "/   \\  ___|  | \\__  \\ _/ ___\\|  |/ __ \\_  __ \\__  \\  ");
+		draw_centered(
+		    win_middle, 3, "  ________.__                .__                     ");
+		draw_centered(
+		    win_middle, 4, " /  _____/|  | _____    ____ |__| ________________   ");
+		draw_centered(
+		    win_middle, 5, "/   \\  ___|  | \\__  \\ _/ ___\\|  |/ __ \\_  __ \\__  \\  ");
 		draw_centered(win_middle, 6,
-			      "\\    \\_\\  \\  |__/ __ \\\\  \\___|  \\  ___/|  | \\/\\/ __ \\_");
-		draw_centered(win_middle, 7,
-			      " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
-		draw_centered(win_middle, 8,
-			      "        \\/          \\/     \\/        \\/           \\/  ");
+		    "\\    \\_\\  \\  |__/ __ \\\\  \\___|  \\  ___/|  | \\/\\/ __ \\_");
+		draw_centered(
+		    win_middle, 7, " \\______  /____(____  /\\___  >__|\\___  >__|  (____  /");
+		draw_centered(
+		    win_middle, 8, "        \\/          \\/     \\/        \\/           \\/  ");
 		draw_centered(win_middle, 10, "- Heavy Duty Jukebox -");
 		draw_centered(win_middle, 11, complete_version());
 		draw_centered(win_middle, 12, "Copyright (c) Plux Stahre 2025");
@@ -1298,7 +1173,7 @@ void append_tune_to_history(struct tune *tune, time_t timestarted) {
 		timestarted = t;
 	localtime_r(&t, &tm);
 	snprintf(historyfilename, sizeof(historyfilename), "%s%4d_%02d_%02d.list", playlist_dir,
-		 1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday);
+	    1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday);
 	f = fopen(historyfilename, "a");
 	if (f) {
 		fprintf(f, "%s\n", tune->display);
@@ -1338,8 +1213,8 @@ void store_to_cache(const char *badname, const char *goodname) {
 	char cachefilename[512];
 	FILE *f;
 
-	snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache",
-		 playlist_dir);
+	snprintf(
+	    cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache", playlist_dir);
 	f = fopen(cachefilename, "a");
 	if (f) {
 		fprintf(f, "%s\n", badname);
@@ -1355,8 +1230,8 @@ struct tune *get_from_cache(const char *badname) {
 	struct tune *tune = NULL;
 	struct tune key;
 
-	snprintf(cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache",
-		 playlist_dir);
+	snprintf(
+	    cachefilename, sizeof(cachefilename), "%sbad-name-to-good-name.cache", playlist_dir);
 	f = fopen(cachefilename, "r");
 	if (!f)
 		return NULL;
@@ -1368,8 +1243,8 @@ struct tune *get_from_cache(const char *badname) {
 				break;
 			chop(buf);
 			key.display = buf;
-			tune = bsearch(&key, (void *)alltunes, allcount, sizeof(struct tune),
-				       alltunes_sort);
+			tune = bsearch(
+			    &key, (void *)alltunes, allcount, sizeof(struct tune), alltunes_sort);
 			if (tune)
 				break;
 		} else {
@@ -1692,7 +1567,7 @@ void update_song_progress_handler(int sig) {
 	 */
 	if (secondsleft < 10 && !cache_next_song_thread_id) {
 		pthread_create(&cache_next_song_thread_id, &detachedattr,
-			       &cache_next_song_in_advance_thread, now_playing_tune);
+		    &cache_next_song_in_advance_thread, now_playing_tune);
 	}
 
 	/*
@@ -1703,7 +1578,7 @@ void update_song_progress_handler(int sig) {
 	if (percentplayed >= 50 || secondsplayed >= 240) {
 		if (tune_to_save_to_history && !append_tune_to_history_thread_id) {
 			pthread_create(&append_tune_to_history_thread_id, &detachedattr,
-				       &append_tune_to_history_thread, tune_to_save_to_history);
+			    &append_tune_to_history_thread, tune_to_save_to_history);
 		}
 	}
 
@@ -1714,8 +1589,8 @@ void update_song_progress_handler(int sig) {
 	 */
 	if (opt_read_ahead && !readahead_thread_id) {
 		g_percentplayed = percentplayed;
-		pthread_create(&readahead_thread_id, &detachedattr, &readahead_thread,
-			       now_playing_tune);
+		pthread_create(
+		    &readahead_thread_id, &detachedattr, &readahead_thread, now_playing_tune);
 	}
 
 just_renew_timer:
@@ -1855,8 +1730,15 @@ int sort_ARG_FINISH(struct tune *a, struct tune *b) {
 }
 
 int (*sort_funcs[])(struct tune *a, struct tune *b) = {
-    &sort_ARG_NORMAL, &sort_ARG_LENGTH, &sort_ARG_SIZE, &sort_ARG_DATE,   &sort_ARG_BITRATE,
-    &sort_ARG_GENRE,  &sort_ARG_RATING, &sort_ARG_PATH, &sort_ARG_FINISH,
+	&sort_ARG_NORMAL,
+	&sort_ARG_LENGTH,
+	&sort_ARG_SIZE,
+	&sort_ARG_DATE,
+	&sort_ARG_BITRATE,
+	&sort_ARG_GENRE,
+	&sort_ARG_RATING,
+	&sort_ARG_PATH,
+	&sort_ARG_FINISH,
 };
 
 int sort_sort_function(const void *a, const void *b) {
@@ -1952,8 +1834,8 @@ void do_show_available_playlists(int all) {
 		/*
 		 * Don't show the autogenerated .list's (2003_12_14)
 		 */
-		if ((strlen(pde->d_name) == (4 + 2 + 2 + 4 + 1 + 1 + 1)) &&
-		    isdigit(pde->d_name[0]) && !all)
+		if ((strlen(pde->d_name) == (4 + 2 + 2 + 4 + 1 + 1 + 1)) && isdigit(pde->d_name[0])
+		    && !all)
 			continue;
 
 		strcpy(fullname, playlist_dir);
@@ -1963,7 +1845,7 @@ void do_show_available_playlists(int all) {
 		stat(fullname, &statbuf);
 
 		addtexttodisplay(pde->d_name, all ? 0 : find_duration_of_playlist(fullname),
-				 statbuf.st_size, statbuf.st_mtime);
+		    statbuf.st_size, statbuf.st_mtime);
 	}
 	closedir(pdir);
 
@@ -2142,8 +2024,8 @@ void do_view_available_genres(void) {
 	clear_displaytunes();
 	for (i = 0; i < 256; i++) {
 		if (genre_count[i] > 10) {
-			addtexttodisplay(genrename(i), genre_duration[i], genre_count[i],
-					 (i + 1) * -1);
+			addtexttodisplay(
+			    genrename(i), genre_duration[i], genre_count[i], (i + 1) * -1);
 		}
 	}
 
@@ -2283,8 +2165,8 @@ void do_view(void) {
 		localtime_r(&lolimit, &lotm);
 		localtime_r(&hilimit, &hitm);
 		show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
-			  1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
-			  1 + hitm.tm_mon, hitm.tm_mday);
+		    1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
+		    1 + hitm.tm_mon, hitm.tm_mday);
 		break;
 
 	case 'R':
@@ -2332,9 +2214,9 @@ void do_view(void) {
 	case 'D':
 		clear_displaytunes();
 		for (i = 0; i < allcount - 1; i++) {
-			if (0 == strcmp(alltunes[i].search, alltunes[i + 1].search) &&
-			    (alltunes[i].ti->filesize == alltunes[i + 1].ti->filesize ||
-			     alltunes[i].ti->filedate == alltunes[i + 1].ti->filedate)) {
+			if (0 == strcmp(alltunes[i].search, alltunes[i + 1].search)
+			    && (alltunes[i].ti->filesize == alltunes[i + 1].ti->filesize
+				|| alltunes[i].ti->filedate == alltunes[i + 1].ti->filedate)) {
 				addtunetodisplay(&alltunes[i]);
 				addtunetodisplay(&alltunes[i + 1]);
 				i++;
@@ -2569,8 +2451,8 @@ void do_context(void) {
 		localtime_r(&lolimit, &lotm);
 		localtime_r(&hilimit, &hitm);
 		show_info(_("Showing date context (%4d-%02d-%02d -- %4d-%02d-%02d)"),
-			  1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
-			  1 + hitm.tm_mon, hitm.tm_mday);
+		    1900 + lotm.tm_year, 1 + lotm.tm_mon, lotm.tm_mday, 1900 + hitm.tm_year,
+		    1 + hitm.tm_mon, hitm.tm_mday);
 		break;
 
 	case 'I':
@@ -2621,8 +2503,8 @@ void do_burn_playlist(void) {
 
 	show_info(_("Preparing for burning..."));
 	for (i = 0; i < playlistcount; i++) {
-		snprintf(symname, sizeof(symname), "/burn/%03d_%s.mp3", 1 + i,
-			 playlist[i]->display);
+		snprintf(
+		    symname, sizeof(symname), "/burn/%03d_%s.mp3", 1 + i, playlist[i]->display);
 
 		/*
 		 * !!2005-04-23 KB
@@ -2732,7 +2614,7 @@ void do_time(void) {
 
 	playends = time(NULL) + total_duration;
 	show_info(_("%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"), displaycount,
-		  total_size, suffix, days, hh, mm, ss, ctime(&playends));
+	    total_size, suffix, days, hh, mm, ss, ctime(&playends));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2893,7 +2775,7 @@ void do_search(void) {
 				strcat(query, "%'");
 			} else if (matchfirstchar && j == 0) {
 				/* First character match */
-				char first_char[2] = {toupper(wordlist[j][0]), '\0'};
+				char first_char[2] = { toupper(wordlist[j][0]), '\0' };
 				strcat(query, "(display_name LIKE '");
 				strcat(query, first_char);
 				strcat(query, "%' OR search_text LIKE '");
@@ -3046,9 +2928,9 @@ void do_query_info(void) {
 		} else {
 			localtime_r(&tune->ti->filedate, &tm);
 			show_info(_("%4d-%02d-%02d %9d bytes, %02d:%02d minutes, %d kbps, '%s'"),
-				  1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tune->ti->filesize,
-				  tune->ti->duration / 60, tune->ti->duration % 60,
-				  tune->ti->bitrate, genrename(tune->ti->genre));
+			    1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tune->ti->filesize,
+			    tune->ti->duration / 60, tune->ti->duration % 60, tune->ti->bitrate,
+			    genrename(tune->ti->genre));
 		}
 	}
 }
@@ -3220,10 +3102,10 @@ static bool handle_search_input(int key, int *last_space_count) {
 
 	/* Explicitly reject arrow keys and navigation keys to prevent escape sequences
 	 * from being interpreted as typeable characters when holding down keys */
-	if (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT ||
-	    key == KEY_HOME || key == KEY_END || key == KEY_PPAGE || key == KEY_NPAGE ||
-	    key == KEY_IC || key == KEY_DC || key == KEY_ENTER ||
-	    (key >= KEY_F(1) && key <= KEY_F(12))) {
+	if (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT
+	    || key == KEY_HOME || key == KEY_END || key == KEY_PPAGE || key == KEY_NPAGE
+	    || key == KEY_IC || key == KEY_DC || key == KEY_ENTER
+	    || (key >= KEY_F(1) && key <= KEY_F(12))) {
 		return false; /* Let these be handled by other key handlers */
 	}
 
@@ -3243,8 +3125,8 @@ static bool handle_search_input(int key, int *last_space_count) {
 	}
 
 	/* Handle typeable characters and special search chars */
-	if ('!' == key || ':' == key || '%' == key || '/' == key || ' ' == key ||
-	    is_typeable_key(key)) {
+	if ('!' == key || ':' == key || '%' == key || '/' == key || ' ' == key
+	    || is_typeable_key(key)) {
 		i = strlen(search_string);
 
 		/* Validate special characters */
@@ -3572,8 +3454,8 @@ void action(int key) {
 /* -------------------------------------------------------------------------- */
 
 void print_version(void) {
-	printf("GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(),
-	       __DATE__ " " __TIME__);
+	printf(
+	    "GLACIERA - Heavy Duty Jukebox - %s - %s\n", complete_version(), __DATE__ " " __TIME__);
 	printf("Copyright (c) Krister Brus 2000-2010 <kristerbrus@fastmail.fm>\n");
 	printf("Portions Copyright (c) Kristian Wiklund 1997 <kw@dtek.chalmers.se>\n");
 }
@@ -3594,10 +3476,9 @@ int main(int argc, char **argv) {
 #endif
 
 	/* Define long options */
-	static struct option long_options[] = {{"help", no_argument, 0, 'h'},
-					       {"version", no_argument, 0, 'v'},
-					       {"theme-preview", no_argument, 0, 't'},
-					       {0, 0, 0, 0}};
+	static struct option long_options[]
+	    = { { "help", no_argument, 0, 'h' }, { "version", no_argument, 0, 'v' },
+		      { "theme-preview", no_argument, 0, 't' }, { 0, 0, 0, 0 } };
 
 	int option_index = 0;
 	while ((arg = getopt_long(argc, argv, "hvr", long_options, &option_index)) > -1) {
@@ -3613,7 +3494,8 @@ int main(int argc, char **argv) {
 			printf("  -h, --help          Show this help message\n");
 			printf("  -v, --version       Show version information\n");
 			printf("  -r                  *Don't* use read ahead\n");
-			printf("  --theme-preview     Display all available themes and exit\n");
+			printf("  --theme-preview     Display all available themes and "
+			       "exit\n");
 			exit(0);
 			break;
 		case 'v':

@@ -296,9 +296,9 @@ struct toml_arritem_t {
 
 struct toml_array_t {
 	const char *key; /* key to this array */
-	int kind;        /* element kind: 'v'alue, 'a'rray, or 't'able, 'm'ixed */
-	int type;        /* for value kind: 'i'nt, 'd'ouble, 'b'ool, 's'tring, 't'ime,
-			    'D'ate, 'T'imestamp, 'm'ixed */
+	int kind; /* element kind: 'v'alue, 'a'rray, or 't'able, 'm'ixed */
+	int type; /* for value kind: 'i'nt, 'd'ouble, 'b'ool, 's'tring, 't'ime,
+		     'D'ate, 'T'imestamp, 'm'ixed */
 
 	int nitem; /* number of elements */
 	toml_arritem_t *item;
@@ -306,8 +306,8 @@ struct toml_array_t {
 
 struct toml_table_t {
 	const char *key; /* key to this table */
-	bool implicit;   /* table was created implicitly */
-	bool readonly;   /* no more modification allowed */
+	bool implicit; /* table was created implicitly */
+	bool readonly; /* no more modification allowed */
 
 	/* key-values in the table */
 	int nkval;
@@ -443,8 +443,8 @@ static toml_arritem_t *expand_arritem(toml_arritem_t *p, int n) {
 
 static char *norm_lit_str(const char *src, int srclen, int multiline, char *errbuf, int errbufsz) {
 	char *dst = 0; /* will write to dst[] and return it */
-	int max = 0;   /* max size of dst[] */
-	int off = 0;   /* cur offset in dst[] */
+	int max = 0; /* max size of dst[] */
+	int off = 0; /* cur offset in dst[] */
 	const char *sp = src;
 	const char *sq = src + srclen;
 	int ch;
@@ -489,11 +489,11 @@ static char *norm_lit_str(const char *src, int srclen, int multiline, char *errb
  * Convert src to raw unescaped utf-8 string.
  * Returns NULL if error with errmsg in errbuf.
  */
-static char *norm_basic_str(const char *src, int srclen, int multiline, char *errbuf,
-			    int errbufsz) {
+static char *norm_basic_str(
+    const char *src, int srclen, int multiline, char *errbuf, int errbufsz) {
 	char *dst = 0; /* will write to dst[] and return it */
-	int max = 0;   /* max size of dst[] */
-	int off = 0;   /* cur offset in dst[] */
+	int max = 0; /* max size of dst[] */
+	int off = 0; /* cur offset in dst[] */
 	const char *sp = src;
 	const char *sq = src + srclen;
 	int ch;
@@ -560,17 +560,17 @@ static char *norm_basic_str(const char *src, int srclen, int multiline, char *er
 			for (int i = 0; i < nhex; i++) {
 				if (sp >= sq) {
 					snprintf(errbuf, errbufsz, "\\%c expects %d hex chars", ch,
-						 nhex);
+					    nhex);
 					xfree(dst);
 					return 0;
 				}
 				ch = *sp++;
 				int v = ('0' <= ch && ch <= '9')
-					    ? ch - '0'
-					    : (('A' <= ch && ch <= 'F') ? ch - 'A' + 10 : -1);
+				    ? ch - '0'
+				    : (('A' <= ch && ch <= 'F') ? ch - 'A' + 10 : -1);
 				if (-1 == v) {
-					snprintf(errbuf, errbufsz,
-						 "invalid hex chars for \\u or \\U");
+					snprintf(
+					    errbuf, errbufsz, "invalid hex chars for \\u or \\U");
 					xfree(dst);
 					return 0;
 				}
@@ -689,7 +689,7 @@ static char *normalize_key(context_t *ctx, token_t strtok) {
  * 'v'alue, 'a'rray or 't'able depending on the element.
  */
 static int check_key(toml_table_t *tab, const char *key, toml_keyval_t **ret_val,
-		     toml_array_t **ret_arr, toml_table_t **ret_tab) {
+    toml_array_t **ret_arr, toml_table_t **ret_tab) {
 	int i;
 	void *dummy;
 
@@ -818,8 +818,8 @@ static toml_table_t *create_keytable_in_table(context_t *ctx, toml_table_t *tab,
 
 /* Create an array in the table.
  */
-static toml_array_t *create_keyarray_in_table(context_t *ctx, toml_table_t *tab, token_t keytok,
-					      char kind) {
+static toml_array_t *create_keyarray_in_table(
+    context_t *ctx, toml_table_t *tab, token_t keytok, char kind) {
 	/* first, normalize the key to be used for lookup.
 	 * remember to free it if we error out.
 	 */
@@ -940,8 +940,8 @@ static int parse_inline_table(context_t *ctx, toml_table_t *tab) {
 
 	for (;;) {
 		if (ctx->tok.tok == NEWLINE)
-			return e_syntax(ctx, ctx->tok.lineno,
-					"newline not allowed in inline table");
+			return e_syntax(
+			    ctx, ctx->tok.lineno, "newline not allowed in inline table");
 
 		/* until } */
 		if (ctx->tok.tok == RBRACE)
@@ -954,8 +954,8 @@ static int parse_inline_table(context_t *ctx, toml_table_t *tab) {
 			return -1;
 
 		if (ctx->tok.tok == NEWLINE)
-			return e_syntax(ctx, ctx->tok.lineno,
-					"newline not allowed in inline table");
+			return e_syntax(
+			    ctx, ctx->tok.lineno, "newline not allowed in inline table");
 
 		/* on comma, continue to scan for next keyval */
 		if (ctx->tok.tok == COMMA) {
@@ -989,7 +989,7 @@ static int valtype(const char *val) {
 			return 'T'; /* timestamp */
 		if (ts.year)
 			return 'D'; /* date */
-		return 't';         /* time */
+		return 't'; /* time */
 	}
 	return 'u'; /* unknown */
 }
@@ -1097,8 +1097,8 @@ static int parse_array(context_t *ctx, toml_array_t *arr) {
 */
 static int parse_keyval(context_t *ctx, toml_table_t *tab) {
 	if (tab->readonly) {
-		return e_forbid(ctx, ctx->tok.lineno,
-				"cannot insert new entry into existing table");
+		return e_forbid(
+		    ctx, ctx->tok.lineno, "cannot insert new entry into existing table");
 	}
 
 	token_t key = ctx->tok;
@@ -1269,8 +1269,8 @@ static int walk_tabpath(context_t *ctx) {
 
 		default: { /* Not found. Let's create an implicit table. */
 			int n = curtab->ntab;
-			toml_table_t **base =
-			    (toml_table_t **)expand_ptrarr((void **)curtab->tab, n);
+			toml_table_t **base
+			    = (toml_table_t **)expand_ptrarr((void **)curtab->tab, n);
 			if (0 == base)
 				return e_outofmemory(ctx, FLINE);
 
@@ -1489,8 +1489,8 @@ toml_table_t *toml_parse_file(FILE *fp, char *errbuf, int errbufsz) {
 		errno = 0;
 		int n = fread(buf + off, 1, bufsz - off, fp);
 		if (ferror(fp)) {
-			snprintf(errbuf, errbufsz, "%s",
-				 errno ? strerror(errno) : "Error reading file");
+			snprintf(
+			    errbuf, errbufsz, "%s", errno ? strerror(errno) : "Error reading file");
 			xfree(buf);
 			return 0;
 		}
@@ -1743,8 +1743,8 @@ static int scan_string(context_t *ctx, char *p, int lineno, int dotisspecial) {
 			}
 			if (*p == '\'') {
 				if (p[1] == '\'' && p[2] == '\'') {
-					return e_syntax(ctx, lineno,
-							"triple-s-quote inside string lit");
+					return e_syntax(
+					    ctx, lineno, "triple-s-quote inside string lit");
 				}
 				continue;
 			}
@@ -2226,8 +2226,8 @@ int toml_rtos(toml_raw_t src, char **ret) {
 
 	// triple quotes?
 	if (qchar == src[1] && qchar == src[2]) {
-		multiline = 1;         // triple-quote implies multiline
-		sp = src + 3;          // first char after quote
+		multiline = 1; // triple-quote implies multiline
+		sp = src + 3; // first char after quote
 		sq = src + srclen - 3; // first char of ending quote
 
 		if (!(sp <= sq && sq[0] == qchar && sq[1] == qchar && sq[2] == qchar)) {
@@ -2242,7 +2242,7 @@ int toml_rtos(toml_raw_t src, char **ret) {
 			sp += 2;
 
 	} else {
-		sp = src + 1;          // first char after quote
+		sp = src + 1; // first char after quote
 		sq = src + srclen - 1; // ending quote
 		if (!(sp <= sq && *sq == qchar)) {
 			/* last char in src must be qchar */

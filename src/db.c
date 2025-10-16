@@ -21,8 +21,8 @@ static bool db_migrate_from_mmap(const char *db_path) {
 	int i;
 	int f[5];
 	struct stat ss;
-	void *g_mm[5] = {0};
-	int g_mmsize[5] = {0};
+	void *g_mm[5] = { 0 };
+	int g_mmsize[5] = { 0 };
 	struct tune0 *base0;
 	int allcount = 0;
 	int track_count = 0;
@@ -180,28 +180,28 @@ bool db_migrate(void) {
 	char *errmsg = NULL;
 
 	/* Create tracks table */
-	const char *create_tracks_sql =
-	    "CREATE TABLE IF NOT EXISTS tracks ("
-	    "    id INTEGER PRIMARY KEY AUTOINCREMENT,"
-	    "    filepath TEXT NOT NULL UNIQUE,"
-	    "    display_name TEXT NOT NULL,"
-	    "    search_text TEXT NOT NULL,"
-	    "    filesize INTEGER NOT NULL,"
-	    "    filedate INTEGER NOT NULL,"
-	    "    duration INTEGER NOT NULL,"
-	    "    bitrate INTEGER NOT NULL,"
-	    "    genre INTEGER NOT NULL,"
-	    "    rating INTEGER NOT NULL,"
-	    "    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),"
-	    "    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))"
-	    ");"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_filepath ON tracks(filepath);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_display_name ON tracks(display_name);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_search_text ON tracks(search_text);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_filesize ON tracks(filesize);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_filedate ON tracks(filedate);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_genre ON tracks(genre);"
-	    "CREATE INDEX IF NOT EXISTS idx_tracks_rating ON tracks(rating);";
+	const char *create_tracks_sql
+	    = "CREATE TABLE IF NOT EXISTS tracks ("
+	      "    id INTEGER PRIMARY KEY AUTOINCREMENT,"
+	      "    filepath TEXT NOT NULL UNIQUE,"
+	      "    display_name TEXT NOT NULL,"
+	      "    search_text TEXT NOT NULL,"
+	      "    filesize INTEGER NOT NULL,"
+	      "    filedate INTEGER NOT NULL,"
+	      "    duration INTEGER NOT NULL,"
+	      "    bitrate INTEGER NOT NULL,"
+	      "    genre INTEGER NOT NULL,"
+	      "    rating INTEGER NOT NULL,"
+	      "    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),"
+	      "    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))"
+	      ");"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_filepath ON tracks(filepath);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_display_name ON tracks(display_name);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_search_text ON tracks(search_text);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_filesize ON tracks(filesize);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_filedate ON tracks(filedate);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_genre ON tracks(genre);"
+	      "CREATE INDEX IF NOT EXISTS idx_tracks_rating ON tracks(rating);";
 
 	rc = sqlite3_exec(db, create_tracks_sql, NULL, NULL, &errmsg);
 	if (rc != SQLITE_OK) {
@@ -215,7 +215,7 @@ bool db_migrate(void) {
 
 /* Track operations */
 bool db_insert_track(const char *filepath, const char *display_name, const char *search_text,
-		     const struct tuneinfo *ti) {
+    const struct tuneinfo *ti) {
 	sqlite3_stmt *stmt;
 	int rc;
 
@@ -251,7 +251,7 @@ bool db_insert_track(const char *filepath, const char *display_name, const char 
 }
 
 bool db_update_track(int id, const char *filepath, const char *display_name,
-		     const char *search_text, const struct tuneinfo *ti) {
+    const char *search_text, const struct tuneinfo *ti) {
 	sqlite3_stmt *stmt;
 	int rc;
 
@@ -523,7 +523,7 @@ bool db_rollback_transaction(void) {
 }
 
 void db_insert_track_batch(const char *filepath, const char *display_name, const char *search_text,
-			   const struct tuneinfo *ti) {
+    const struct tuneinfo *ti) {
 	db_insert_track(filepath, display_name, search_text, ti);
 }
 

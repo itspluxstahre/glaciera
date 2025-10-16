@@ -53,7 +53,7 @@ TOML_EXTERN toml_table_t *toml_parse_file(FILE *fp, char *errbuf, int errbufsz);
  * Caller must toml_free(the-return-value) after use.
  */
 TOML_EXTERN toml_table_t *toml_parse(char *conf, /* NUL terminated, please. */
-				     char *errbuf, int errbufsz);
+    char *errbuf, int errbufsz);
 
 /* Free the table returned by toml_parse() or toml_parse_file(). Once
  * this function is called, any handles accessed through this tab
@@ -83,10 +83,10 @@ struct toml_datum_t {
 	int ok;
 	union {
 		toml_timestamp_t *ts; /* ts must be freed after use */
-		char *s;              /* string value. s must be freed after use */
-		int b;                /* bool value */
-		int64_t i;            /* int value */
-		double d;             /* double value */
+		char *s; /* string value. s must be freed after use */
+		int b; /* bool value */
+		int64_t i; /* int value */
+		double d; /* double value */
 	} u;
 };
 

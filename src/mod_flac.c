@@ -43,7 +43,7 @@ bool flac_info(char *filename, struct tuneinfo *ti) {
 	else
 		ti->duration = 0;
 	ti->bitrate = 128; /* TODO: Get values from file */
-	ti->genre = 0xff;  /* TODO: Get values from file */
+	ti->genre = 0xff; /* TODO: Get values from file */
 
 	return true;
 }
@@ -99,20 +99,21 @@ bool flac_metadata(char *filename, struct track_metadata *meta) {
 						flac_metadata_set(&meta->title, value);
 						if (meta->title)
 							found = true;
-					} else if (key_len == 6 &&
-						   strncasecmp(comment, "ARTIST", 6) == 0) {
+					} else if (key_len == 6
+					    && strncasecmp(comment, "ARTIST", 6) == 0) {
 						flac_metadata_set(&meta->artist, value);
 						if (meta->artist)
 							found = true;
-					} else if (key_len == 5 &&
-						   strncasecmp(comment, "ALBUM", 5) == 0) {
+					} else if (key_len == 5
+					    && strncasecmp(comment, "ALBUM", 5) == 0) {
 						flac_metadata_set(&meta->album, value);
 						if (meta->album)
 							found = true;
-					} else if ((key_len == 11 &&
-						    strncasecmp(comment, "TRACKNUMBER", 11) == 0) ||
-						   (key_len == 5 &&
-						    strncasecmp(comment, "TRACK", 5) == 0)) {
+					} else if ((key_len == 11
+						       && strncasecmp(comment, "TRACKNUMBER", 11)
+							   == 0)
+					    || (key_len == 5
+						&& strncasecmp(comment, "TRACK", 5) == 0)) {
 						flac_metadata_try_set_track(meta, value);
 						if (meta->track || meta->track_number >= 0)
 							found = true;

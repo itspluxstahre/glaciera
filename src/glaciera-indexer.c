@@ -233,8 +233,8 @@ void trim_minus_space_minus(char *src) {
 
 	dst = src;
 	while (*src) {
-		if (('-' == *(src + 0) || '.' == *(src + 0)) && ' ' == *(src + 1) &&
-		    '-' == *(src + 2)) {
+		if (('-' == *(src + 0) || '.' == *(src + 0)) && ' ' == *(src + 1)
+		    && '-' == *(src + 2)) {
 			*dst++ = '.';
 			src++;
 			src++;
@@ -275,11 +275,11 @@ static int utf8_char_len(unsigned char c) {
 		return 3; /* 1110xxxx - 3-byte */
 	if ((c & 0xF8) == 0xF0)
 		return 4; /* 11110xxx - 4-byte */
-	return 1;         /* Invalid UTF-8, treat as single byte */
+	return 1; /* Invalid UTF-8, treat as single byte */
 }
 
-static void build_display_from_filename(const char *dir, const char *filename, BITS keepers[],
-					char *out, size_t out_size) {
+static void build_display_from_filename(
+    const char *dir, const char *filename, BITS keepers[], char *out, size_t out_size) {
 	char fullpath[1024 * 4];
 	char gbuf[1024 * 4];
 	size_t dir_len = strlen(dir);
@@ -304,9 +304,9 @@ static void build_display_from_filename(const char *dir, const char *filename, B
 		/* Check if first byte of character should be kept */
 		if (bittest(keepers, i)) {
 			/* Copy entire UTF-8 character */
-			for (int j = 0; j < char_len && filename[i + j] &&
-					(size_t)(p - fullpath) < sizeof(fullpath) - 1;
-			     j++) {
+			for (int j = 0; j < char_len && filename[i + j]
+			    && (size_t)(p - fullpath) < sizeof(fullpath) - 1;
+			    j++) {
 				*p++ = filename[i + j];
 			}
 		}
@@ -332,8 +332,8 @@ static void build_display_from_filename(const char *dir, const char *filename, B
 	snprintf(out, out_size, "%s", p);
 }
 
-static void build_display_from_metadata(const struct track_metadata *meta, char *out,
-					size_t out_size) {
+static void build_display_from_metadata(
+    const struct track_metadata *meta, char *out, size_t out_size) {
 	out[0] = '\0';
 	if (!meta)
 		return;
@@ -342,22 +342,22 @@ static void build_display_from_metadata(const struct track_metadata *meta, char 
 	if (meta->artist && meta->album && meta->title) {
 		if (meta->track_number > 0)
 			snprintf(out, out_size, "%s - %s - %02d %s", meta->artist, meta->album,
-				 meta->track_number, meta->title);
+			    meta->track_number, meta->title);
 		else
-			snprintf(out, out_size, "%s - %s - %s", meta->artist, meta->album,
-				 meta->title);
+			snprintf(
+			    out, out_size, "%s - %s - %s", meta->artist, meta->album, meta->title);
 	}
 	/* Fallback formats when some metadata is missing */
 	else if (meta->artist && meta->title) {
 		if (meta->track_number > 0)
 			snprintf(out, out_size, "%s - %02d %s", meta->artist, meta->track_number,
-				 meta->title);
+			    meta->title);
 		else
 			snprintf(out, out_size, "%s - %s", meta->artist, meta->title);
 	} else if (meta->album && meta->title) {
 		if (meta->track_number > 0)
 			snprintf(out, out_size, "%s - %02d %s", meta->album, meta->track_number,
-				 meta->title);
+			    meta->title);
 		else
 			snprintf(out, out_size, "%s - %s", meta->album, meta->title);
 	} else if (meta->title) {
@@ -420,9 +420,9 @@ char *massage_full_path(char *buf, char *fullpath) {
 		r = fix_01_to_fullname(2, fullpath);
 	}
 
-	if ((r[0] == 'c' || r[0] == 'C') && (r[1] == 'd' || r[1] == 'D') &&
-	    (r[2] == ' ' || isdigit(r[2])) &&
-	    (r[3] == '-' || r[3] == ' ' || r[3] == '/' || isdigit(r[3]))) {
+	if ((r[0] == 'c' || r[0] == 'C') && (r[1] == 'd' || r[1] == 'D')
+	    && (r[2] == ' ' || isdigit(r[2]))
+	    && (r[3] == '-' || r[3] == ' ' || r[3] == '/' || isdigit(r[3]))) {
 		r = fix_01_to_fullname(3, fullpath);
 	}
 
@@ -453,7 +453,7 @@ void report_scanning_progress(int sig) {
 	}
 
 	fprintf(stderr, "\rTotal files: %8d  new files: %8d (%5d/sec %6d%s/sec)", total_files,
-		new_files, total_files - prev_total_files, megdiff, suffix);
+	    new_files, total_files - prev_total_files, megdiff, suffix);
 	fflush(stderr);
 	prev_total_files = total_files;
 	prev_total_bytes = total_bytes;
@@ -463,8 +463,8 @@ void report_scanning_progress(int sig) {
 
 /* ------------------------------------------------------------------------- */
 
-void process_one_file(char *dir, char *afullpath, char *filename, struct tuneinfo *pfti,
-		      BITS keepers[]) {
+void process_one_file(
+    char *dir, char *afullpath, char *filename, struct tuneinfo *pfti, BITS keepers[]) {
 	char display[1024 * 4];
 	char search_text[1024 * 4];
 	struct track_metadata meta;
@@ -509,7 +509,7 @@ void process_one_file(char *dir, char *afullpath, char *filename, struct tuneinf
  * Analyze filename patterns across directory to find common/unique characters
  */
 static int analyze_filename_patterns(DIR *pdir, char basefilename[256], int samecolumn[256],
-				     int sumcolumn[256], int trackcolumn[256]) {
+    int sumcolumn[256], int trackcolumn[256]) {
 	struct dirent *sd;
 	char *p;
 	int i;
@@ -562,8 +562,7 @@ static void normalize_column_stats(int musicfiles, int samecolumn[256], int trac
  * e.g., "cd1" in "cd1-01-song", "cd1-02-song"
  */
 static void remove_redundant_with_tracknums(int musicfiles, const char basefilename[256],
-					    int samecolumn[256], int sumcolumn[256],
-					    int trackcolumn[256]) {
+    int samecolumn[256], int sumcolumn[256], int trackcolumn[256]) {
 	for (int i = 0; i < 256; i++) {
 		if (trackcolumn[i]) {
 			sumcolumn[i] /= musicfiles;
@@ -617,8 +616,8 @@ static void fix_missing_leading_zero(int trackcolumn[256]) {
 /*
  * Build final keepers bitmap from analysis
  */
-static void build_keepers_bitmap(const int samecolumn[256], const int trackcolumn[256],
-				 BITS keepers[]) {
+static void build_keepers_bitmap(
+    const int samecolumn[256], const int trackcolumn[256], BITS keepers[]) {
 	/* Check if we have any track numbers */
 	bool justnames = true;
 	for (int i = 0; i < 256; i++) {
@@ -664,8 +663,8 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[]) {
 	memset(sumcolumn, 0, sizeof(sumcolumn));
 
 	/* Analyze all music files in directory */
-	musicfiles =
-	    analyze_filename_patterns(pdir, basefilename, samecolumn, sumcolumn, trackcolumn);
+	musicfiles
+	    = analyze_filename_patterns(pdir, basefilename, samecolumn, sumcolumn, trackcolumn);
 
 	/* Keep all characters if there's only one file */
 	if (musicfiles <= 1) {
@@ -678,8 +677,8 @@ void find_redundant_song_names(DIR *pdir, BITS keepers[]) {
 	normalize_column_stats(musicfiles, samecolumn, trackcolumn);
 
 	/* Remove redundant text around track numbers */
-	remove_redundant_with_tracknums(musicfiles, basefilename, samecolumn, sumcolumn,
-					trackcolumn);
+	remove_redundant_with_tracknums(
+	    musicfiles, basefilename, samecolumn, sumcolumn, trackcolumn);
 
 	/* Find and clean prefixes before track numbers */
 	find_and_clean_track_prefix(samecolumn, trackcolumn);
@@ -905,7 +904,7 @@ bool can_create_database(const char *dir) {
 
 void print_version(void) {
 	fprintf(stderr, "Database builder for GLACIERA - %s - %s\n", complete_version(),
-		__DATE__ " " __TIME__);
+	    __DATE__ " " __TIME__);
 	fprintf(stderr, "Copyright (c) Plux Stahre 2025\n");
 }
 
@@ -989,16 +988,16 @@ int main(int argc, char *argv[]) {
 	if (!threadcount) {
 		if (global_config.index_paths_count > 0) {
 			fprintf(stderr, "Indexing %d path(s) from config:\n",
-				global_config.index_paths_count);
+			    global_config.index_paths_count);
 			for (i = 0; i < global_config.index_paths_count; i++) {
 				fprintf(stderr, "  [%d] %s\n", i + 1, global_config.index_paths[i]);
 				start_recurse_disc(global_config.index_paths[i]);
 			}
 		} else {
 			fprintf(stderr,
-				"Warning: No index paths configured. "
-				"Please edit %s/config.toml\n",
-				xdg_config_dir);
+			    "Warning: No index paths configured. "
+			    "Please edit %s/config.toml\n",
+			    xdg_config_dir);
 		}
 	}
 
@@ -1011,8 +1010,8 @@ int main(int argc, char *argv[]) {
 	 */
 	alarm(0);
 
-	fprintf(stderr, "\nglaciera-indexer: total files: %d  new files: %d\n", total_files,
-		new_files);
+	fprintf(
+	    stderr, "\nglaciera-indexer: total files: %d  new files: %d\n", total_files, new_files);
 
 	db_close();
 	exit(0);

@@ -1,5 +1,5 @@
 ---
-BasedOnStyle: LLVM
+BasedOnStyle: WebKit
 IndentWidth: 8
 UseTab: ForContinuationAndIndentation
 BreakBeforeBraces: Attach

@@ -88,8 +88,8 @@ bool ogg_metadata(char *filename, struct track_metadata *meta) {
 				ogg_metadata_set(&meta->album, value);
 				if (meta->album)
 					found = true;
-			} else if ((key_len == 11 && strncasecmp(entry, "TRACKNUMBER", 11) == 0) ||
-				   (key_len == 5 && strncasecmp(entry, "TRACK", 5) == 0)) {
+			} else if ((key_len == 11 && strncasecmp(entry, "TRACKNUMBER", 11) == 0)
+			    || (key_len == 5 && strncasecmp(entry, "TRACK", 5) == 0)) {
 				ogg_metadata_try_set_track(meta, value);
 				if (meta->track || meta->track_number >= 0)
 					found = true;
@@ -120,7 +120,7 @@ bool ogg_info(char *filename, struct tuneinfo *ti) {
 	if (error < 0) {
 		fclose(f);
 		fprintf(stderr, "\nogg_read_info: Unable to understand '%s', errorcode=%d\n",
-			filename, error);
+		    filename, error);
 		return false;
 	}
 

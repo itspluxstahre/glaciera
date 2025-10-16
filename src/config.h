@@ -48,8 +48,8 @@ typedef struct {
 
 /* XDG directory paths */
 extern char xdg_config_dir[512]; /* ~/.config/glaciera */
-extern char xdg_data_dir[512];   /* ~/.local/share/glaciera */
-extern char xdg_cache_dir[512];  /* ~/.cache/glaciera */
+extern char xdg_data_dir[512]; /* ~/.local/share/glaciera */
+extern char xdg_cache_dir[512]; /* ~/.cache/glaciera */
 
 /* Global config instance */
 extern config_t global_config;

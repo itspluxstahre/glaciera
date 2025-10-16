@@ -21,9 +21,9 @@ bool db_migrate(void);
 
 /* Track operations */
 bool db_insert_track(const char *filepath, const char *display_name, const char *search_text,
-		     const struct tuneinfo *ti);
+    const struct tuneinfo *ti);
 bool db_update_track(int id, const char *filepath, const char *display_name,
-		     const char *search_text, const struct tuneinfo *ti);
+    const char *search_text, const struct tuneinfo *ti);
 bool db_delete_track(int id);
 bool db_track_exists(const char *filepath);
 
@@ -38,7 +38,7 @@ bool db_begin_transaction(void);
 bool db_commit_transaction(void);
 bool db_rollback_transaction(void);
 void db_insert_track_batch(const char *filepath, const char *display_name, const char *search_text,
-			   const struct tuneinfo *ti);
+    const struct tuneinfo *ti);
 
 /* Statistics */
 int db_get_track_count(void);

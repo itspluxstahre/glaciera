@@ -48,7 +48,7 @@ void swap(struct tune **a, struct tune **b) {
 	struct tune *temp;
 
 	temp = *a; /* Save pointer from a */
-	*a = *b;   /* Copy pointer from b to a */
+	*a = *b; /* Copy pointer from b to a */
 	*b = temp; /* Copy saved pointer to b */
 }
 
@@ -59,8 +59,8 @@ void swap(struct tune **a, struct tune **b) {
  * @return true if the key is alphanumeric, false otherwise
  */
 bool is_typeable_key(int key) {
-	return ((key >= 'a') && (key <= 'z')) || ((key >= 'A') && (key <= 'Z')) ||
-	       ((key >= '0') && (key <= '9'));
+	return ((key >= 'a') && (key <= 'z')) || ((key >= 'A') && (key <= 'Z'))
+	    || ((key >= '0') && (key <= '9'));
 	/*return isalnum(key);*/
 }
 
@@ -157,8 +157,9 @@ int trim(char s[]) {
 		return 0;
 
 	/* Find last non-whitespace character */
-	while (len > 0 && (s[len - 1] == ' ' || s[len - 1] == '\t' || s[len - 1] == '\n' ||
-			   s[len - 1] == '\r')) {
+	while (len > 0
+	    && (s[len - 1] == ' ' || s[len - 1] == '\t' || s[len - 1] == '\n'
+		|| s[len - 1] == '\r')) {
 		len--;
 	}
 
@@ -194,8 +195,8 @@ char *strrev(char *str) {
 /* -------------------------------------------------------------------------- */
 
 /* main function, unmodified from original code */
-inline static int NGramMatch(char *haystack, char *needle, int needlelen, int NGramLen,
-			     int *MaxMatch) {
+inline static int NGramMatch(
+    char *haystack, char *needle, int needlelen, int NGramLen, int *MaxMatch) {
 	char NGram[8];
 	int NGramCount;
 	int i, Count;

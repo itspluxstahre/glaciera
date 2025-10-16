@@ -65,40 +65,42 @@ static inline int mp3_getModeIndex(unsigned long h) {
 }
 
 static inline int mp3_is_valid_header(unsigned long h) {
-	return (((mp3_getFrameSync(h)) == 0x7FF) && ((mp3_getVersionIndex(h)) != 1) &&
-		((mp3_getLayerIndex(h)) != 0) && ((mp3_getBitrateIndex(h)) != 0) &&
-		((mp3_getBitrateIndex(h)) != 15) && ((mp3_getFrequencyIndex(h)) != 3) &&
-		((mp3_getEmphasisIndex(h)) != 2));
+	return (((mp3_getFrameSync(h)) == 0x7FF) && ((mp3_getVersionIndex(h)) != 1)
+	    && ((mp3_getLayerIndex(h)) != 0) && ((mp3_getBitrateIndex(h)) != 0)
+	    && ((mp3_getBitrateIndex(h)) != 15) && ((mp3_getFrequencyIndex(h)) != 3)
+	    && ((mp3_getEmphasisIndex(h)) != 2));
 }
 
 static inline int mp3_get_frequency(unsigned long h) {
 	static int tableFreq[4][3] = {
-	    {32000, 16000, 8000},  /* MPEG 2.5 */
-	    {0, 0, 0},             /* reserved */
-	    {22050, 24000, 16000}, /* MPEG 2   */
-	    {44100, 48000, 32000}  /* MPEG 1   */
+		{ 32000, 16000, 8000 }, /* MPEG 2.5 */
+		{ 0, 0, 0 }, /* reserved */
+		{ 22050, 24000, 16000 }, /* MPEG 2   */
+		{ 44100, 48000, 32000 } /* MPEG 1   */
 	};
 
 	return tableFreq[mp3_getVersionIndex(h)][mp3_getFrequencyIndex(h)];
 }
 
 static int mp3_calc_bit_rate(unsigned long h, size_t filesize, int variable_frames) {
-	static int tableBitRate[2][3][16] = {
-	    {
-		/* MPEG 2 & 2.5 */
-		{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}, /* Layer III */
-		{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}, /* Layer II */
-		{0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0} /* Layer I */
-	    },
-	    {
-		/* MPEG 1 */
-		{0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,
-		 0}, /* Layer III */
-		{0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,
-		 0}, /* Layer II */
-		{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0}
-		/* Layer I */
-	    }};
+	static int tableBitRate[2][3][16] = { {
+						  /* MPEG 2 & 2.5 */
+						  { 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112,
+						      128, 144, 160, 0 }, /* Layer III */
+						  { 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112,
+						      128, 144, 160, 0 }, /* Layer II */
+						  { 0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160,
+						      176, 192, 224, 256, 0 } /* Layer I */
+					      },
+		{
+		    /* MPEG 1 */
+		    { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,
+			0 }, /* Layer III */
+		    { 0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,
+			0 }, /* Layer II */
+		    { 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }
+		    /* Layer I */
+		} };
 
 	int result = 0;
 
@@ -109,8 +111,8 @@ static int mp3_calc_bit_rate(unsigned long h, size_t filesize, int variable_fram
 	 */
 	if (variable_frames) {
 		double medFrameSize = (double)filesize / (double)variable_frames;
-		result = (int)((medFrameSize * (double)mp3_get_frequency(h)) /
-			       (1000.0 * ((mp3_getLayerIndex(h) == 3) ? 12.0 : 144.0)));
+		result = (int)((medFrameSize * (double)mp3_get_frequency(h))
+		    / (1000.0 * ((mp3_getLayerIndex(h) == 3) ? 12.0 : 144.0)));
 	} else {
 		result = tableBitRate[mp3_getVersionIndex(h) & 1][mp3_getLayerIndex(h) - 1]
 				     [mp3_getBitrateIndex(h)];
@@ -177,13 +179,13 @@ static void metadata_try_set_track_number(struct track_metadata *meta, const cha
 }
 
 static uint32_t mp3_read_be32(const unsigned char *data) {
-	return ((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) | ((uint32_t)data[2] << 8) |
-	       ((uint32_t)data[3]);
+	return ((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) | ((uint32_t)data[2] << 8)
+	    | ((uint32_t)data[3]);
 }
 
 static uint32_t mp3_read_synchsafe32(const unsigned char *data) {
-	return ((uint32_t)(data[0] & 0x7f) << 21) | ((uint32_t)(data[1] & 0x7f) << 14) |
-	       ((uint32_t)(data[2] & 0x7f) << 7) | ((uint32_t)(data[3] & 0x7f));
+	return ((uint32_t)(data[0] & 0x7f) << 21) | ((uint32_t)(data[1] & 0x7f) << 14)
+	    | ((uint32_t)(data[2] & 0x7f) << 7) | ((uint32_t)(data[3] & 0x7f));
 }
 
 static char *mp3_decode_utf16(const unsigned char *data, size_t len, bool big_endian) {
@@ -290,7 +292,7 @@ static char *mp3_decode_id3_text(uint8_t encoding, const unsigned char *data, si
  * Returns true if metadata was successfully extracted
  */
 static bool parse_id3v2_text_frame(const char *frame_id, const unsigned char *frame_data,
-				   uint32_t frame_size, struct track_metadata *meta) {
+    uint32_t frame_size, struct track_metadata *meta) {
 	if (!frame_id || !frame_data || !meta || frame_size < 2)
 		return false;
 
@@ -334,8 +336,7 @@ static bool parse_id3v2_text_frame(const char *frame_id, const unsigned char *fr
  * Returns frame size (including header) or 0 on error
  */
 static uint32_t decode_id3v2_frame(const unsigned char *frame, size_t available_size,
-				   uint8_t version, struct track_metadata *meta,
-				   bool *found_metadata) {
+    uint8_t version, struct track_metadata *meta, bool *found_metadata) {
 	/* Need at least 10 bytes for frame header */
 	if (!frame || !meta || available_size < 10)
 		return 0;
@@ -356,8 +357,8 @@ static uint32_t decode_id3v2_frame(const unsigned char *frame, size_t available_
 	}
 
 	/* Read frame size */
-	uint32_t frame_size =
-	    (version == 4) ? mp3_read_synchsafe32(frame + 4) : mp3_read_be32(frame + 4);
+	uint32_t frame_size
+	    = (version == 4) ? mp3_read_synchsafe32(frame + 4) : mp3_read_be32(frame + 4);
 
 	/* Validate frame size */
 	if (frame_size == 0 || frame_size > available_size - 10)
@@ -375,8 +376,8 @@ static uint32_t decode_id3v2_frame(const unsigned char *frame, size_t available_
  * Skip ID3v2 extended header if present
  * Returns new offset after extended header
  */
-static size_t skip_id3v2_extended_header(const unsigned char *data, size_t offset, size_t limit,
-					 uint8_t version, uint8_t flags) {
+static size_t skip_id3v2_extended_header(
+    const unsigned char *data, size_t offset, size_t limit, uint8_t version, uint8_t flags) {
 	/* Check if extended header flag is set */
 	if (!(flags & 0x40) || offset >= limit)
 		return offset;
@@ -435,8 +436,8 @@ static bool mp3_parse_id3v2(const unsigned char *data, size_t size, struct track
 	/* Parse frames */
 	bool found = false;
 	while (offset + 10 <= limit) {
-		uint32_t frame_total_size =
-		    decode_id3v2_frame(data + offset, limit - offset, version, meta, &found);
+		uint32_t frame_total_size
+		    = decode_id3v2_frame(data + offset, limit - offset, version, meta, &found);
 		if (frame_total_size == 0)
 			break;
 
@@ -572,8 +573,8 @@ bool mp3_info(char *filename, struct tuneinfo *ti) {
 		variable_frames = 0;
 		if (header[0] == 'X' && header[1] == 'i' && header[2] == 'n' && header[3] == 'g') {
 			if (header[7] & 0x01) {
-				variable_frames = (header[8] << 24) | (header[9] << 16) |
-						  (header[10] << 8) | (header[11]);
+				variable_frames = (header[8] << 24) | (header[9] << 16)
+				    | (header[10] << 8) | (header[11]);
 			}
 		}
 

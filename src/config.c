@@ -98,10 +98,10 @@ void config_set_defaults(config_t *config) {
 	/* Default to ~/Music as first index path */
 	config->index_paths_count = 1;
 	snprintf(config->index_paths[0], sizeof(config->index_paths[0]), "%s/Music",
-		 home ? home : "/tmp");
+	    home ? home : "/tmp");
 
 	snprintf(config->rippers_path, sizeof(config->rippers_path), "%s/Music/rippers",
-		 home ? home : "/tmp");
+	    home ? home : "/tmp");
 
 	strcpy(config->mp3_player_path, "mpg123");
 	config->mp3_player_flags[0] = '\0';
@@ -198,23 +198,21 @@ bool config_load_theme(const char *theme_name) {
 	toml_table_t *colors = toml_table_in(conf, "colors");
 	if (colors) {
 		parse_color(colors, "main_bg", &global_config.theme.main_bg.r,
-			    &global_config.theme.main_bg.g, &global_config.theme.main_bg.b);
+		    &global_config.theme.main_bg.g, &global_config.theme.main_bg.b);
 		parse_color(colors, "main_fg", &global_config.theme.main_fg.r,
-			    &global_config.theme.main_fg.g, &global_config.theme.main_fg.b);
+		    &global_config.theme.main_fg.g, &global_config.theme.main_fg.b);
 		parse_color(colors, "accent_bg", &global_config.theme.accent_bg.r,
-			    &global_config.theme.accent_bg.g, &global_config.theme.accent_bg.b);
+		    &global_config.theme.accent_bg.g, &global_config.theme.accent_bg.b);
 		parse_color(colors, "accent_fg", &global_config.theme.accent_fg.r,
-			    &global_config.theme.accent_fg.g, &global_config.theme.accent_fg.b);
+		    &global_config.theme.accent_fg.g, &global_config.theme.accent_fg.b);
 		parse_color(colors, "playing", &global_config.theme.playing.r,
-			    &global_config.theme.playing.g, &global_config.theme.playing.b);
+		    &global_config.theme.playing.g, &global_config.theme.playing.b);
 		parse_color(colors, "playlist", &global_config.theme.playlist.r,
-			    &global_config.theme.playlist.g, &global_config.theme.playlist.b);
+		    &global_config.theme.playlist.g, &global_config.theme.playlist.b);
 		parse_color(colors, "highlight_bg", &global_config.theme.highlight_bg.r,
-			    &global_config.theme.highlight_bg.g,
-			    &global_config.theme.highlight_bg.b);
+		    &global_config.theme.highlight_bg.g, &global_config.theme.highlight_bg.b);
 		parse_color(colors, "highlight_fg", &global_config.theme.highlight_fg.r,
-			    &global_config.theme.highlight_fg.g,
-			    &global_config.theme.highlight_fg.b);
+		    &global_config.theme.highlight_fg.g, &global_config.theme.highlight_fg.b);
 	}
 
 	toml_free(conf);
@@ -309,7 +307,7 @@ static bool load_config_file(void) {
 				if (path.ok) {
 					strncpy(global_config
 						    .index_paths[global_config.index_paths_count],
-						path.u.s, sizeof(global_config.index_paths[0]) - 1);
+					    path.u.s, sizeof(global_config.index_paths[0]) - 1);
 					global_config.index_paths_count++;
 					free(path.u.s);
 				}
@@ -317,7 +315,7 @@ static bool load_config_file(void) {
 
 			if (global_config.index_paths_count > 0) {
 				printf("Loaded %d index path(s) from config:\n",
-				       global_config.index_paths_count);
+				    global_config.index_paths_count);
 				for (int i = 0; i < global_config.index_paths_count; i++) {
 					printf("  [%d] %s\n", i + 1, global_config.index_paths[i]);
 				}
@@ -328,7 +326,7 @@ static bool load_config_file(void) {
 			if (music.ok) {
 				global_config.index_paths_count = 1;
 				strncpy(global_config.index_paths[0], music.u.s,
-					sizeof(global_config.index_paths[0]) - 1);
+				    sizeof(global_config.index_paths[0]) - 1);
 				free(music.u.s);
 				printf("Note: Using legacy 'music_library' path. Consider updating "
 				       "to 'index' array.\n");
@@ -338,7 +336,7 @@ static bool load_config_file(void) {
 		toml_datum_t rippers = toml_string_in(paths, "rippers");
 		if (rippers.ok) {
 			strncpy(global_config.rippers_path, rippers.u.s,
-				sizeof(global_config.rippers_path) - 1);
+			    sizeof(global_config.rippers_path) - 1);
 			free(rippers.u.s);
 		}
 	}
@@ -349,42 +347,42 @@ static bool load_config_file(void) {
 		toml_datum_t mp3 = toml_string_in(players, "mp3_player");
 		if (mp3.ok) {
 			strncpy(global_config.mp3_player_path, mp3.u.s,
-				sizeof(global_config.mp3_player_path) - 1);
+			    sizeof(global_config.mp3_player_path) - 1);
 			free(mp3.u.s);
 		}
 
 		toml_datum_t mp3flags = toml_string_in(players, "mp3_flags");
 		if (mp3flags.ok) {
 			strncpy(global_config.mp3_player_flags, mp3flags.u.s,
-				sizeof(global_config.mp3_player_flags) - 1);
+			    sizeof(global_config.mp3_player_flags) - 1);
 			free(mp3flags.u.s);
 		}
 
 		toml_datum_t ogg = toml_string_in(players, "ogg_player");
 		if (ogg.ok) {
 			strncpy(global_config.ogg_player_path, ogg.u.s,
-				sizeof(global_config.ogg_player_path) - 1);
+			    sizeof(global_config.ogg_player_path) - 1);
 			free(ogg.u.s);
 		}
 
 		toml_datum_t oggflags = toml_string_in(players, "ogg_flags");
 		if (oggflags.ok) {
 			strncpy(global_config.ogg_player_flags, oggflags.u.s,
-				sizeof(global_config.ogg_player_flags) - 1);
+			    sizeof(global_config.ogg_player_flags) - 1);
 			free(oggflags.u.s);
 		}
 
 		toml_datum_t flac = toml_string_in(players, "flac_player");
 		if (flac.ok) {
 			strncpy(global_config.flac_player_path, flac.u.s,
-				sizeof(global_config.flac_player_path) - 1);
+			    sizeof(global_config.flac_player_path) - 1);
 			free(flac.u.s);
 		}
 
 		toml_datum_t flacflags = toml_string_in(players, "flac_flags");
 		if (flacflags.ok) {
 			strncpy(global_config.flac_player_flags, flacflags.u.s,
-				sizeof(global_config.flac_player_flags) - 1);
+			    sizeof(global_config.flac_player_flags) - 1);
 			free(flacflags.u.s);
 		}
 	}
@@ -518,27 +516,27 @@ bool config_validate_players(void) {
 	/* Check MP3 player */
 	if (!check_executable_exists(global_config.mp3_player_path)) {
 		fprintf(stderr, "Warning: MP3 player '%s' not found or not executable\n",
-			global_config.mp3_player_path);
+		    global_config.mp3_player_path);
 		all_valid = false;
 	}
 
 	/* Check OGG player */
 	if (!check_executable_exists(global_config.ogg_player_path)) {
 		fprintf(stderr, "Warning: OGG player '%s' not found or not executable\n",
-			global_config.ogg_player_path);
+		    global_config.ogg_player_path);
 		all_valid = false;
 	}
 
 	/* Check FLAC player */
 	if (!check_executable_exists(global_config.flac_player_path)) {
 		fprintf(stderr, "Warning: FLAC player '%s' not found or not executable\n",
-			global_config.flac_player_path);
+		    global_config.flac_player_path);
 		all_valid = false;
 	}
 
 	if (!all_valid) {
 		fprintf(stderr,
-			"\nPlease install the missing players or update the configuration file:\n");
+		    "\nPlease install the missing players or update the configuration file:\n");
 		fprintf(stderr, "  %s/glaciera.toml\n\n", xdg_config_dir);
 		fprintf(stderr, "Common players:\n");
 		fprintf(stderr, "  MP3:  mpg321, mpg123, ffplay\n");

@@ -52,10 +52,10 @@ static void print_theme_preview(const theme_t *theme) {
 	PRINT_COLOR_ROW("accent_fg", theme->accent_fg.r, theme->accent_fg.g, theme->accent_fg.b);
 	PRINT_COLOR_ROW("playing", theme->playing.r, theme->playing.g, theme->playing.b);
 	PRINT_COLOR_ROW("playlist", theme->playlist.r, theme->playlist.g, theme->playlist.b);
-	PRINT_COLOR_ROW("highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g,
-			theme->highlight_bg.b);
-	PRINT_COLOR_ROW("highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g,
-			theme->highlight_fg.b);
+	PRINT_COLOR_ROW(
+	    "highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g, theme->highlight_bg.b);
+	PRINT_COLOR_ROW(
+	    "highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g, theme->highlight_fg.b);
 
 #undef PRINT_COLOR_ROW
 
@@ -156,7 +156,7 @@ void display_theme_previews(const char *themes_dir) {
 			continue;
 
 		/* Load and display theme */
-		theme_t theme = {0};
+		theme_t theme = { 0 };
 		if (load_theme_file(theme_path, &theme)) {
 			print_theme_preview(&theme);
 			theme_count++;
@@ -169,6 +169,6 @@ void display_theme_previews(const char *themes_dir) {
 		printf("No themes found in: %s\n\n", themes_dir);
 	} else {
 		printf("Found %d theme%s in: %s\n\n", theme_count, theme_count == 1 ? "" : "s",
-		       themes_dir);
+		    themes_dir);
 	}
 }
