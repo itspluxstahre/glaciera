@@ -897,22 +897,22 @@ void draw_one_song(int row, int item, int highlight) {
 	case ARG_RATING:
 		switch (tune->ti->rating) {
 		case 1:
-			strcat(buf, "*     ");
+			safe_strcat(buf, "*     ", sizeof(buf));
 			break;
 		case 2:
-			strcat(buf, "**    ");
+			safe_strcat(buf, "**    ", sizeof(buf));
 			break;
 		case 3:
-			strcat(buf, "***   ");
+			safe_strcat(buf, "***   ", sizeof(buf));
 			break;
 		case 4:
-			strcat(buf, "****  ");
+			safe_strcat(buf, "****  ", sizeof(buf));
 			break;
 		case 5:
-			strcat(buf, "***** ");
+			safe_strcat(buf, "***** ", sizeof(buf));
 			break;
 		default:
-			strcat(buf, "      ");
+			safe_strcat(buf, "      ", sizeof(buf));
 			break;
 		}
 		break;
@@ -2777,22 +2777,21 @@ void do_search(void) {
 				safe_strcat(query, "filepath LIKE '%", sizeof(query));
 				safe_strcat(query, wordlist[j], sizeof(query));
 				safe_strcat(query, "%'", sizeof(query));
-				strcat(query, "%'");
 			} else if (matchfirstchar && j == 0) {
 				/* First character match */
 				char first_char[2] = { toupper(wordlist[j][0]), '\0' };
-				strcat(query, "(display_name LIKE '");
-				strcat(query, first_char);
-				strcat(query, "%' OR search_text LIKE '");
-				strcat(query, first_char);
-				strcat(query, "%')");
+				safe_strcat(query, "(display_name LIKE '", sizeof(query));
+				safe_strcat(query, first_char, sizeof(query));
+				safe_strcat(query, "%' OR search_text LIKE '", sizeof(query));
+				safe_strcat(query, first_char, sizeof(query));
+				safe_strcat(query, "%')", sizeof(query));
 			} else {
 				/* Regular search */
-				strcat(query, "(display_name LIKE '%");
-				strcat(query, wordlist[j]);
-				strcat(query, "%' OR search_text LIKE '%");
-				strcat(query, wordlist[j]);
-				strcat(query, "%')");
+				safe_strcat(query, "(display_name LIKE '%", sizeof(query));
+				safe_strcat(query, wordlist[j], sizeof(query));
+				safe_strcat(query, "%' OR search_text LIKE '%", sizeof(query));
+				safe_strcat(query, wordlist[j], sizeof(query));
+				safe_strcat(query, "%')", sizeof(query));
 			}
 		}
 
@@ -3020,7 +3019,7 @@ void do_save_displaystate(int state_num) {
 		fprintf(f, "%d\n", toptunenr);
 		fclose(f);
 
-		strcat(statefilename, ".bin");
+		safe_strcat(statefilename, ".bin", sizeof(statefilename));
 		f = fopen(statefilename, "w");
 		if (f) {
 			for (i = 0; i < displaycount; i++)
@@ -3060,7 +3059,7 @@ void do_restore_displaystate(int state_num) {
 	}
 	fclose(f);
 
-	strcat(statefilename, ".bin");
+	safe_strcat(statefilename, ".bin", sizeof(statefilename));
 	f = fopen(statefilename, "r");
 	if (f) {
 		while (fread(&address, sizeof(char *), 1, f))
