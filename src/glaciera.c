@@ -161,6 +161,7 @@ void action(int key);
 void find_and_play_next_handler(int dummyparam);
 void do_state(int cmd);
 void do_search(void);
+static int read_input_key(void);
 
 /* -------------------------------------------------------------------------- */
 
@@ -2071,7 +2072,7 @@ void do_view_artists(void) {
 	int hi_ch;
 
 	show_info(_("Enter first letter (A..Z, 0..9) or SPACE for all. "));
-	cmd = wgetch(win_top);
+	cmd = read_input_key();
 	if (cmd != ' ' && !isalnum(cmd)) {
 		action(cmd);
 		return;
@@ -2278,7 +2279,7 @@ void do_show_new_songs(void) {
 	time_t hilimit;
 
 	show_info(_("Enter weeks back (1..9) "));
-	cmd = wgetch(win_top);
+	cmd = read_input_key();
 	if (!isdigit(cmd)) {
 		action(cmd);
 		return;
@@ -2332,7 +2333,7 @@ void do_view(void) {
 	struct tm hitm;
 
 	show_info(_("View: 0-9=Weeks back  R)andom  T)opList  A)rtists  G)enre  N)ew "));
-	cmd = wgetch(win_top);
+	cmd = read_input_key();
 	switch (cmd) {
 	case '0':
 	case '1':
@@ -2571,7 +2572,7 @@ void do_context(void) {
 
 	/*  L=Length  S=Size  P=Path  "); */
 	show_info(_("Context: F4=Songlist  G)enre  A)rtist  D)ate  I)nformation  R)andom "));
-	cmd = wgetch(win_top);
+	cmd = read_input_key();
 	switch (cmd) {
 	case KEY_F(4):
 		if (same_key_twice_in_a_row(&last_key_count))
@@ -3179,7 +3180,7 @@ void do_info(void) {
 
 	show_info(
 	    _("Info: N)ormal  L)ength  S)ize  D)ate  B)itrate  G)enre  R)ating  P)ath  F)inish "));
-	cmd = wgetch(win_top);
+	cmd = read_input_key();
 	switch (cmd) {
 	case ' ':
 	case 'N':
@@ -3302,7 +3303,7 @@ void do_state(int cmd) {
 
 	show_info(_("State: S)ave  R)estore D=DEBUG"));
 	if (!cmd)
-		cmd = wgetch(win_top);
+		cmd = read_input_key();
 	switch (cmd) {
 	case 'S':
 	case 's':
@@ -3657,6 +3658,169 @@ static bool handle_special_commands(int key) {
 }
 
 /*
+ * Normalize raw input so incomplete escape sequences (e.g. split arrow keys)
+ * are converted back into their intended KEY_* values before UI dispatch.
+ */
+static int translate_escape_sequence(const int *seq, size_t len) {
+	if (len == 0)
+		return 0;
+
+	int prefix = seq[0];
+
+	if ('[' == prefix) {
+		if (len == 2) {
+			switch (seq[1]) {
+			case 'A':
+				return KEY_UP;
+			case 'B':
+				return KEY_DOWN;
+			case 'C':
+				return KEY_RIGHT;
+			case 'D':
+				return KEY_LEFT;
+			case 'F':
+				return KEY_END;
+			case 'H':
+				return KEY_HOME;
+			default:
+				break;
+			}
+		} else if (len >= 3 && seq[len - 1] == '~') {
+			int value = 0;
+			for (size_t i = 1; i + 1 < len; i++) {
+				if (!isdigit((unsigned char)seq[i]))
+					return 0;
+				value = (value * 10) + (seq[i] - '0');
+			}
+
+			switch (value) {
+			case 1:
+			case 7:
+				return KEY_HOME;
+			case 2:
+				return KEY_IC;
+			case 3:
+				return KEY_DC;
+			case 4:
+			case 8:
+				return KEY_END;
+			case 5:
+				return KEY_PPAGE;
+			case 6:
+				return KEY_NPAGE;
+			case 11:
+				return KEY_F(1);
+			case 12:
+				return KEY_F(2);
+			case 13:
+				return KEY_F(3);
+			case 14:
+				return KEY_F(4);
+			case 15:
+				return KEY_F(5);
+			case 17:
+				return KEY_F(6);
+			case 18:
+				return KEY_F(7);
+			case 19:
+				return KEY_F(8);
+			case 20:
+				return KEY_F(9);
+			case 21:
+				return KEY_F(10);
+			case 23:
+				return KEY_F(11);
+			case 24:
+				return KEY_F(12);
+			default:
+				break;
+			}
+		}
+	} else if ('O' == prefix && len == 2) {
+		switch (seq[1]) {
+		case 'A':
+			return KEY_UP;
+		case 'B':
+			return KEY_DOWN;
+		case 'C':
+			return KEY_RIGHT;
+		case 'D':
+			return KEY_LEFT;
+		case 'F':
+			return KEY_END;
+		case 'H':
+			return KEY_HOME;
+		case 'P':
+			return KEY_F(1);
+		case 'Q':
+			return KEY_F(2);
+		case 'R':
+			return KEY_F(3);
+		case 'S':
+			return KEY_F(4);
+		default:
+			break;
+		}
+	}
+
+	return 0;
+}
+
+static int read_input_key(void) {
+	static int pending_seq[8];
+	static size_t pending_len = 0;
+	static size_t pending_index = 0;
+
+	for (;;) {
+		if (pending_index < pending_len) {
+			int queued = pending_seq[pending_index++];
+			if (pending_index >= pending_len) {
+				pending_index = 0;
+				pending_len = 0;
+			}
+			return queued;
+		}
+
+		int key = wgetch(win_top);
+		if (key == ERR)
+			continue;
+
+		if (key != 27)
+			return key;
+
+		int seq[8];
+		size_t seq_len = 0;
+
+		nodelay(win_top, true);
+		for (;;) {
+			int ch = wgetch(win_top);
+			if (ch == ERR)
+				break;
+			if (seq_len < (sizeof(seq) / sizeof(seq[0])))
+				seq[seq_len++] = ch;
+			if ((ch >= 'A' && ch <= 'Z') || ch == '~')
+				break;
+		}
+		nodelay(win_top, false);
+
+		if (!seq_len)
+			return 27;
+
+		int translated = translate_escape_sequence(seq, seq_len);
+		if (translated)
+			return translated;
+
+		pending_len = (seq_len < (sizeof(pending_seq) / sizeof(pending_seq[0])))
+		    ? seq_len
+		    : (sizeof(pending_seq) / sizeof(pending_seq[0]));
+		for (size_t i = 0; i < pending_len; i++)
+			pending_seq[i] = seq[i];
+		pending_index = 0;
+		return 27;
+	}
+}
+
+/*
  * Main keyboard action handler
  * Dispatches to specialized handlers based on key type
  */
@@ -3823,7 +3987,7 @@ int main(int argc, char **argv) {
 		after_move();
 		doupdate();
 		in_action = false;
-		arg = wgetch(win_top);
+		arg = read_input_key();
 		key_count++;
 		in_action = true;
 		action(arg);
