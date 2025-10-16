@@ -3595,9 +3595,9 @@ int main(int argc, char **argv) {
 
 	/* Define long options */
 	static struct option long_options[] = {{"help", no_argument, 0, 'h'},
-	                                       {"version", no_argument, 0, 'v'},
-	                                       {"theme-preview", no_argument, 0, 't'},
-	                                       {0, 0, 0, 0}};
+					       {"version", no_argument, 0, 'v'},
+					       {"theme-preview", no_argument, 0, 't'},
+					       {0, 0, 0, 0}};
 
 	int option_index = 0;
 	while ((arg = getopt_long(argc, argv, "hvr", long_options, &option_index)) > -1) {
@@ -3627,8 +3627,7 @@ int main(int argc, char **argv) {
 			}
 			/* Display theme previews */
 			char themes_path[1024];
-			snprintf(themes_path, sizeof(themes_path), "%s/themes",
-			         xdg_config_dir);
+			snprintf(themes_path, sizeof(themes_path), "%s/themes", xdg_config_dir);
 			display_theme_previews(themes_path);
 			exit(0);
 		}

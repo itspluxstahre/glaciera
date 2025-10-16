@@ -452,19 +452,33 @@ const char *config_get_data_dir(void) {
 }
 
 /* Player path getters */
-const char *config_get_mp3_player_path(void) { return global_config.mp3_player_path; }
+const char *config_get_mp3_player_path(void) {
+	return global_config.mp3_player_path;
+}
 
-const char *config_get_mp3_player_flags(void) { return global_config.mp3_player_flags; }
+const char *config_get_mp3_player_flags(void) {
+	return global_config.mp3_player_flags;
+}
 
-const char *config_get_ogg_player_path(void) { return global_config.ogg_player_path; }
+const char *config_get_ogg_player_path(void) {
+	return global_config.ogg_player_path;
+}
 
-const char *config_get_ogg_player_flags(void) { return global_config.ogg_player_flags; }
+const char *config_get_ogg_player_flags(void) {
+	return global_config.ogg_player_flags;
+}
 
-const char *config_get_flac_player_path(void) { return global_config.flac_player_path; }
+const char *config_get_flac_player_path(void) {
+	return global_config.flac_player_path;
+}
 
-const char *config_get_flac_player_flags(void) { return global_config.flac_player_flags; }
+const char *config_get_flac_player_flags(void) {
+	return global_config.flac_player_flags;
+}
 
-const char *config_get_rippers_path(void) { return global_config.rippers_path; }
+const char *config_get_rippers_path(void) {
+	return global_config.rippers_path;
+}
 
 /* Check if an executable exists in PATH or as absolute path */
 static bool check_executable_exists(const char *program) {
@@ -523,7 +537,8 @@ bool config_validate_players(void) {
 	}
 
 	if (!all_valid) {
-		fprintf(stderr, "\nPlease install the missing players or update the configuration file:\n");
+		fprintf(stderr,
+			"\nPlease install the missing players or update the configuration file:\n");
 		fprintf(stderr, "  %s/glaciera.toml\n\n", xdg_config_dir);
 		fprintf(stderr, "Common players:\n");
 		fprintf(stderr, "  MP3:  mpg321, mpg123, ffplay\n");

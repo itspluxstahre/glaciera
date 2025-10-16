@@ -38,7 +38,7 @@ static void print_theme_preview(const theme_t *theme) {
 		rgb_to_hex(r, g, b, hex);                                                          \
 		int label_len = strlen(label);                                                     \
 		int pad = 12 - label_len;                                                          \
-		printf("│ %s", label);                                                              \
+		printf("│ %s", label);                                                             \
 		for (int i = 0; i < pad; i++)                                                      \
 			printf(" ");                                                               \
 		printf(" │ ");                                                                     \
@@ -53,9 +53,9 @@ static void print_theme_preview(const theme_t *theme) {
 	PRINT_COLOR_ROW("playing", theme->playing.r, theme->playing.g, theme->playing.b);
 	PRINT_COLOR_ROW("playlist", theme->playlist.r, theme->playlist.g, theme->playlist.b);
 	PRINT_COLOR_ROW("highlight_bg", theme->highlight_bg.r, theme->highlight_bg.g,
-	                theme->highlight_bg.b);
+			theme->highlight_bg.b);
 	PRINT_COLOR_ROW("highlight_fg", theme->highlight_fg.r, theme->highlight_fg.g,
-	                theme->highlight_fg.b);
+			theme->highlight_fg.b);
 
 #undef PRINT_COLOR_ROW
 
@@ -90,22 +90,22 @@ static bool load_theme_file(const char *theme_path, theme_t *theme) {
 	}
 
 	/* Helper macro to parse RGB sub-tables */
-#define PARSE_COLOR(name, dest)                                                                    
-	do {                                                                                       
-		toml_table_t *color_table = toml_table_in(colors, name);                          
-		if (color_table) {                                                                 
-			toml_datum_t r = toml_int_in(color_table, "r");                           
-			toml_datum_t g = toml_int_in(color_table, "g");                           
-			toml_datum_t b = toml_int_in(color_table, "b");                           
-			if (r.ok && g.ok && b.ok) {                                                
-				dest.r = r.u.i;                                                    
-				dest.g = g.u.i;                                                    
-				dest.b = b.u.i;                                                    
-			}                                                                          
-		}                                                                           
+#define PARSE_COLOR(name, dest)
+	do {
+		toml_table_t *color_table = toml_table_in(colors, name);
+		if (color_table) {
+			toml_datum_t r = toml_int_in(color_table, "r");
+			toml_datum_t g = toml_int_in(color_table, "g");
+			toml_datum_t b = toml_int_in(color_table, "b");
+			if (r.ok && g.ok && b.ok) {
+				dest.r = r.u.i;
+				dest.g = g.u.i;
+				dest.b = b.u.i;
+			}
+		}
 	} while (0)
 
-	PARSE_COLOR("main_bg", theme->main_bg);
+	    PARSE_COLOR("main_bg", theme->main_bg);
 	PARSE_COLOR("main_fg", theme->main_fg);
 	PARSE_COLOR("accent_bg", theme->accent_bg);
 	PARSE_COLOR("accent_fg", theme->accent_fg);

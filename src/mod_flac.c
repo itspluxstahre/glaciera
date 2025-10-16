@@ -151,7 +151,7 @@ void flac_play(char *filename) {
 	 */
 	const char *player = config_get_flac_player_path();
 	const char *flags = config_get_flac_player_flags();
-	
+
 	char *player_args[3];
 	player_args[0] = (char *)player;
 	player_args[1] = filename;

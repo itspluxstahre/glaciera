@@ -94,7 +94,7 @@ if clang_format.found()
     'format',
     command: [
       'sh', '-c',
-      'find src -type f -name "*.[ch]" -exec ' + clang_format.full_path() + ' -i {} +'
+      'cd "$MESON_SOURCE_ROOT" && find src -type f -name "*.[ch]" -exec ' + clang_format.full_path() + ' -i {} +'
     ]
   )
 endif

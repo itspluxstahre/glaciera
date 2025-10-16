@@ -15,41 +15,41 @@
 
 /* Color theme structure */
 typedef struct {
-    char name[64];
-    /* RGB values for each semantic color (0-255) */
-    struct {
-        int r, g, b;
-    } main_bg, main_fg, accent_bg, accent_fg;
-    struct {
-        int r, g, b;
-    } playing, playlist, highlight_bg, highlight_fg;
+	char name[64];
+	/* RGB values for each semantic color (0-255) */
+	struct {
+		int r, g, b;
+	} main_bg, main_fg, accent_bg, accent_fg;
+	struct {
+		int r, g, b;
+	} playing, playlist, highlight_bg, highlight_fg;
 } theme_t;
 
 #define MAX_INDEX_PATHS 16
 
 /* Main configuration structure */
 typedef struct {
-    /* Multiple paths to index */
-    char index_paths[MAX_INDEX_PATHS][512];
-    int index_paths_count;
-    
-    char rippers_path[512];
-    char mp3_player_path[128];
-    char mp3_player_flags[256];
-    char ogg_player_path[128];
-    char ogg_player_flags[256];
-    char flac_player_path[128];
-    char flac_player_flags[256];
-    
-    /* Active theme */
-    theme_t theme;
-    char theme_name[64];  /* Name of loaded theme file, or "default" */
+	/* Multiple paths to index */
+	char index_paths[MAX_INDEX_PATHS][512];
+	int index_paths_count;
+
+	char rippers_path[512];
+	char mp3_player_path[128];
+	char mp3_player_flags[256];
+	char ogg_player_path[128];
+	char ogg_player_flags[256];
+	char flac_player_path[128];
+	char flac_player_flags[256];
+
+	/* Active theme */
+	theme_t theme;
+	char theme_name[64]; /* Name of loaded theme file, or "default" */
 } config_t;
 
 /* XDG directory paths */
-extern char xdg_config_dir[512];   /* ~/.config/glaciera */
-extern char xdg_data_dir[512];     /* ~/.local/share/glaciera */
-extern char xdg_cache_dir[512];    /* ~/.cache/glaciera */
+extern char xdg_config_dir[512]; /* ~/.config/glaciera */
+extern char xdg_data_dir[512];   /* ~/.local/share/glaciera */
+extern char xdg_cache_dir[512];  /* ~/.cache/glaciera */
 
 /* Global config instance */
 extern config_t global_config;
