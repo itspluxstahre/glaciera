@@ -9,6 +9,7 @@
 // System headers
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <locale.h>
@@ -1652,8 +1653,31 @@ void start_play(int userpressed_enter, struct tune *tune) {
 			 * Redirect the new process' stdout to /tmp/glaciera.stdout,
 			 * so we can scan it for lines containing "StreamTitle".
 			 */
-			freopen(GLACIERA_PIPE, "w", stdout);
-			freopen("/dev/null", "w", stderr);
+			int out_fd
+			    = open(GLACIERA_PIPE, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+			if (out_fd < 0) {
+				fprintf(stderr, "Failed to open %s: %s\n", GLACIERA_PIPE,
+				    strerror(errno));
+				_exit(EXIT_FAILURE);
+			}
+			if (dup2(out_fd, STDOUT_FILENO) == -1) {
+				fprintf(stderr, "Failed to redirect stdout: %s\n", strerror(errno));
+				close(out_fd);
+				_exit(EXIT_FAILURE);
+			}
+			close(out_fd);
+
+			int err_fd = open("/dev/null", O_WRONLY | O_CLOEXEC);
+			if (err_fd < 0) {
+				fprintf(stderr, "Failed to open /dev/null: %s\n", strerror(errno));
+				_exit(EXIT_FAILURE);
+			}
+			if (dup2(err_fd, STDERR_FILENO) == -1) {
+				fprintf(stderr, "Failed to redirect stderr: %s\n", strerror(errno));
+				close(err_fd);
+				_exit(EXIT_FAILURE);
+			}
+			close(err_fd);
 
 			music_play(now_playing_tune->path);
 
