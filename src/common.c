@@ -5,6 +5,7 @@
 
 // System headers
 #include <ctype.h>
+#include <errno.h>
 #include <glob.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -12,6 +13,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <wordexp.h>
 
 // Local headers
 #include "common.h"
@@ -455,4 +457,86 @@ char *safe_getenv(const char *name, const char *default_value) {
 		return (char *)default_value;
 
 	return value;
+}
+
+bool player_exec(const char *player, const char *flags, const char *const *extra_args,
+    size_t extra_count, const char *filename) {
+	if (!player || player[0] == '\0') {
+		fprintf(stderr, "Error: No player command configured.\n");
+		return false;
+	}
+
+	wordexp_t we;
+	memset(&we, 0, sizeof(we));
+	bool have_flags = false;
+	size_t flag_count = 0;
+
+	if (flags && *flags) {
+		int wret = wordexp(flags, &we, WRDE_NOCMD | WRDE_SHOWERR);
+		if (wret == 0) {
+			have_flags = true;
+			flag_count = (size_t)we.we_wordc;
+		} else {
+			const char *reason = "invalid syntax";
+			switch (wret) {
+			case WRDE_BADCHAR:
+				reason = "invalid character in flags";
+				break;
+			case WRDE_BADVAL:
+				reason = "undefined variable in flags";
+				break;
+			case WRDE_CMDSUB:
+				reason = "command substitution is not allowed";
+				break;
+			case WRDE_NOSPACE:
+				reason = "out of memory while parsing flags";
+				wordfree(&we);
+				break;
+			case WRDE_SYNTAX:
+				reason = "syntax error in flags";
+				break;
+			default:
+				break;
+			}
+			fprintf(
+			    stderr, "Warning: Ignoring player flags \"%s\": %s.\n", flags, reason);
+		}
+	}
+
+	size_t filename_count = filename ? 1 : 0;
+	size_t total_args = 1 + flag_count + extra_count + filename_count;
+	char **argv = calloc(total_args + 1, sizeof(char *));
+	if (!argv) {
+		fprintf(
+		    stderr, "Error: Unable to allocate argument vector for player %s.\n", player);
+		if (have_flags)
+			wordfree(&we);
+		return false;
+	}
+
+	size_t idx = 0;
+	argv[idx++] = (char *)player;
+
+	if (have_flags) {
+		for (size_t i = 0; i < flag_count; i++)
+			argv[idx++] = we.we_wordv[i];
+	}
+
+	for (size_t i = 0; i < extra_count; i++)
+		argv[idx++] = (char *)extra_args[i];
+
+	if (filename)
+		argv[idx++] = (char *)filename;
+	argv[idx] = NULL;
+
+	execvp(player, argv);
+
+	int saved_errno = errno;
+	fprintf(stderr, "Error executing player '%s': %s\n", player, strerror(saved_errno));
+
+	if (have_flags)
+		wordfree(&we);
+	free(argv);
+	errno = saved_errno;
+	return false;
 }

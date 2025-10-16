@@ -151,5 +151,6 @@ bool ogg_isit(char *s, int len) {
 
 void ogg_play(char *filename) {
 	const char *player = config_get_ogg_player_path();
-	execlp(player, player, filename, NULL);
+	const char *flags = config_get_ogg_player_flags();
+	player_exec(player, flags, NULL, 0, filename);
 }

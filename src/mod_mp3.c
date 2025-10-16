@@ -633,7 +633,8 @@ bool mp3_isit(char *s, int len) {
 
 void mp3_play(char *filename) {
 	const char *player = config_get_mp3_player_path();
-	execlp(player, player, filename, NULL);
+	const char *flags = config_get_mp3_player_flags();
+	player_exec(player, flags, NULL, 0, filename);
 
 	/*
 	 * !!20061123 KB

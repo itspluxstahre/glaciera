@@ -34,6 +34,7 @@ bool pls_info(char *filename, struct tuneinfo *ti) {
 }
 
 bool pls_isit(char *s, int len) {
+	return false;
 	if (len < 5)
 		return false;
 
@@ -48,5 +49,7 @@ void pls_play(char *filename) {
 	 * several progress messages per second.
 	 * The -quiet flag lets the StreamTitle messages get through.
 	 */
-	execlp("mplayer", "mplayer", "-quiet", "-noconsolecontrols", "-playlist", filename, NULL);
+	static const char *extra_args[] = { "-quiet", "-noconsolecontrols", "-playlist" };
+	player_exec(
+	    "mplayer", NULL, extra_args, sizeof(extra_args) / sizeof(extra_args[0]), filename);
 }

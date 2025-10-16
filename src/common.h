@@ -76,3 +76,6 @@ bool safe_path_join(char *dst, size_t dst_size, const char *path1, const char *p
 char *safe_getenv(const char *name, const char *default_value);
 bool path_is_secure(const char *path);
 bool env_path_copy_if_safe(const char *name, char *dst, size_t dst_size);
+
+bool player_exec(const char *player, const char *flags, const char *const *extra_args,
+    size_t extra_count, const char *filename);
