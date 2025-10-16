@@ -1842,8 +1842,8 @@ void do_show_available_playlists(int all) {
 		    && !all)
 			continue;
 
-		strcpy(fullname, playlist_dir);
-		strcat(fullname, pde->d_name);
+		if (!safe_path_join(fullname, sizeof(fullname), playlist_dir, pde->d_name))
+			continue;
 
 		memset(&statbuf, 0, sizeof(statbuf));
 		stat(fullname, &statbuf);
@@ -1954,8 +1954,8 @@ void do_view_toplist(void) {
 		if (!isdigit(pde->d_name[0]) || !strstr(pde->d_name, ".list"))
 			continue;
 
-		strcpy(fullname, playlist_dir);
-		strcat(fullname, pde->d_name);
+		if (!safe_path_join(fullname, sizeof(fullname), playlist_dir, pde->d_name))
+			continue;
 
 		f = fopen(fullname, "r");
 		if (!f)
@@ -2293,8 +2293,8 @@ void do_show_infofiles(void) {
 		if (!is_infofile(pde->d_name))
 			continue;
 
-		strcpy(fullname, workdir);
-		strcat(fullname, pde->d_name);
+		if (!safe_path_join(fullname, sizeof(fullname), workdir, pde->d_name))
+			continue;
 
 		f = fopen(fullname, "r");
 		if (!f)
