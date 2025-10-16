@@ -86,3 +86,15 @@ git_version = configure_file(
 )
 
 subdir('src')
+
+# clang-format target
+clang_format = find_program('clang-format', required: false)
+if clang_format.found()
+  run_target(
+    'format',
+    command: [
+      'sh', '-c',
+      'find src -type f -name "*.[ch]" -exec ' + clang_format.full_path() + ' -i {} +'
+    ]
+  )
+endif
