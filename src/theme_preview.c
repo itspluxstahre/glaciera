@@ -90,22 +90,22 @@ static bool load_theme_file(const char *theme_path, theme_t *theme) {
 	}
 
 	/* Helper macro to parse RGB sub-tables */
-#define PARSE_COLOR(name, dest)
-	do {
-		toml_table_t *color_table = toml_table_in(colors, name);
-		if (color_table) {
-			toml_datum_t r = toml_int_in(color_table, "r");
-			toml_datum_t g = toml_int_in(color_table, "g");
-			toml_datum_t b = toml_int_in(color_table, "b");
-			if (r.ok && g.ok && b.ok) {
-				dest.r = r.u.i;
-				dest.g = g.u.i;
-				dest.b = b.u.i;
-			}
-		}
+#define PARSE_COLOR(name, dest)                                                                    \
+	do {                                                                                       \
+		toml_table_t *color_table = toml_table_in(colors, name);                          \
+		if (color_table) {                                                                 \
+			toml_datum_t r = toml_int_in(color_table, "r");                           \
+			toml_datum_t g = toml_int_in(color_table, "g");                           \
+			toml_datum_t b = toml_int_in(color_table, "b");                           \
+			if (r.ok && g.ok && b.ok) {                                                \
+				dest.r = r.u.i;                                                    \
+				dest.g = g.u.i;                                                    \
+				dest.b = b.u.i;                                                    \
+			}                                                                          \
+		}                                                                                  \
 	} while (0)
 
-	    PARSE_COLOR("main_bg", theme->main_bg);
+	PARSE_COLOR("main_bg", theme->main_bg);
 	PARSE_COLOR("main_fg", theme->main_fg);
 	PARSE_COLOR("accent_bg", theme->accent_bg);
 	PARSE_COLOR("accent_fg", theme->accent_fg);

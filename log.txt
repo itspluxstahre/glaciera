@@ -1,0 +1,72 @@
+Thu Oct 16 02:21:36 2025 +0200 Plux Stahre Add code formatting section to README
+Thu Oct 16 02:19:16 2025 +0200 Plux Stahre Final fix of formatting
+Thu Oct 16 02:08:13 2025 +0200 Plux Stahre Fix clang-format target and apply formatting to entire codebase
+Thu Oct 16 02:03:20 2025 +0200 Plux Stahre Add clang-format meson target
+Thu Oct 16 01:54:39 2025 +0200 Plux Stahre Add column separators and fix theme preview alignment
+Thu Oct 16 01:38:26 2025 +0200 Plux Stahre Add --theme-preview flag to display theme swatches
+Thu Oct 16 01:29:14 2025 +0200 Plux Stahre Add startup validation for player binaries
+Thu Oct 16 00:56:11 2025 +0200 Plux Stahre Refactor extension checking to use strcasecmp
+Thu Oct 16 00:49:04 2025 +0200 Plux Stahre Fix arrow keys inserting garbage into search string
+Thu Oct 16 00:43:47 2025 +0200 Plux Stahre Implement real-time search filtering
+Thu Oct 16 00:38:31 2025 +0200 Plux Stahre Replace legacy global config variables with getter functions
+Thu Oct 16 00:30:24 2025 +0200 Plux Stahre Organize and sort #include directives
+Thu Oct 16 00:21:03 2025 +0200 Plux Stahre Apply clang-format to standardize code formatting
+Thu Oct 16 00:11:30 2025 +0200 Plux Stahre Convert hardcoded feature flags to Meson build options
+Thu Oct 16 00:07:56 2025 +0200 Plux Stahre Replace verbose GPL boilerplate with SPDX identifiers
+Thu Oct 16 00:02:45 2025 +0200 Plux Stahre Replace traditional include guards with #pragma once
+Wed Oct 15 23:57:40 2025 +0200 Plux Stahre Remove abandoned sizes.c debug utility
+Wed Oct 15 23:54:13 2025 +0200 Plux Stahre Remove unnecessary gethomedir() wrapper function
+Wed Oct 15 23:51:14 2025 +0200 Plux Stahre Remove unused urlencode() function from old FCGI web interface
+Wed Oct 15 23:48:29 2025 +0200 Plux Stahre Remove obsolete find_actual_file_name() glob workaround
+Wed Oct 15 23:44:56 2025 +0200 Plux Stahre Clarify swap() function with better naming and documentation
+Wed Oct 15 23:42:48 2025 +0200 Plux Stahre Improve clarity and robustness of chop() and trim() functions
+Wed Oct 15 23:39:56 2025 +0200 Plux Stahre Replace XOR swap trick with readable temp variable in strrev()
+Wed Oct 15 23:34:24 2025 +0200 Plux Stahre Remove obsolete search string cache-warming code
+Wed Oct 15 23:20:58 2025 +0200 Plux Stahre Fix UTF-8/Unicode display in ncurses UI
+Wed Oct 15 22:43:29 2025 +0200 Plux Stahre Add UTF-8 awareness to filename display
+Wed Oct 15 22:34:14 2025 +0200 Plux Stahre Change display format to group songs by album
+Wed Oct 15 22:25:16 2025 +0200 Plux Stahre Refactor and improve ID3v2 parsing robustness
+Wed Oct 15 22:20:31 2025 +0200 Plux Stahre Refactor: Break down action() keyboard handler into specialized functions
+Wed Oct 15 22:16:06 2025 +0200 Plux Stahre Refactor: Break down find_redundant_song_names() into focused helper functions
+Wed Oct 15 22:08:21 2025 +0200 Plux Stahre Remove dead code and unused debug blocks
+Wed Oct 15 22:02:20 2025 +0200 Plux Stahre Remove old unused documents
+Wed Oct 15 21:52:08 2025 +0200 Plux Stahre Revert non-functional static linking attempt
+Wed Oct 15 21:48:42 2025 +0200 Plux Stahre Add optional static linking support to Meson build system
+Wed Oct 15 21:28:54 2025 +0200 Plux Stahre Add FLAC player configuration support
+Wed Oct 15 21:19:32 2025 +0200 Plux Stahre Fix GitHub repository URL in README
+Wed Oct 15 21:17:59 2025 +0200 Plux Stahre Replace old README with modern README.md
+Wed Oct 15 21:11:47 2025 +0200 Plux Stahre Housekeeping: removing unused stuff
+Wed Oct 15 21:11:10 2025 +0200 Plux Stahre Update copyrights
+Wed Oct 15 21:10:12 2025 +0200 Plux Stahre Add credit for CK Tan's tomlc99 library
+Wed Oct 15 21:05:59 2025 +0200 Plux Stahre Modernize configuration system with XDG compliance, TOML format, and theme support
+Wed Oct 15 20:08:08 2025 +0200 Plux Stahre Migrate from mmap to SQLite for music database storage
+Wed Oct 15 19:18:23 2025 +0200 Plux Stahre fix: add complete_version function declaration and update usage
+Wed Oct 15 19:12:59 2025 +0200 Plux Stahre feat: improve version string handling
+Wed Oct 15 18:58:34 2025 +0200 Plux Stahre Fix incorrect linenumber
+Wed Oct 15 18:58:13 2025 +0200 Plux Stahre fix: properly escape backslashes in ASCII art logo
+Wed Oct 15 18:46:30 2025 +0200 Plux Stahre Change the tagline for glaciera
+Wed Oct 15 18:41:30 2025 +0200 Plux Stahre fix: update remaining references in glaciera-indexer
+Wed Oct 15 18:40:24 2025 +0200 Plux Stahre fix: update remaining opt_mp3path references to opt_datapath
+Wed Oct 15 18:36:23 2025 +0200 Plux Stahre refactor: rename project from mp3berg to glaciera
+Wed Oct 15 18:15:28 2025 +0200 Plux Stahre refactor: improve code formatting, consistency and documentation
+Wed Oct 15 18:03:34 2025 +0200 Plux Stahre docs: convert INSTALL to INSTALL.md with enhanced instructions
+Wed Oct 15 18:00:59 2025 +0200 Plux Stahre Remove outdated README
+Wed Oct 15 17:57:24 2025 +0200 Plux Stahre Fixing credits file
+Wed Oct 15 17:56:06 2025 +0200 Plux Stahre Adding CREDITS.md
+Wed Oct 15 17:46:51 2025 +0200 Plux Stahre cleanup: remove svn leftovers
+Wed Oct 15 17:28:47 2025 +0200 Plux Stahre metadata: prefer tags over filename heuristics
+Wed Oct 15 16:34:14 2025 +0200 Plux Stahre build: inline git version generation
+Wed Oct 15 16:29:54 2025 +0200 Plux Stahre build: drop legacy Makefile
+Wed Oct 15 16:21:04 2025 +0200 Plux Stahre build: add meson build system
+Wed Oct 15 15:58:59 2025 +0200 Plux Stahre core: clear compiler warnings
+Wed Oct 15 15:41:51 2025 +0200 Plux Stahre app: migrate boolean state to bool
+Wed Oct 15 15:29:23 2025 +0200 Plux Stahre music: switch module interfaces to bool
+Wed Oct 15 15:19:05 2025 +0200 Plux Stahre core: replace ad-hoc booleans with stdbool
+Wed Oct 15 15:07:30 2025 +0200 Plux Stahre Build: enable C23 and modern warning set
+Wed Oct 15 15:01:21 2025 +0200 Plux Stahre Remove legacy fcgi search binary
+Wed Oct 15 14:52:02 2025 +0200 Plux Stahre Clean up old helper stuff
+Wed Oct 15 14:49:24 2025 +0200 Plux Stahre Replace svn version helpers with git describe
+Wed Oct 15 14:34:59 2025 +0200 Plux Stahre Reorganize project layout into src and build
+Wed Oct 15 14:11:30 2025 +0200 Plux Stahre Housekeeping
+Wed Oct 15 14:10:19 2025 +0200 Plux Stahre Make it build on macos again
+Wed Oct 15 13:28:47 2025 +0200 Plux Stahre Initial import

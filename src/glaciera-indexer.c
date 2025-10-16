@@ -802,79 +802,34 @@ bool path_has_files(char *path) {
 	return result;
 }
 
+/*
+ * Remove trailing slash from directory path
+ */
+static char *normalize_directory_path(const char *path) {
+	char *dir = strdup(path);
+	size_t len = strlen(dir);
+	if (len > 1 && dir[len - 1] == '/')
+		dir[len - 1] = '\0';
+	return dir;
+}
+
+/*
+ * Start recursive directory scan in a new thread
+ */
 void start_recurse_disc(const char *argdir) {
-	struct statvfs df;
-	FILE *f;
-	char *dir;
-	char buf[1024];
-	char freefilename[1024];
-	char *p;
-	unsigned long stored_free = ULONG_MAX;
-	int err;
-	bool use_cache = false;
+	char *dir = normalize_directory_path(argdir);
+
+	fprintf(stderr, "\nScanning for audio files in '%s'...\n", dir);
+	fflush(stderr);
+
+	/* Spawn scanning thread */
+	pthread_create(&threads[threadcount++], NULL, &prim_recurse_disc, dir);
 
 	/*
-	 * If the directory ends with a /, remove it
-	 * This simplifies the prim_recurse_disc() function
+	 * Note: dir is passed to thread and will be freed by the thread function
+	 * or when thread terminates. If this causes issues, we may need to
+	 * implement proper cleanup in prim_recurse_disc.
 	 */
-	dir = strdup(argdir);
-	if ('/' == dir[strlen(dir) - 1])
-		dir[strlen(dir) - 1] = 0;
-
-	strcpy(buf, dir);
-	for (p = buf; *p; p++)
-		if ('/' == *p)
-			*p = '_';
-	snprintf(freefilename, sizeof(freefilename), "%s%s.free", config_get_data_dir(), buf);
-
-	f = fopen(freefilename, "r");
-	if (f) {
-		fscanf(f, "%lu", &stored_free);
-		fclose(f);
-	}
-
-	if (opt_force_build)
-		stored_free = ULONG_MAX;
-
-	/*
-	 * NEW FEATURE!!! I call it "ElephantMemory".
-	 *
-	 * Figure how to determine if this path points to a previously mounted,
-	 * but as of now is an unmounted directory.
-	 * Why? If it does, DO NOT throw away the already stored file
-	 * information. Instead, just reload it into the new *.db files.
-	 * But why? Some users, ....,  don't keep all of their servers running
-	 * all of the time.
-	 * This is probably the best idea I've had since the introduction of
-	 * the memory mapped files. This is gonna save us boatloads of
-	 * unnecessary filesystem scanning time.
-	 */
-	err = statvfs(dir, &df);
-	if (err)
-		df.f_bfree = 0;
-	if (is_path_in_mounts(dir))
-		use_cache = df.f_bfree == stored_free;
-	else
-		use_cache = stored_free != ULONG_MAX;
-
-	if (use_cache) {
-		fprintf(stderr, "\nJust parsing mp3-files '%s'...", dir);
-		fflush(stderr);
-
-		/* For now, just fall back to full scan */
-		pthread_create(&threads[threadcount++], NULL, &prim_recurse_disc, dir);
-	} else {
-		fprintf(stderr, "\nBrowsing for mp3-files in '%s'...", dir);
-		fflush(stderr);
-
-		pthread_create(&threads[threadcount++], NULL, &prim_recurse_disc, dir);
-
-		f = fopen(freefilename, "w");
-		if (f) {
-			fprintf(f, "%lu\n", (unsigned long)df.f_bfree);
-			fclose(f);
-		}
-	}
 }
 
 /* --------------------------------------------------------------------------- */
