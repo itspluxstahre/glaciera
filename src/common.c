@@ -319,3 +319,85 @@ void track_metadata_clear(struct track_metadata *meta) {
 	meta->track = NULL;
 	meta->track_number = -1;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Safe String Handling Functions                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Safe string copy with bounds checking
+ * Returns the length of the copied string
+ */
+size_t safe_strcpy(char *dst, const char *src, size_t dst_size) {
+	if (!dst || !src || dst_size == 0)
+		return 0;
+	
+	size_t src_len = strlen(src);
+	size_t copy_len = (src_len < dst_size - 1) ? src_len : (dst_size - 1);
+	
+	memcpy(dst, src, copy_len);
+	dst[copy_len] = '\0';
+	
+	return copy_len;
+}
+
+/**
+ * Safe string concatenation with bounds checking
+ * Returns the total length of the resulting string
+ */
+size_t safe_strcat(char *dst, const char *src, size_t dst_size) {
+	if (!dst || !src || dst_size == 0)
+		return 0;
+	
+	size_t dst_len = strnlen(dst, dst_size);
+	if (dst_len >= dst_size - 1)
+		return dst_len; /* No space left */
+	
+	size_t remaining = dst_size - dst_len - 1;
+	size_t src_len = strlen(src);
+	size_t copy_len = (src_len < remaining) ? src_len : remaining;
+	
+	memcpy(dst + dst_len, src, copy_len);
+	dst[dst_len + copy_len] = '\0';
+	
+	return dst_len + copy_len;
+}
+
+/**
+ * Safe path joining with automatic separator handling
+ * Returns true on success, false if buffer too small
+ */
+bool safe_path_join(char *dst, size_t dst_size, const char *path1, const char *path2) {
+	if (!dst || !path1 || !path2 || dst_size == 0)
+		return false;
+	
+	size_t len1 = strlen(path1);
+	size_t len2 = strlen(path2);
+	bool needs_sep = (len1 > 0 && path1[len1-1] != '/' && path2[0] != '/');
+	
+	size_t total_len = len1 + len2 + (needs_sep ? 1 : 0);
+	if (total_len >= dst_size)
+		return false;
+	
+	safe_strcpy(dst, path1, dst_size);
+	if (needs_sep)
+		safe_strcat(dst, "/", dst_size);
+	safe_strcat(dst, path2, dst_size);
+	
+	return true;
+}
+
+/**
+ * Safe getenv with default value and validation
+ * Returns environment variable value or default if not set/empty
+ */
+char *safe_getenv(const char *name, const char *default_value) {
+	if (!name)
+		return (char *)default_value;
+	
+	char *value = getenv(name);
+	if (!value || value[0] == '\0')
+		return (char *)default_value;
+	
+	return value;
+}

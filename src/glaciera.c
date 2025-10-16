@@ -3548,8 +3548,11 @@ int main(int argc, char **argv) {
 	 * Playlists are now stored in /home/joeuser/playlists
 	 * The directory is created with 700 permission
 	 */
-	strcpy(playlist_dir, getenv("HOME"));
-	strcat(playlist_dir, "/playlists/");
+	char *home = safe_getenv("HOME", "/tmp");
+	if (!safe_path_join(playlist_dir, sizeof(playlist_dir), home, "playlists/")) {
+		fprintf(stderr, "Error: playlist path too long\n");
+		exit(EXIT_FAILURE);
+	}
 	mkdir(playlist_dir, 0700);
 
 	/*
