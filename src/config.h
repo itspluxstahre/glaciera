@@ -86,3 +86,6 @@ const char *config_get_rippers_path(void);
 
 /* Validate that configured player binaries exist */
 bool config_validate_players(void);
+
+/* Get sanitized home directory used for defaults */
+const char *config_get_home_dir(void);

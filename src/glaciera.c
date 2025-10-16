@@ -2887,7 +2887,8 @@ void do_enter(void) {
 			do_show_playlist();
 		} else {
 			/* Search for the selected item's name */
-			safe_strcpy(search_string, displaytunes[tunenr]->display, sizeof(search_string));
+			safe_strcpy(
+			    search_string, displaytunes[tunenr]->display, sizeof(search_string));
 			only_searchables(search_string);
 			trigger_realtime_search();
 		}
@@ -3562,7 +3563,7 @@ int main(int argc, char **argv) {
 	 * Playlists are now stored in /home/joeuser/playlists
 	 * The directory is created with 700 permission
 	 */
-	char *home = safe_getenv("HOME", "/tmp");
+	const char *home = config_get_home_dir();
 	if (!safe_path_join(playlist_dir, sizeof(playlist_dir), home, "playlists/")) {
 		fprintf(stderr, "Error: playlist path too long\n");
 		exit(EXIT_FAILURE);

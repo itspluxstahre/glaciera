@@ -6,6 +6,7 @@
 
 // System headers
 #include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,7 @@
 #include <unistd.h>
 
 // Local headers
+#include "common.h"
 #include "config.h"
 #include "toml.h"
 
@@ -23,6 +25,7 @@ char xdg_cache_dir[512];
 config_t global_config;
 
 static char db_path_cache[512];
+static char home_dir[512] = "/tmp";
 
 /* Create directory if it doesn't exist */
 static bool ensure_dir(const char *path) {
@@ -43,36 +46,80 @@ static bool ensure_dir(const char *path) {
 	return false;
 }
 
-/* Initialize XDG directories */
-static bool init_xdg_dirs(void) {
-	const char *home = getenv("HOME");
-	if (!home) {
-		fprintf(stderr, "Error: HOME environment variable not set\n");
+static void set_home_dir_fallback(void) {
+	safe_strcpy(home_dir, "/tmp", sizeof(home_dir));
+}
+
+static void set_home_dir(const char *path) {
+	if (!path) {
+		set_home_dir_fallback();
+		return;
+	}
+
+	if (!path_is_secure(path)) {
+		set_home_dir_fallback();
+		return;
+	}
+
+	safe_strcpy(home_dir, path, sizeof(home_dir));
+}
+
+static void resolve_home_directory(void) {
+	const char *env_home = getenv("HOME");
+	if (env_home && env_home[0] != '\0' && path_is_secure(env_home)) {
+		set_home_dir(env_home);
+		return;
+	}
+
+	struct passwd *pwd = getpwuid(getuid());
+	if (pwd && pwd->pw_dir && path_is_secure(pwd->pw_dir)) {
+		set_home_dir(pwd->pw_dir);
+		return;
+	}
+
+	fprintf(stderr, "Warning: HOME is unset or unsafe; falling back to /tmp\n");
+	set_home_dir_fallback();
+}
+
+static bool build_dir_from_env(
+    const char *env_name, const char *fallback_suffix, char *out, size_t out_size) {
+	const char *raw = getenv(env_name);
+	if (raw && raw[0] != '\0') {
+		if (!path_is_secure(raw)) {
+			fprintf(
+			    stderr, "Warning: Ignoring unsafe value for %s: %s\n", env_name, raw);
+		} else {
+			if (!safe_path_join(out, out_size, raw, "glaciera")) {
+				fprintf(
+				    stderr, "Error: Path too long when building %s\n", env_name);
+				return false;
+			}
+			return true;
+		}
+	}
+
+	if (!safe_path_join(out, out_size, home_dir, fallback_suffix)) {
+		fprintf(stderr, "Error: Path too long for fallback %s\n", fallback_suffix);
 		return false;
 	}
+	return true;
+}
 
-	/* Build paths directly to avoid static buffer issues */
-	const char *config_env = getenv("XDG_CONFIG_HOME");
-	const char *data_env = getenv("XDG_DATA_HOME");
-	const char *cache_env = getenv("XDG_CACHE_HOME");
+/* Initialize XDG directories */
+static bool init_xdg_dirs(void) {
+	resolve_home_directory();
 
-	if (config_env && config_env[0] != '\0') {
-		snprintf(xdg_config_dir, sizeof(xdg_config_dir), "%s/glaciera", config_env);
-	} else {
-		snprintf(xdg_config_dir, sizeof(xdg_config_dir), "%s/.config/glaciera", home);
-	}
+	if (!build_dir_from_env(
+		"XDG_CONFIG_HOME", ".config/glaciera", xdg_config_dir, sizeof(xdg_config_dir)))
+		return false;
 
-	if (data_env && data_env[0] != '\0') {
-		snprintf(xdg_data_dir, sizeof(xdg_data_dir), "%s/glaciera", data_env);
-	} else {
-		snprintf(xdg_data_dir, sizeof(xdg_data_dir), "%s/.local/share/glaciera", home);
-	}
+	if (!build_dir_from_env(
+		"XDG_DATA_HOME", ".local/share/glaciera", xdg_data_dir, sizeof(xdg_data_dir)))
+		return false;
 
-	if (cache_env && cache_env[0] != '\0') {
-		snprintf(xdg_cache_dir, sizeof(xdg_cache_dir), "%s/glaciera", cache_env);
-	} else {
-		snprintf(xdg_cache_dir, sizeof(xdg_cache_dir), "%s/.cache/glaciera", home);
-	}
+	if (!build_dir_from_env(
+		"XDG_CACHE_HOME", ".cache/glaciera", xdg_cache_dir, sizeof(xdg_cache_dir)))
+		return false;
 
 	/* Create directories */
 	if (!ensure_dir(xdg_config_dir))
@@ -93,15 +140,24 @@ static bool init_xdg_dirs(void) {
 
 /* Set default configuration values */
 void config_set_defaults(config_t *config) {
-	const char *home = getenv("HOME");
+	const char *home = config_get_home_dir();
 
 	/* Default to ~/Music as first index path */
 	config->index_paths_count = 1;
-	snprintf(config->index_paths[0], sizeof(config->index_paths[0]), "%s/Music",
-	    home ? home : "/tmp");
+	if (!safe_path_join(
+		config->index_paths[0], sizeof(config->index_paths[0]), home, "Music")) {
+		fprintf(stderr, "Warning: Failed to build default music path, using /tmp/Music\n");
+		safe_path_join(
+		    config->index_paths[0], sizeof(config->index_paths[0]), "/tmp", "Music");
+	}
 
-	snprintf(config->rippers_path, sizeof(config->rippers_path), "%s/Music/rippers",
-	    home ? home : "/tmp");
+	if (!safe_path_join(
+		config->rippers_path, sizeof(config->rippers_path), home, "Music/rippers")) {
+		fprintf(stderr,
+		    "Warning: Failed to build default rippers path, using /tmp/Music/rippers\n");
+		safe_path_join(
+		    config->rippers_path, sizeof(config->rippers_path), "/tmp", "Music/rippers");
+	}
 
 	strcpy(config->mp3_player_path, "mpg123");
 	config->mp3_player_flags[0] = '\0';
@@ -236,7 +292,7 @@ bool config_create_default_file(void) {
 		return false;
 	}
 
-	const char *home = getenv("HOME");
+	const char *home = config_get_home_dir();
 	fprintf(fp, "# Glaciera Configuration File\n");
 	fprintf(fp, "# Automatically generated on first run - edit as needed\n\n");
 
@@ -244,12 +300,12 @@ bool config_create_default_file(void) {
 	fprintf(fp, "# Directories to index for music files (array of paths)\n");
 	fprintf(fp, "# You can add multiple directories here\n");
 	fprintf(fp, "index = [\n");
-	fprintf(fp, "    \"%s/Music\",\n", home ? home : "/tmp");
+	fprintf(fp, "    \"%s/Music\",\n", home);
 	fprintf(fp, "    # Add more paths as needed:\n");
 	fprintf(fp, "    # \"/mnt/music\",\n");
 	fprintf(fp, "    # \"/media/external/audio\",\n");
 	fprintf(fp, "]\n\n");
-	fprintf(fp, "rippers = \"%s/Music/rippers\"\n\n", home ? home : "/tmp");
+	fprintf(fp, "rippers = \"%s/Music/rippers\"\n\n", home);
 
 	fprintf(fp, "[players]\n");
 	fprintf(fp, "mp3_player = \"mpg123\"\n");
@@ -476,6 +532,10 @@ const char *config_get_flac_player_flags(void) {
 
 const char *config_get_rippers_path(void) {
 	return global_config.rippers_path;
+}
+
+const char *config_get_home_dir(void) {
+	return home_dir;
 }
 
 /* Check if an executable exists in PATH or as absolute path */

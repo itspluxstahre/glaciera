@@ -74,3 +74,5 @@ size_t safe_strcpy(char *dst, const char *src, size_t dst_size);
 size_t safe_strcat(char *dst, const char *src, size_t dst_size);
 bool safe_path_join(char *dst, size_t dst_size, const char *path1, const char *path2);
 char *safe_getenv(const char *name, const char *default_value);
+bool path_is_secure(const char *path);
+bool env_path_copy_if_safe(const char *name, char *dst, size_t dst_size);

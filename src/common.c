@@ -201,6 +201,13 @@ inline static int NGramMatch(
 	int NGramCount;
 	int i, Count;
 
+	if (!haystack || !needle || !MaxMatch)
+		return 0;
+	if (NGramLen <= 0 || NGramLen >= (int)sizeof(NGram))
+		return 0;
+	if (needlelen < NGramLen)
+		return 0;
+
 	NGram[NGramLen] = '\0';
 	NGramCount = needlelen - NGramLen + 1;
 	*MaxMatch = 0;
@@ -208,7 +215,8 @@ inline static int NGramMatch(
 
 	/* Suchstring in n-Gramme zerlegen und diese im Text suchen */
 	for (i = 0; i < NGramCount; i++) {
-		memcpy(NGram, &needle[i], NGramLen);
+		memcpy(NGram, &needle[i], (size_t)NGramLen);
+		NGram[NGramLen] = '\0';
 		*MaxMatch += NGramLen;
 		if (strstr(haystack, NGram))
 			Count++;
@@ -331,13 +339,13 @@ void track_metadata_clear(struct track_metadata *meta) {
 size_t safe_strcpy(char *dst, const char *src, size_t dst_size) {
 	if (!dst || !src || dst_size == 0)
 		return 0;
-	
+
 	size_t src_len = strlen(src);
 	size_t copy_len = (src_len < dst_size - 1) ? src_len : (dst_size - 1);
-	
+
 	memcpy(dst, src, copy_len);
 	dst[copy_len] = '\0';
-	
+
 	return copy_len;
 }
 
@@ -348,18 +356,18 @@ size_t safe_strcpy(char *dst, const char *src, size_t dst_size) {
 size_t safe_strcat(char *dst, const char *src, size_t dst_size) {
 	if (!dst || !src || dst_size == 0)
 		return 0;
-	
+
 	size_t dst_len = strnlen(dst, dst_size);
 	if (dst_len >= dst_size - 1)
 		return dst_len; /* No space left */
-	
+
 	size_t remaining = dst_size - dst_len - 1;
 	size_t src_len = strlen(src);
 	size_t copy_len = (src_len < remaining) ? src_len : remaining;
-	
+
 	memcpy(dst + dst_len, src, copy_len);
 	dst[dst_len + copy_len] = '\0';
-	
+
 	return dst_len + copy_len;
 }
 
@@ -367,23 +375,70 @@ size_t safe_strcat(char *dst, const char *src, size_t dst_size) {
  * Safe path joining with automatic separator handling
  * Returns true on success, false if buffer too small
  */
+static bool path_contains_parent_reference(const char *path) {
+	if (!path)
+		return false;
+
+	size_t i = 0;
+	while (path[i] != '\0') {
+		while (path[i] == '/')
+			i++;
+		size_t start = i;
+		while (path[i] != '/' && path[i] != '\0')
+			i++;
+		size_t len = i - start;
+		if (len == 2 && path[start] == '.' && path[start + 1] == '.')
+			return true;
+	}
+
+	return false;
+}
+
+bool path_is_secure(const char *path) {
+	if (!path || path[0] == '\0')
+		return false;
+	if (path[0] != '/')
+		return false;
+	if (path_contains_parent_reference(path))
+		return false;
+	return true;
+}
+
+bool env_path_copy_if_safe(const char *name, char *dst, size_t dst_size) {
+	if (!name || !dst || dst_size == 0)
+		return false;
+
+	const char *value = getenv(name);
+	if (!value || value[0] == '\0')
+		return false;
+	if (!path_is_secure(value))
+		return false;
+
+	safe_strcpy(dst, value, dst_size);
+	return true;
+}
+
 bool safe_path_join(char *dst, size_t dst_size, const char *path1, const char *path2) {
 	if (!dst || !path1 || !path2 || dst_size == 0)
 		return false;
-	
+	if (path2[0] == '/')
+		return false;
+	if (path_contains_parent_reference(path2))
+		return false;
+
 	size_t len1 = strlen(path1);
 	size_t len2 = strlen(path2);
-	bool needs_sep = (len1 > 0 && path1[len1-1] != '/' && path2[0] != '/');
-	
+	bool needs_sep = (len1 > 0 && path1[len1 - 1] != '/' && path2[0] != '/');
+
 	size_t total_len = len1 + len2 + (needs_sep ? 1 : 0);
 	if (total_len >= dst_size)
 		return false;
-	
+
 	safe_strcpy(dst, path1, dst_size);
 	if (needs_sep)
 		safe_strcat(dst, "/", dst_size);
 	safe_strcat(dst, path2, dst_size);
-	
+
 	return true;
 }
 
@@ -394,10 +449,10 @@ bool safe_path_join(char *dst, size_t dst_size, const char *path1, const char *p
 char *safe_getenv(const char *name, const char *default_value) {
 	if (!name)
 		return (char *)default_value;
-	
+
 	char *value = getenv(name);
 	if (!value || value[0] == '\0')
 		return (char *)default_value;
-	
+
 	return value;
 }
