@@ -62,7 +62,7 @@ char *strrev(char *str);
 typedef unsigned int BITS;
 void bitset(BITS *abits, int i);
 void bitclr(BITS *abits, int i);
-bool bittest(BITS *abits, int i);
+bool bittest(const BITS *abits, int i);
 void bitnull(BITS *abits, int bits);
 BITS *bitalloc(int bits);
 

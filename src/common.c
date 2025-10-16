@@ -73,9 +73,7 @@ static char toupperarray[256];
  * Populates istypeablearray and toupperarray/tolowerarray for efficient character processing.
  */
 void build_fastarrays(void) {
-	int i;
-
-	for (i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		istypeablearray[i] = is_typeable_key(i);
 		toupperarray[i] = toupper(i);
 		tolowerarray[i] = tolower(i);
@@ -177,7 +175,8 @@ int trim(char s[]) {
  * @return Pointer to the reversed string (same as input)
  */
 char *strrev(char *str) {
-	char *left, *right;
+	char *left; 
+	char *right;
 	char temp;
 
 	if (!str || !*str)
@@ -197,10 +196,10 @@ char *strrev(char *str) {
 
 /* main function, unmodified from original code */
 inline static int NGramMatch(
-    char *haystack, char *needle, int needlelen, int NGramLen, int *MaxMatch) {
+    const char *haystack, const char *needle, int needlelen, int NGramLen, int *MaxMatch) {
 	char NGram[8];
 	int NGramCount;
-	int i, Count;
+	int Count;
 
 	if (!haystack || !needle || !MaxMatch)
 		return 0;
@@ -215,7 +214,7 @@ inline static int NGramMatch(
 	Count = 0;
 
 	/* Suchstring in n-Gramme zerlegen und diese im Text suchen */
-	for (i = 0; i < NGramCount; i++) {
+	for (int i = 0; i < NGramCount; i++) {
 		memcpy(NGram, &needle[i], (size_t)NGramLen);
 		NGram[NGramLen] = '\0';
 		*MaxMatch += NGramLen;
@@ -228,8 +227,10 @@ inline static int NGramMatch(
 
 int fuzzy(char *haystack, char *needle) {
 	int needlelen;
-	int MatchCount1, MatchCount2;
-	int MaxMatch1, MaxMatch2;
+	int MatchCount1;
+	int MatchCount2;
+	int MaxMatch1;
+	int MaxMatch2;
 	double Similarity;
 
 	/* length of that string */ needlelen = strlen(needle);
@@ -276,7 +277,7 @@ inline void bitclr(BITS *abits, int i) {
  * @param i The bit index to test (0-based)
  * @return true if the bit is set, false otherwise
  */
-inline bool bittest(BITS *abits, int i) {
+inline bool bittest(const BITS *abits, int i) {
 	return (abits[i / BITSPERWORD] & (1 << (i % BITSPERWORD))) != 0;
 }
 
