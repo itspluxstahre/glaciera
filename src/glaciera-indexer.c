@@ -316,7 +316,7 @@ static void build_display_from_filename(
 	}
 	*p = '\0';
 
-	strcpy(gbuf, massage_full_path(gbuf, fullpath));
+	safe_strcpy(gbuf, massage_full_path(gbuf, fullpath), sizeof(gbuf));
 	trim_display_path(gbuf);
 	strip_ripper(gbuf);
 	trim_double_spaces(gbuf);
@@ -401,7 +401,7 @@ char *fix_01_to_fullname(int offset, char *s) {
 char *massage_full_path(char *buf, char *fullpath) {
 	char *p, *r;
 
-	strcpy(buf, fullpath);
+	safe_strcpy(buf, fullpath, 1024 * 4);
 
 	/*
 	 * Find the actual filename
@@ -449,7 +449,7 @@ void report_scanning_progress(int sig) {
 	megdiff = (total_bytes - prev_total_bytes) / 1024 / 1024;
 	if (megdiff > 1024) {
 		megdiff /= 1024;
-		strcpy(suffix, "GB");
+		safe_strcpy(suffix, "GB", sizeof(suffix));
 	}
 
 	fprintf(stderr, "\rTotal files: %8d  new files: %8d (%5d/sec %6d%s/sec)", total_files,
@@ -485,7 +485,7 @@ void process_one_file(
 		trimmed++;
 
 	/* Create search text from display name */
-	strcpy(search_text, trimmed);
+	safe_strcpy(search_text, trimmed, sizeof(search_text));
 	only_searchables(search_text);
 
 	/* Check if track already exists and update or insert */
@@ -527,7 +527,7 @@ static int analyze_filename_patterns(DIR *pdir, char basefilename[256], int same
 			*p = 0;
 
 		if (!basefilename[0])
-			strcpy(basefilename, sd->d_name);
+			safe_strcpy(basefilename, sd->d_name, 256);
 
 		/* Analyze each character position */
 		for (p = sd->d_name, i = 0; *p; p++, i++) {
