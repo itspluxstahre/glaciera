@@ -39,6 +39,8 @@ ogg_player = "ogg123"
 ogg_flags = ""
 flac_player = "ogg123"
 flac_flags = ""
+pls_player = "mplayer"
+pls_flags = "-quiet -really-quiet -vo null -vc null -noautosub -noconsolecontrols -playlist"
 
 [appearance]
 # Theme name (default, or filename from themes/ directory without .toml)
@@ -72,6 +74,8 @@ ogg_player = "ogg123"      # OGG file player
 ogg_flags = ""             # Additional flags for OGG player
 flac_player = "ogg123"     # FLAC file player
 flac_flags = ""            # Additional flags for FLAC player
+pls_player = "mplayer"     # Playlist/stream player
+pls_flags = "-quiet -really-quiet -vo null -vc null -noautosub -noconsolecontrols -playlist" # Default mplayer playlist flags
 ```
 
 **Note**: FLAC files can be played by ogg123 (which handles FLAC format), or you can specify a dedicated FLAC player like `flac123` if preferred.

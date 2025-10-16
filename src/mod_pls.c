@@ -9,6 +9,7 @@
 
 // Local headers
 #include "common.h"
+#include "config.h"
 
 /* -------------------------------------------------------------------------- */
 
@@ -34,7 +35,6 @@ bool pls_info(char *filename, struct tuneinfo *ti) {
 }
 
 bool pls_isit(char *s, int len) {
-	return false;
 	if (len < 5)
 		return false;
 
@@ -44,12 +44,10 @@ bool pls_isit(char *s, int len) {
 
 void pls_play(char *filename) {
 	/*
-	 * Don't spam the /tmp/glaciera.out too much, but don't be to quiet either...
-	 * Unless the -quiet flag is present, the logfile is flooded with
-	 * several progress messages per second.
-	 * The -quiet flag lets the StreamTitle messages get through.
+	 * Default command line (as configured): mplayer -quiet -really-quiet -vo null -vc null
+	 * -noautosub -noconsolecontrols -playlist <filename>
 	 */
-	static const char *extra_args[] = { "-quiet", "-noconsolecontrols", "-playlist" };
-	player_exec(
-	    "mplayer", NULL, extra_args, sizeof(extra_args) / sizeof(extra_args[0]), filename);
+	const char *player = config_get_pls_player_path();
+	const char *flags = config_get_pls_player_flags();
+	player_exec(player, flags, NULL, 0, filename);
 }

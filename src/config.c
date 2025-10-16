@@ -165,6 +165,9 @@ void config_set_defaults(config_t *config) {
 	config->ogg_player_flags[0] = '\0';
 	strcpy(config->flac_player_path, "ogg123");
 	config->flac_player_flags[0] = '\0';
+	strcpy(config->pls_player_path, "mplayer");
+	strcpy(config->pls_player_flags,
+	    "-quiet -really-quiet -vo null -vc null -noautosub -noconsolecontrols -playlist");
 
 	/* Default Nord dark theme */
 	strcpy(config->theme_name, "default");
@@ -313,7 +316,11 @@ bool config_create_default_file(void) {
 	fprintf(fp, "ogg_player = \"ogg123\"\n");
 	fprintf(fp, "ogg_flags = \"\"\n");
 	fprintf(fp, "flac_player = \"ogg123\"\n");
-	fprintf(fp, "flac_flags = \"\"\n\n");
+	fprintf(fp, "flac_flags = \"\"\n");
+	fprintf(fp, "pls_player = \"mplayer\"\n");
+	fprintf(fp,
+	    "pls_flags = \"-quiet -really-quiet -vo null -vc null -noautosub -noconsolecontrols "
+	    "-playlist\"\n\n");
 
 	fprintf(fp, "[appearance]\n");
 	fprintf(fp, "# Theme name (default, or filename from themes/ directory without .toml)\n");
@@ -441,6 +448,20 @@ static bool load_config_file(void) {
 			    sizeof(global_config.flac_player_flags) - 1);
 			free(flacflags.u.s);
 		}
+
+		toml_datum_t pls = toml_string_in(players, "pls_player");
+		if (pls.ok) {
+			strncpy(global_config.pls_player_path, pls.u.s,
+			    sizeof(global_config.pls_player_path) - 1);
+			free(pls.u.s);
+		}
+
+		toml_datum_t plsflags = toml_string_in(players, "pls_flags");
+		if (plsflags.ok) {
+			strncpy(global_config.pls_player_flags, plsflags.u.s,
+			    sizeof(global_config.pls_player_flags) - 1);
+			free(plsflags.u.s);
+		}
 	}
 
 	/* Parse [appearance] section */
@@ -530,6 +551,14 @@ const char *config_get_flac_player_flags(void) {
 	return global_config.flac_player_flags;
 }
 
+const char *config_get_pls_player_path(void) {
+	return global_config.pls_player_path;
+}
+
+const char *config_get_pls_player_flags(void) {
+	return global_config.pls_player_flags;
+}
+
 const char *config_get_rippers_path(void) {
 	return global_config.rippers_path;
 }
@@ -594,6 +623,13 @@ bool config_validate_players(void) {
 		all_valid = false;
 	}
 
+	/* Check playlist player */
+	if (!check_executable_exists(global_config.pls_player_path)) {
+		fprintf(stderr, "Warning: Playlist player '%s' not found or not executable\n",
+		    global_config.pls_player_path);
+		all_valid = false;
+	}
+
 	if (!all_valid) {
 		fprintf(stderr,
 		    "\nPlease install the missing players or update the configuration file:\n");
@@ -601,7 +637,8 @@ bool config_validate_players(void) {
 		fprintf(stderr, "Common players:\n");
 		fprintf(stderr, "  MP3:  mpg321, mpg123, ffplay\n");
 		fprintf(stderr, "  OGG:  ogg123, ffplay\n");
-		fprintf(stderr, "  FLAC: flac123, ogg123, ffplay\n\n");
+		fprintf(stderr, "  FLAC: flac123, ogg123, ffplay\n");
+		fprintf(stderr, "  PLS:  mplayer, mpv, ffplay\n\n");
 	}
 
 	return all_valid;

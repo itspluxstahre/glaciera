@@ -40,6 +40,8 @@ typedef struct {
 	char ogg_player_flags[256];
 	char flac_player_path[128];
 	char flac_player_flags[256];
+	char pls_player_path[128];
+	char pls_player_flags[256];
 
 	/* Active theme */
 	theme_t theme;
@@ -82,6 +84,8 @@ const char *config_get_ogg_player_path(void);
 const char *config_get_ogg_player_flags(void);
 const char *config_get_flac_player_path(void);
 const char *config_get_flac_player_flags(void);
+const char *config_get_pls_player_path(void);
+const char *config_get_pls_player_flags(void);
 const char *config_get_rippers_path(void);
 
 /* Validate that configured player binaries exist */
