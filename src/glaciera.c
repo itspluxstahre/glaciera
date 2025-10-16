@@ -12,11 +12,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sqlite3.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,6 +73,46 @@ struct {
 	int lo;
 	int hi;
 } qsearch[256];
+
+static int clamp_int(int value, int min_value, int max_value) {
+	if (max_value < min_value)
+		return min_value;
+	if (value < min_value)
+		return min_value;
+	if (value > max_value)
+		return max_value;
+	return value;
+}
+
+#ifdef USE_FINISH
+static time_t time_max_value(void) {
+	if ((time_t)-1 > 0)
+		return (time_t)-1;
+	int bits = (int)(sizeof(time_t) * CHAR_BIT);
+	if (bits >= (int)(sizeof(uintmax_t) * CHAR_BIT))
+		return (time_t)UINTMAX_MAX;
+	uintmax_t mask = (UINTMAX_C(1) << (bits - 1)) - 1U;
+	return (time_t)mask;
+}
+
+static time_t time_min_value(void) {
+	if ((time_t)-1 > 0)
+		return 0;
+	return (time_t)(-time_max_value() - 1);
+}
+
+static bool time_add_safe(time_t a, time_t b, time_t *out) {
+	intmax_t ai = (intmax_t)a;
+	intmax_t bi = (intmax_t)b;
+	intmax_t sum = ai + bi;
+	intmax_t max = (intmax_t)time_max_value();
+	intmax_t min = (intmax_t)time_min_value();
+	if (sum > max || sum < min)
+		return false;
+	*out = (time_t)sum;
+	return true;
+}
+#endif
 
 struct tune *alltunes = NULL;
 int allcount = 0;
@@ -208,13 +250,35 @@ void clear_displaytunes(void) {
 
 void addtunetodisplay(struct tune *tune) {
 	if (tune) {
-		displaytunes = realloc(displaytunes, (displaycount + 1) * sizeof(void *));
+		size_t new_count = (size_t)displaycount + 1;
+		if (new_count > SIZE_MAX / sizeof(*displaytunes))
+			return;
+		struct tune **new_display = realloc(displaytunes, new_count * sizeof(*new_display));
+		if (!new_display)
+			return;
+		displaytunes = new_display;
 		displaytunes[displaycount] = tune;
 #ifdef USE_FINISH
-		displaytimes = realloc(displaytimes, (displaycount + 1) * sizeof(time_t));
+		size_t time_count = new_count;
+		if (time_count > SIZE_MAX / sizeof(*displaytimes))
+			return;
+		time_t *new_displaytimes
+		    = realloc(displaytimes, time_count * sizeof(*new_displaytimes));
+		if (!new_displaytimes)
+			return;
+		displaytimes = new_displaytimes;
 		displaytimes[displaycount] = display_relative_end_time;
-		if (tune->ti)
-			display_relative_end_time += tune->ti->duration;
+		if (tune->ti) {
+			int duration = tune->ti->duration;
+			time_t duration_time = (time_t)duration;
+			time_t updated = display_relative_end_time;
+			if (time_add_safe(display_relative_end_time, duration_time, &updated)) {
+				display_relative_end_time = updated;
+			} else {
+				display_relative_end_time
+				    = (duration > 0) ? time_max_value() : time_min_value();
+			}
+		}
 #endif
 		displaycount++;
 		if (EMPTY_SEARCH == tune->search)
@@ -324,8 +388,8 @@ void make_local_copy_of_database(int showprogress) {
 	int write_fd;
 	char *buf;
 	size_t bytes;
-	unsigned long bytes_total = 0;
-	unsigned long bytes_written = 0;
+	double bytes_total = 0.0;
+	double bytes_written = 0.0;
 	time_t timeprogress = 0;
 	time_t now;
 	const char *data_dir = config_get_data_dir();
@@ -339,7 +403,8 @@ void make_local_copy_of_database(int showprogress) {
 		snprintf(srcfilename, sizeof(srcfilename), "%s%d.db", data_dir, i);
 		snprintf(dstfilename, sizeof(dstfilename), "%s%d.db", playlist_dir, i);
 		bytes = filesize(srcfilename);
-		bytes_total += bytes;
+		if (bytes != (size_t)-1)
+			bytes_total += (double)bytes;
 		if (bytes != filesize(dstfilename))
 			mustcopy = true;
 	}
@@ -357,24 +422,50 @@ void make_local_copy_of_database(int showprogress) {
 		write_fd = open(dstfilename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
 		if (write_fd != -1) {
 			buf = malloc(COPY_SIZE);
-			while ((bytes = read(read_fd, buf, COPY_SIZE)) > 0) {
-				bytes_written += write(write_fd, buf, bytes);
+			if (!buf) {
+				close(write_fd);
+				close(read_fd);
+				continue;
+			}
+			ssize_t chunk_read;
+			while ((chunk_read = read(read_fd, buf, COPY_SIZE)) > 0) {
+				ssize_t written_total = 0;
+				while (written_total < chunk_read) {
+					size_t remaining = (size_t)(chunk_read - written_total);
+					ssize_t chunk_written
+					    = write(write_fd, buf + written_total, remaining);
+					if (chunk_written <= 0) {
+						written_total = -1;
+						break;
+					}
+					written_total += chunk_written;
+					bytes_written += (double)chunk_written;
+				}
+				if (written_total < 0)
+					break;
 				if (showprogress) {
 					now = time(NULL);
 					if (now > timeprogress) {
 						char progress[61];
-						int filled = 0;
+						size_t filled = 0;
 
-						if (bytes_total > 0) {
-							filled = (int)((bytes_written * 60UL)
-							    / bytes_total);
-							if (filled > 60)
-								filled = 60;
+						if (bytes_total > 0.0) {
+							double ratio = bytes_written / bytes_total;
+							if (ratio < 0.0)
+								ratio = 0.0;
+							if (ratio > 1.0)
+								ratio = 1.0;
+							filled = (size_t)(ratio * 60.0);
 						}
+						const size_t progress_len = sizeof(progress) - 1;
+						if (filled > progress_len)
+							filled = progress_len;
 
-						memset(progress, '#', filled);
-						memset(progress + filled, ' ', 60 - filled);
-						progress[60] = '\0';
+						for (size_t idx = 0; idx < filled; idx++)
+							progress[idx] = '#';
+						for (size_t idx = filled; idx < progress_len; idx++)
+							progress[idx] = ' ';
+						progress[progress_len] = '\0';
 
 						fprintf(stderr, "[%s]\r", progress);
 						timeprogress = now;
@@ -733,18 +824,35 @@ void make_ui(void) {
 
 void draw_scrollbar(void) {
 	char scrollbar[255]; /* There is room for a 255-row display... */
-	int percent;
-	int row;
-
 	memset(scrollbar, ' ', sizeof(scrollbar));
 
-	if (displaycount) {
-		percent = (100 * tunenr) / displaycount;
-		scrollbar[(percent * middlesize) / 100] = '#';
+	if (displaycount > 0 && middlesize > 0) {
+		double ratio = (double)tunenr / (double)displaycount;
+		if (ratio < 0.0)
+			ratio = 0.0;
+		else if (ratio > 1.0)
+			ratio = 1.0;
+
+		int64_t marker_limit = (int64_t)middlesize - 1;
+		int64_t limit = (int64_t)sizeof(scrollbar) - 1;
+		if (marker_limit > limit)
+			marker_limit = limit;
+		if (marker_limit < 0)
+			marker_limit = 0;
+		if (marker_limit > INT_MAX)
+			marker_limit = INT_MAX;
+		int max_marker = (int)marker_limit;
+
+		int marker = (int)(ratio * (double)max_marker + 0.5);
+		if (marker > max_marker)
+			marker = max_marker;
+		scrollbar[marker] = '#';
 	}
 
-	for (row = 0; row < middlesize; row++)
-		mvwaddch(win_middle, row, COLS - 1, scrollbar[row]);
+	for (int row = 0; row < middlesize; row++) {
+		char cell = (row < (int)sizeof(scrollbar)) ? scrollbar[row] : ' ';
+		mvwaddch(win_middle, row, COLS - 1, cell);
+	}
 }
 
 /*
@@ -933,6 +1041,8 @@ void draw_one_song(int row, int item, int highlight) {
 		size_t safe_step = (step < 0 || (size_t)step > path_len)
 		    ? 0
 		    : utf8_safe_offset(tune->path, step);
+		if (safe_step > path_len)
+			safe_step = path_len;
 		p = tune->path + safe_step;
 
 		/* UTF-8 safe copy - copy up to COLS characters, not bytes */
@@ -954,6 +1064,8 @@ void draw_one_song(int row, int item, int highlight) {
 		size_t safe_step = (step < 0 || (size_t)step > display_len)
 		    ? 0
 		    : utf8_safe_offset(tune->display, step);
+		if (safe_step > display_len)
+			safe_step = display_len;
 		p = tune->display + safe_step;
 		depath(buf + strlen(buf), p);
 	}
@@ -1055,9 +1167,13 @@ void refresh_screen(void) {
 		show_splash = false;
 	} else {
 		for (row = 0; row < middlesize; row++) {
-			if (row + toptunenr >= displaycount)
+			int64_t display_index = (int64_t)row + (int64_t)toptunenr;
+			if (display_index < 0 || display_index > INT_MAX)
 				break;
-			draw_one_song(row, row + toptunenr, (row + toptunenr) == tunenr);
+			if (display_index >= (int64_t)displaycount)
+				break;
+			int display_idx = (int)display_index;
+			draw_one_song(row, display_idx, display_idx == tunenr);
 		}
 		draw_scrollbar();
 	}
@@ -1092,29 +1208,84 @@ void user_move_cursor(int delta, int redraw) {
 	int count;
 
 	count = abs(delta);
-	delta = (delta < 0) ? -1 : +1;
+	int step = (delta < 0) ? -1 : +1;
 
 	while (count--) {
-		if (redraw)
-			draw_one_song(tunenr - toptunenr, tunenr, false);
+		if (redraw) {
+			int64_t relative_before = (int64_t)tunenr - (int64_t)toptunenr;
+			int draw_index = 0;
+			if (relative_before > INT_MAX)
+				draw_index = INT_MAX;
+			else if (relative_before < INT_MIN)
+				draw_index = INT_MIN;
+			else
+				draw_index = (int)relative_before;
+			draw_index
+			    = clamp_int(draw_index, 0, (middlesize > 0) ? middlesize - 1 : 0);
+			draw_one_song(draw_index, tunenr, false);
+		}
 
-		tunenr += delta;
-		if (tunenr >= displaycount - 1)
-			tunenr = displaycount - 1;
-		if (tunenr < 0)
-			tunenr = 0;
+		int64_t new_tunenr = (int64_t)tunenr + step;
+		if (new_tunenr > INT_MAX)
+			new_tunenr = INT_MAX;
+		if (new_tunenr < INT_MIN)
+			new_tunenr = INT_MIN;
 
-		if ((tunenr - toptunenr >= middlesize) || (tunenr - toptunenr < 0)) {
-			toptunenr += delta;
+		int64_t max_index = 0;
+		if (displaycount > 0) {
+			max_index = (int64_t)displaycount;
+			if (max_index > 0)
+				max_index -= 1;
+		}
+		if (new_tunenr > max_index)
+			new_tunenr = max_index;
+		if (new_tunenr < 0)
+			new_tunenr = 0;
+
+		tunenr = (int)new_tunenr;
+
+		int64_t relative = (int64_t)tunenr - (int64_t)toptunenr;
+		if (relative >= (int64_t)middlesize || relative < 0) {
+			int64_t new_top = (int64_t)toptunenr + step;
+			if (new_top > INT_MAX)
+				new_top = INT_MAX;
+			if (new_top < INT_MIN)
+				new_top = INT_MIN;
+			toptunenr = (int)new_top;
+			if (toptunenr < 0)
+				toptunenr = 0;
+			if (displaycount > 0) {
+				int64_t top_limit = (int64_t)displaycount;
+				if (top_limit > 0)
+					top_limit -= 1;
+				if (top_limit < 0)
+					top_limit = 0;
+				if (top_limit > INT_MAX)
+					top_limit = INT_MAX;
+				int max_top = (int)top_limit;
+				if (toptunenr > max_top)
+					toptunenr = max_top;
+			}
+
 			if (redraw) {
 				scrollok(win_middle, true);
-				wscrl(win_middle, delta);
+				wscrl(win_middle, step);
 				scrollok(win_middle, false);
 			}
 		}
 
 		if (redraw) {
-			draw_one_song(tunenr - toptunenr, tunenr, true);
+			int64_t relative_after = (int64_t)tunenr - (int64_t)toptunenr;
+			int draw_index = 0;
+			if (relative_after > INT_MAX)
+				draw_index = INT_MAX;
+			else if (relative_after < INT_MIN)
+				draw_index = INT_MIN;
+			else
+				draw_index = (int)relative_after;
+			draw_index
+			    = clamp_int(draw_index, 0, (middlesize > 0) ? middlesize - 1 : 0);
+			draw_one_song(draw_index, tunenr, true);
 			draw_scrollbar();
 		}
 	}
@@ -2464,7 +2635,8 @@ void do_context(void) {
 		}
 
 		refresh_screen();
-		show_info(_("Showing artist context (%s)."), s);
+		const char *artist_label = s ? s : _("(unknown)");
+		show_info(_("Showing artist context (%s)."), artist_label);
 		break;
 
 	case 'D':
@@ -2643,8 +2815,11 @@ void do_time(void) {
 	days = (h - hh) / 24;
 
 	playends = time(NULL) + total_duration;
+	const char *time_str = ctime(&playends);
+	if (!time_str)
+		time_str = _("(unknown)");
 	show_info(_("%d displayed songs, %0.1f %sBytes, %ddays %02d:%02d:%02d, %s"), displaycount,
-	    total_size, suffix, days, hh, mm, ss, ctime(&playends));
+	    total_size, suffix, days, hh, mm, ss, time_str);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2725,9 +2900,11 @@ void do_search(void) {
 	/*
 	 * Construct the wordlist array and each string
 	 */
-	wordlist = malloc(words * sizeof(char *));
-	negatelist = malloc(words * sizeof(int));
-	if (!wordlist || !negatelist) {
+	int word_capacity = words;
+	size_t word_bytes = (size_t)word_capacity;
+	wordlist = (word_capacity > 0) ? malloc(word_bytes * sizeof(char *)) : NULL;
+	negatelist = (word_capacity > 0) ? malloc(word_bytes * sizeof(int)) : NULL;
+	if (word_capacity > 0 && (!wordlist || !negatelist)) {
 		/* Out of memory - free what we allocated and return */
 		free(wordlist);
 		free(negatelist);
@@ -2735,13 +2912,27 @@ void do_search(void) {
 	}
 	words = 0;
 	safe_strcpy(lookfor, search_string, sizeof(lookfor));
+	bool allocation_failed = false;
 	for (p = strtok(lookfor, " "); p; p = strtok(NULL, " ")) {
+		if (word_capacity == 0 || words >= word_capacity) {
+			allocation_failed = true;
+			break;
+		}
 		negatelist[words] = strchr(p, '!') ? 1 : 0;
 		wordlist[words] = strdup(p);
-		if (!wordlist[words])
+		if (!wordlist[words]) {
+			allocation_failed = true;
 			break; /* Out of memory */
+		}
 		only_searchables(wordlist[words]);
 		words++;
+	}
+	if (allocation_failed) {
+		for (int k = 0; k < words; k++)
+			free(wordlist[k]);
+		free(negatelist);
+		free(wordlist);
+		return;
 	}
 
 	/*
@@ -2925,7 +3116,10 @@ void do_move_song(int delta) {
 	void *here;
 	int newpos;
 
-	newpos = tunenr + delta;
+	int64_t candidate = (int64_t)tunenr + (int64_t)delta;
+	if (candidate < 0 || candidate > INT_MAX)
+		return;
+	newpos = (int)candidate;
 	if (newpos < 0 || newpos >= displaycount)
 		return;
 
