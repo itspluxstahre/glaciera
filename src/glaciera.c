@@ -249,51 +249,90 @@ void clear_displaytunes(void) {
 	clear_displaytunes_prim(true);
 }
 
-void addtunetodisplay(struct tune *tune) {
-	if (tune) {
-		size_t new_count = (size_t)displaycount + 1;
-		if (new_count > SIZE_MAX / sizeof(*displaytunes))
-			return;
-		struct tune **new_display = realloc(displaytunes, new_count * sizeof(*new_display));
-		if (!new_display)
-			return;
-		displaytunes = new_display;
-		displaytunes[displaycount] = tune;
+static bool addtunetodisplay(struct tune *tune) {
+	if (!tune)
+		return false;
+
+	size_t new_count = (size_t)displaycount + 1;
+	if (new_count > SIZE_MAX / sizeof(*displaytunes))
+		return false;
+
+	struct tune **old_display = displaytunes;
+	struct tune **new_display = malloc(new_count * sizeof(*new_display));
+	if (!new_display)
+		return false;
+	if (old_display && displaycount > 0)
+		memcpy(new_display, old_display, (size_t)displaycount * sizeof(*new_display));
+
 #ifdef USE_FINISH
-		size_t time_count = new_count;
-		if (time_count > SIZE_MAX / sizeof(*displaytimes))
-			return;
-		time_t *new_displaytimes
-		    = realloc(displaytimes, time_count * sizeof(*new_displaytimes));
-		if (!new_displaytimes)
-			return;
-		displaytimes = new_displaytimes;
-		displaytimes[displaycount] = display_relative_end_time;
-		if (tune->ti) {
-			int duration = tune->ti->duration;
-			time_t duration_time = (time_t)duration;
-			time_t updated = display_relative_end_time;
-			if (time_add_safe(display_relative_end_time, duration_time, &updated)) {
-				display_relative_end_time = updated;
-			} else {
-				display_relative_end_time
-				    = (duration > 0) ? time_max_value() : time_min_value();
-			}
-		}
-#endif
-		displaycount++;
-		if (EMPTY_SEARCH == tune->search)
-			needs_strcasecmp_sort = true;
+	size_t time_count = new_count;
+	if (time_count > SIZE_MAX / sizeof(*displaytimes)) {
+		free(new_display);
+		return false;
 	}
+	time_t *old_displaytimes = displaytimes;
+	time_t *new_displaytimes = malloc(time_count * sizeof(*new_displaytimes));
+	if (!new_displaytimes) {
+		free(new_display);
+		return false;
+	}
+	if (old_displaytimes && displaycount > 0) {
+		memcpy(new_displaytimes, old_displaytimes,
+		    (size_t)displaycount * sizeof(*new_displaytimes));
+	}
+	displaytimes = new_displaytimes;
+#endif
+
+	displaytunes = new_display;
+
+	displaytunes[displaycount] = tune;
+#ifdef USE_FINISH
+	displaytimes[displaycount] = display_relative_end_time;
+	if (tune->ti) {
+		int duration = tune->ti->duration;
+		time_t duration_time = (time_t)duration;
+		time_t updated = display_relative_end_time;
+		if (time_add_safe(display_relative_end_time, duration_time, &updated)) {
+			display_relative_end_time = updated;
+		} else {
+			display_relative_end_time
+			    = (duration > 0) ? time_max_value() : time_min_value();
+		}
+	}
+#endif
+	displaycount++;
+	if (EMPTY_SEARCH == tune->search)
+		needs_strcasecmp_sort = true;
+
+#ifdef USE_FINISH
+	if (old_displaytimes)
+		free(old_displaytimes);
+#endif
+	if (old_display)
+		free(old_display);
+	return true;
 }
 
 void addtexttodisplay(char *text, int duration, int filesize, time_t filedate) {
-	struct tune *tune;
+	struct tune *tune = malloc(sizeof(*tune));
+	if (!tune)
+		return;
 
-	tune = malloc(sizeof(struct tune));
-	tune->display = tune->path = strdup(text);
+	char *path_copy = strdup(text);
+	if (!path_copy) {
+		free(tune);
+		return;
+	}
+	tune->display = path_copy;
+	tune->path = path_copy;
 	tune->search = EMPTY_SEARCH;
-	tune->ti = malloc(sizeof(struct tuneinfo));
+	tune->ti = malloc(sizeof(*tune->ti));
+	if (!tune->ti) {
+		free(path_copy);
+		free(tune);
+		return;
+	}
+
 	tune->ti->filesize = filesize;
 	tune->ti->filedate = filedate;
 	tune->ti->duration = duration;
@@ -301,7 +340,11 @@ void addtexttodisplay(char *text, int duration, int filesize, time_t filedate) {
 	tune->ti->genre = 0;
 	tune->ti->rating = 0;
 
-	addtunetodisplay(tune);
+	if (!addtunetodisplay(tune)) {
+		free(tune->ti);
+		free(path_copy);
+		free(tune);
+	}
 }
 
 int tune_in_playlist(struct tune *tune) {
