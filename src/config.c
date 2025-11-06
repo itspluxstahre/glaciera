@@ -73,7 +73,7 @@ static void resolve_home_directory(void) {
 
 	struct passwd pwd;
 	struct passwd *result;
-	char *buf;
+	char *buf = NULL;
 	size_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
 	if (bufsize == (size_t)-1) { // Cast -1 to size_t for comparison
 		bufsize = 16384; // Fallback size if sysconf fails
@@ -87,27 +87,26 @@ static void resolve_home_directory(void) {
 
 	if (getpwuid_r(getuid(), &pwd, buf, bufsize, &result) != 0 || result == NULL) {
 		fprintf(stderr, "Error: Failed to get user information\n");
-		free(buf);
 		goto fallback;
 	}
 
 	if (pwd.pw_dir && path_is_secure(pwd.pw_dir)) {
 		char *home = strdup(pwd.pw_dir);
-		free(buf);
 		if (home) {
 			set_home_dir(home);
 			free(home);
-		} else {
-			fprintf(stderr, "Error: Failed to allocate memory for home directory\n");
-			goto fallback;
+			goto cleanup;
 		}
-		return;
+		fprintf(stderr, "Error: Failed to allocate memory for home directory\n");
+		goto fallback;
 	}
 
-	free(buf);
 fallback:
 	fprintf(stderr, "Warning: HOME is unset or unsafe; falling back to /tmp\n");
 	set_home_dir_fallback();
+
+cleanup:
+	free(buf);
 }
 
 static bool build_dir_from_env(
