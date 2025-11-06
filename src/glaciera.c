@@ -981,15 +981,19 @@ static size_t utf8_safe_truncate(char *str, size_t max_bytes) {
  * to        "aaa - bbb - ccc - ddd"
  * UTF-8 safe version that handles substrings correctly
  */
-void depath(char *dst, char *src) {
+static void depath(char *dst, size_t dst_size, const char *src) {
+	if (!dst || dst_size == 0) {
+		return;
+	}
+	dst[0] = '\0';
+
 	/* If src is null or empty, nothing to do */
 	if (!src || !*src) {
-		*dst = 0;
 		return;
 	}
 
 	/* Find start of first complete UTF-8 character in substring */
-	char *start = src;
+	const char *start = src;
 	while (*start) {
 		/* Check if this byte starts a valid UTF-8 sequence */
 		unsigned char c = (unsigned char)*start;
@@ -1005,34 +1009,49 @@ void depath(char *dst, char *src) {
 		/* This is a continuation byte, skip it */
 		start++;
 		if (!*start) {
-			*dst = 0;
 			return;
 		}
 	}
 
 	/* If we reached end without finding a valid start, nothing to do */
-	if (!*start) {
-		*dst = 0;
+	if (!*start)
 		return;
-	}
+
+	char *write = dst;
+	size_t remaining = dst_size - 1; /* Reserve space for terminator */
 
 	/* Now process from the safe starting point */
-	while (*start) {
-		if ('/' != *start) {
+	while (*start && remaining > 0) {
+		if (*start != '/') {
 			/* Copy complete UTF-8 character */
 			int char_len = utf8_char_len_ui((unsigned char)*start);
-			for (int i = 0; i < char_len && start[i]; i++) {
-				*dst++ = start[i];
+			for (int i = 0; i < char_len && start[i] && remaining > 0; i++) {
+				*write++ = start[i];
+				remaining--;
 			}
 			start += char_len;
 		} else {
-			*dst++ = ' ';
-			*dst++ = '-';
-			*dst++ = ' ';
+			if (remaining < 3)
+				break; /* Not enough room for separator */
+			*write++ = ' ';
+			*write++ = '-';
+			*write++ = ' ';
+			remaining -= 3;
 			start++;
 		}
 	}
-	*dst = 0;
+	*write = '\0';
+}
+
+static void depath_append(char *dst, size_t dst_capacity, const char *src) {
+	if (!dst || dst_capacity == 0)
+		return;
+
+	size_t prefix_len = strnlen(dst, dst_capacity);
+	if (prefix_len >= dst_capacity - 1) /* No room to append */
+		return;
+
+	depath(dst + prefix_len, dst_capacity - prefix_len, src);
 }
 
 void draw_one_song(int row, int item, int highlight) {
@@ -1137,7 +1156,7 @@ void draw_one_song(int row, int item, int highlight) {
 		if (safe_step > display_len)
 			safe_step = display_len;
 		p = tune->display + safe_step;
-		depath(buf + strlen(buf), p);
+		depath_append(buf, sizeof(buf), p);
 	}
 
 	/* UTF-8 safe truncation at screen width */
