@@ -1320,12 +1320,7 @@ void user_move_cursor(int delta, int redraw) {
 		if (new_tunenr < INT_MIN)
 			new_tunenr = INT_MIN;
 
-		int64_t max_index = 0;
-		if (displaycount > 0) {
-			max_index = (int64_t)displaycount;
-			if (max_index > 0)
-				max_index -= 1;
-		}
+		int64_t max_index = (displaycount > 0) ? ((int64_t)displaycount - 1) : 0;
 		if (new_tunenr > max_index)
 			new_tunenr = max_index;
 		if (new_tunenr < 0)
@@ -1333,7 +1328,9 @@ void user_move_cursor(int delta, int redraw) {
 
 		tunenr = (int)new_tunenr;
 
-		int64_t relative = (int64_t)tunenr - (int64_t)toptunenr;
+		int64_t relative = 0;
+		if (ckd_sub(&relative, (int64_t)tunenr, (int64_t)toptunenr) != 0)
+			relative = (tunenr >= toptunenr) ? INT64_MAX : INT64_MIN;
 		if (relative >= (int64_t)middlesize || relative < 0) {
 			int64_t new_top = (int64_t)toptunenr + step;
 			if (new_top > INT_MAX)
@@ -1344,9 +1341,8 @@ void user_move_cursor(int delta, int redraw) {
 			if (toptunenr < 0)
 				toptunenr = 0;
 			if (displaycount > 0) {
-				int64_t top_limit = (int64_t)displaycount;
-				if (top_limit > 0)
-					top_limit -= 1;
+				int64_t top_limit
+				    = ((int64_t)displaycount > 0) ? ((int64_t)displaycount - 1) : 0;
 				if (top_limit < 0)
 					top_limit = 0;
 				if (top_limit > INT_MAX)
