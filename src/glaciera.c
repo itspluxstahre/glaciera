@@ -2749,13 +2749,16 @@ void do_context(void) {
 
 	case 'R':
 	case 'r':
-		for (i = 0; i < displaycount; i++) {
-			r1 = (int)((1.0 * displaycount) * random() / (RAND_MAX + 1.0));
-			r2 = (int)((1.0 * displaycount) * random() / (RAND_MAX + 1.0));
-			if (r1 != r2)
-				swap(&displaytunes[r1], &displaytunes[r2]);
+		if (displaycount > 0) {
+			long range = (long)displaycount;
+			for (i = 0; i < displaycount; i++) {
+				r1 = (int)(random() % range);
+				r2 = (int)(random() % range);
+				if (r1 != r2)
+					swap(&displaytunes[r1], &displaytunes[r2]);
+			}
+			refresh_screen();
 		}
-		refresh_screen();
 		break;
 
 	default:
