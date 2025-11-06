@@ -2349,7 +2349,24 @@ void do_show_one_genre(int genre) {
  */
 
 time_t addweektotime(time_t t, int weeks) {
-	return t + (86400 * (7 * weeks));
+	static const time_t seconds_per_week = (time_t)604800; /* 7 days */
+
+	time_t delta = 0;
+	time_t weeks_as_time = (time_t)weeks;
+	if (ckd_mul(&delta, weeks_as_time, seconds_per_week) != 0) {
+		return (weeks >= 0)
+		    ? (time_t)((sizeof(time_t) == sizeof(long long)) ? LLONG_MAX : LONG_MAX)
+		    : (time_t)((sizeof(time_t) == sizeof(long long)) ? LLONG_MIN : LONG_MIN);
+	}
+
+	time_t result = 0;
+	if (ckd_add(&result, t, delta) != 0) {
+		return (delta >= 0)
+		    ? (time_t)((sizeof(time_t) == sizeof(long long)) ? LLONG_MAX : LONG_MAX)
+		    : (time_t)((sizeof(time_t) == sizeof(long long)) ? LLONG_MIN : LONG_MIN);
+	}
+
+	return result;
 }
 
 void do_show_new_songs(void) {
