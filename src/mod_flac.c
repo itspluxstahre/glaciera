@@ -42,8 +42,49 @@ bool flac_info(char *filename, struct tuneinfo *ti) {
 		ti->duration = md.data.stream_info.total_samples / md.data.stream_info.sample_rate;
 	else
 		ti->duration = 0;
-	ti->bitrate = 128; /* TODO: Get values from file */
-	ti->genre = 0xff; /* TODO: Get values from file */
+
+	// Calculate average bitrate in kbps
+	if (ti->duration > 0) {
+		FLAC__uint64 total_bits = md.data.stream_info.total_samples
+		    * md.data.stream_info.bits_per_sample * md.data.stream_info.channels;
+		ti->bitrate = (short)(total_bits / (ti->duration * 1000));
+	} else {
+		ti->bitrate = 0;
+	}
+
+	// Read genre from VORBIS comments
+	FLAC__StreamMetadata *tags = NULL;
+	if (FLAC__metadata_get_tags(filename, &tags) && tags
+	    && tags->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+		FLAC__StreamMetadata_VorbisComment *vc = &tags->data.vorbis_comment;
+		for (unsigned int i = 0; i < vc->num_comments; i++) {
+			const FLAC__StreamMetadata_VorbisComment_Entry *entry = &vc->comments[i];
+			if (!entry->entry || entry->length == 0)
+				continue;
+			char *comment = malloc(entry->length + 1);
+			if (!comment)
+				continue;
+			memcpy(comment, entry->entry, entry->length);
+			comment[entry->length] = '\0';
+
+			char *sep = strchr(comment, '=');
+			if (sep) {
+				size_t key_len = (size_t)(sep - comment);
+				const char *value = sep + 1;
+				if (key_len == 5 && strncasecmp(comment, "GENRE", 5) == 0) {
+					ti->genre = (unsigned char)atoi(
+					    value); // Assuming genre is numeric
+					break;
+				}
+			}
+			free(comment);
+		}
+	} else {
+		ti->genre = 0xff; // Default if not found
+	}
+
+	if (tags)
+		FLAC__metadata_object_delete(tags);
 
 	return true;
 }
