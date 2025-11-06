@@ -18,6 +18,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sqlite3.h>
+#include <stdckdint.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -258,27 +259,43 @@ static bool addtunetodisplay(struct tune *tune) {
 		return false;
 
 	struct tune **old_display = displaytunes;
-	struct tune **new_display = malloc(new_count * sizeof(*new_display));
+	size_t display_bytes = 0;
+	if (ckd_mul(&display_bytes, new_count, sizeof(*displaytunes)) != 0)
+		return false;
+	struct tune **new_display = malloc(display_bytes);
 	if (!new_display)
 		return false;
-	if (old_display && displaycount > 0)
-		memcpy(new_display, old_display, (size_t)displaycount * sizeof(*new_display));
+	if (old_display && displaycount > 0) {
+		size_t copy_bytes = 0;
+		if (ckd_mul(&copy_bytes, (size_t)displaycount, sizeof(*new_display)) != 0) {
+			free(new_display);
+			return false;
+		}
+		memcpy(new_display, old_display, copy_bytes);
+	}
 
 #ifdef USE_FINISH
 	size_t time_count = new_count;
-	if (time_count > SIZE_MAX / sizeof(*displaytimes)) {
+	size_t time_bytes = 0;
+	if (ckd_mul(&time_bytes, time_count, sizeof(*displaytimes)) != 0) {
 		free(new_display);
 		return false;
 	}
 	time_t *old_displaytimes = displaytimes;
-	time_t *new_displaytimes = malloc(time_count * sizeof(*new_displaytimes));
+	time_t *new_displaytimes = malloc(time_bytes);
 	if (!new_displaytimes) {
 		free(new_display);
 		return false;
 	}
 	if (old_displaytimes && displaycount > 0) {
-		memcpy(new_displaytimes, old_displaytimes,
-		    (size_t)displaycount * sizeof(*new_displaytimes));
+		size_t time_copy_bytes = 0;
+		if (ckd_mul(&time_copy_bytes, (size_t)displaycount, sizeof(*new_displaytimes))
+		    != 0) {
+			free(new_displaytimes);
+			free(new_display);
+			return false;
+		}
+		memcpy(new_displaytimes, old_displaytimes, time_copy_bytes);
 	}
 	displaytimes = new_displaytimes;
 #endif
