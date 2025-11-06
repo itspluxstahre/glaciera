@@ -172,8 +172,6 @@ ninja -C builddir format
 
 This ensures consistent code style across the project. The formatting rules are defined in `.clang-format` (WebKit style with 8-space indentation).
 
-See [`MIGRATION.md`](MIGRATION.md) for technical details about the v4.0 modernization.
-
 ## Credits
 
 See [`CREDITS.md`](CREDITS.md) for detailed attribution to all contributors and third-party libraries.
