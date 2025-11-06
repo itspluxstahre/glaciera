@@ -3598,15 +3598,20 @@ static bool handle_function_keys(int key) {
 static bool handle_navigation_keys(int key) {
 	switch (key) {
 	case KEY_LEFT:
-		col_step -= COLUMN_DELTA;
-		if (col_step < 0)
+		if (col_step > COLUMN_DELTA)
+			col_step -= COLUMN_DELTA;
+		else
 			col_step = 0;
 		refresh_screen();
 		return true;
 
 	case KEY_RIGHT:
-		if (col_step < 150)
-			col_step += COLUMN_DELTA;
+		if (col_step < 150) {
+			int next = col_step + COLUMN_DELTA;
+			if (next > 150)
+				next = 150;
+			col_step = next;
+		}
 		refresh_screen();
 		return true;
 
@@ -3617,10 +3622,17 @@ static bool handle_navigation_keys(int key) {
 		return true;
 
 	case KEY_END:
-		tunenr = displaycount - 1;
-		toptunenr = tunenr - middlesize + 1;
-		if (toptunenr < 0)
+		tunenr = (displaycount > 0) ? displaycount - 1 : 0;
+		if (middlesize > 0) {
+			int64_t top_value = (int64_t)tunenr - (int64_t)middlesize + 1;
+			if (top_value < 0)
+				top_value = 0;
+			if (top_value > INT_MAX)
+				top_value = INT_MAX;
+			toptunenr = (int)top_value;
+		} else {
 			toptunenr = 0;
+		}
 		refresh_screen();
 		return true;
 
