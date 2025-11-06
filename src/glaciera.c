@@ -1698,7 +1698,15 @@ void *readahead_thread(void *arg) {
 	if (percentplayed < 100 && tune && tune->ti && tune->ti->filesize) {
 		fd = open(tune->path, O_RDONLY);
 		if (fd != -1) {
-			readpos = (tune->ti->filesize / 100L) * percentplayed;
+			off_t chunk = (off_t)(tune->ti->filesize / 100L);
+			if (chunk < 0)
+				chunk = 0;
+			if (percentplayed < 0)
+				percentplayed = 0;
+			off_t safe_readpos = 0;
+			if (ckd_mul(&safe_readpos, chunk, (off_t)percentplayed) != 0)
+				safe_readpos = (percentplayed > 0) ? (off_t)LLONG_MAX : 0;
+			readpos = safe_readpos;
 			if (-1 != lseek(fd, readpos, SEEK_SET)) {
 				for (i = 0; i < 16; i++) {
 					if (read(fd, buf, sizeof(buf)) < 0)
@@ -1776,9 +1784,12 @@ void update_song_progress_handler(int sig) {
 		started_playing_time = time(NULL);
 	secondsplayed = time(NULL) - started_playing_time;
 	secondsleft = now_playing_tune->ti->duration - secondsplayed;
-	if (now_playing_tune->ti->duration)
-		percentplayed = (100 * secondsplayed) / now_playing_tune->ti->duration;
-	else {
+	if (now_playing_tune->ti->duration) {
+		int64_t scaled_seconds = 0;
+		if (ckd_mul(&scaled_seconds, (int64_t)secondsplayed, 100LL) != 0)
+			scaled_seconds = (secondsplayed >= 0) ? LLONG_MAX : LLONG_MIN;
+		percentplayed = (int)(scaled_seconds / now_playing_tune->ti->duration);
+	} else {
 		/*
 		 * Don't mess up the display for songs that has no duration
 		 */
