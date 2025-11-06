@@ -14,6 +14,7 @@
 #include <getopt.h>
 #include <limits.h>
 #include <locale.h>
+#include <math.h>
 #include <ncurses.h>
 #include <pthread.h>
 #include <signal.h>
@@ -904,9 +905,17 @@ void draw_scrollbar(void) {
 			marker_limit = INT_MAX;
 		int max_marker = (int)marker_limit;
 
-		int marker = (int)(ratio * (double)max_marker + 0.5);
-		if (marker > max_marker)
-			marker = max_marker;
+		double scaled = ratio * (double)max_marker;
+		if (scaled < 0.0)
+			scaled = 0.0;
+		if (scaled > (double)max_marker)
+			scaled = (double)max_marker;
+		long rounded = lround(scaled);
+		if (rounded < 0)
+			rounded = 0;
+		if (rounded > max_marker)
+			rounded = max_marker;
+		const int marker = (int)rounded;
 		scrollbar[marker] = '#';
 	}
 
